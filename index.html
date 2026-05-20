@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chronic Care Command Center – Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Supabase client (optional, used when you add your project) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-soft: #020617;
+      --card: #020617;
+      --border: #1e293b;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56,189,248,0.1);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --danger: #f97373;
+      --danger-soft: rgba(248,113,113,0.1);
+      --warn: #fbbf24;
+      --warn-soft: rgba(251,191,36,0.1);
+      --success: #22c55e;
+      --success-soft: rgba(34,197,94,0.1);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #000 100%);
+      color: var(--text);
+    }
+    button { font-family: inherit; cursor: pointer; }
+    .app-shell {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 18px 16px;
+      background: radial-gradient(circle at top left, #0f172a 0, #020617 55%);
+    }
+    .sidebar-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .sidebar-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: conic-gradient(from 180deg, #38bdf8, #22c55e, #f97373, #38bdf8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0f172a;
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
+    .nav-btn {
+      border-radius: 999px;
+      border: 1px solid transparent;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--muted);
+      background: transparent;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn span.icon { font-size: 14px; opacity: 0.9; }
+    .nav-btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    .nav-section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin: 16px 4px 6px;
+    }
+    .main {
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar-left h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .topbar-sub {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.2);
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.8);
+      color: var(--text);
+      padding: 7px 12px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, #38bdf8, #22c55e);
+      color: #020617;
+      font-weight: 600;
+    }
+    .btn-ghost { background: transparent; }
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top, #38bdf8, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .card {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top left, rgba(15,23,42,0.9), #020617);
+      padding: 12px 14px;
+    }
+    .card-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .card-value { font-size: 24px; font-weight: 700; }
+    .card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .tabs-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .tabs {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid var(--border);
+    }
+    .tab-btn {
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+    .tab-btn.active {
+      background: rgba(15,23,42,1);
+      color: var(--text);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+    .search-input {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.9);
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 12px;
+      min-width: 180px;
+    }
+    .search-input::placeholder { color: var(--muted); }
+    .panel {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.9);
+      padding: 10px;
+      margin-top: 6px;
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+      gap: 10px;
+      min-height: 320px;
+    }
+    .panel-full { grid-template-columns: minmax(0, 1fr); }
+    .panel-section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .table th,
+    .table td {
+      padding: 7px 8px;
+      border-bottom: 1px solid rgba(15,23,42,0.9);
+    }
+    .table th {
+      text-align: left;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .table tr:hover td { background: rgba(15,23,42,0.7); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      border: 1px solid transparent;
+    }
+    .badge-pri-urgent {
+      background: var(--danger-soft);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .badge-pri-followup {
+      background: var(--warn-soft);
+      border-color: var(--warn);
+      color: var(--warn);
+    }
+    .badge-pri-routine {
+      background: rgba(56,189,248,0.1);
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+    .badge-pri-normal {
+      background: rgba(148,163,184,0.1);
+      border-color: #64748b;
+      color: #64748b;
+    }
+    .badge-status-new {
+      background: rgba(56,189,248,0.1);
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+    .badge-status-reviewed {
+      background: rgba(148,163,184,0.1);
+      border-color: #64748b;
+      color: #64748b;
+    }
+    .badge-status-actioned {
+      background: var(--success-soft);
+      border-color: var(--success);
+      color: var(--success);
+    }
+    .badge-conf {
+      background: rgba(15,23,42,0.9);
+      border-color: var(--border);
+      color: var(--muted);
+    }
+    .pill {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .pill.active {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(15,23,42,1);
+    }
+    .fax-list {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.9);
+      max-height: 320px;
+      overflow: auto;
+    }
+    .fax-row {
+      padding: 8px 9px;
+      border-bottom: 1px solid rgba(15,23,42,0.9);
+      display: flex;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .fax-row:hover { background: rgba(15,23,42,0.9); }
+    .fax-row-main { flex: 1; min-width: 0; }
+    .fax-row-title { font-size: 12px; font-weight: 600; }
+    .fax-row-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .fax-row-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .dropzone {
+      border-radius: 10px;
+      border: 1px dashed var(--border);
+      padding: 14px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      background: rgba(15,23,42,0.7);
+    }
+    .dropzone strong { color: var(--text); }
+    .detail-card {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.9);
+      padding: 10px;
+      font-size: 12px;
+    }
+    .detail-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .detail-value { font-size: 12px; }
+    .detail-list {
+      margin: 4px 0 0;
+      padding-left: 16px;
+      color: var(--muted);
+    }
+    .detail-list li { margin-bottom: 2px; }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .chip {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      font-size: 11px;
+      color: var(--muted);
+      background: rgba(15,23,42,0.9);
+    }
+    .actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .toast {
+      position: fixed;
+      right: 16px;
+      top: 16px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.95);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 50;
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+    .modal {
+      width: 100%;
+      max-width: 520px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      box-shadow: 0 18px 60px rgba(0,0,0,0.7);
+      padding: 16px 18px 14px;
+      font-size: 13px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .modal-title { font-size: 15px; font-weight: 600; }
+    .modal-body { margin-top: 4px; }
+    .field { margin-bottom: 8px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .field input,
+    .field textarea {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.9);
+      color: var(--text);
+      padding: 6px 8px;
+      font-size: 12px;
+      resize: vertical;
+    }
+    .field input::placeholder,
+    .field textarea::placeholder { color: var(--muted); }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .mic-circle {
+      width: 70px;
+      height: 70px;
+      border-radius: 999px;
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 8px auto;
+      background: radial-gradient(circle at top, rgba(56,189,248,0.2), transparent);
+      cursor: pointer;
+    }
+    .mic-circle span { font-size: 26px; }
+    .mic-status {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .transcript-box {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.9);
+      padding: 8px;
+      font-size: 12px;
+      min-height: 60px;
+      margin-top: 6px;
+      color: var(--muted);
+    }
+    @media (max-width: 900px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="toast" class="toast" style="display:none;"></div>
+
+<div class="app-shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-title">
+      <div class="sidebar-logo">CC</div>
+      <div>
+        <div style="font-size:13px;font-weight:600;">Chronic Care</div>
+        <div style="font-size:11px;color:var(--muted);">Command Center</div>
+      </div>
+    </div>
+
+    <div class="nav-section-label">Navigation</div>
+    <div class="sidebar-nav">
+      <button class="nav-btn active" data-page="dashboard">
+        <span class="icon">📊</span> Dashboard
+      </button>
+      <button class="nav-btn" data-page="patients">
+        <span class="icon">👥</span> Patients
+      </button>
+      <button class="nav-btn" data-page="fax">
+        <span class="icon">📠</span> Fax Triage
+      </button>
+      <button class="nav-btn" data-page="calls">
+        <span class="icon">📞</span> Calls
+      </button>
+    </div>
+
+    <div class="nav-section-label">Integrations</div>
+    <div class="sidebar-nav">
+      <button class="nav-btn">
+        <span class="icon">🏥</span> eClinicalWorks FHIR
+      </button>
+      <button class="nav-btn">
+        <span class="icon">🔗</span> VOIP Providers
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1>Chronic Care Dashboard</h1>
+        <div class="topbar-sub">
+          <div class="status-dot"></div>
+          <span>EMR: Connected to eClinicalWorks FHIR Sandbox</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost" id="btn-voice-intake">
+          <span>🎙️</span> Voice Intake
+        </button>
+        <button class="btn btn-primary" id="btn-add-patient">
+          <span>＋</span> Add Patient
+        </button>
+        <div class="avatar">DR</div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD CARDS -->
+    <div id="dashboard-cards" class="grid-cards">
+      <div class="card">
+        <div class="card-label">Chronic Patients</div>
+        <div class="card-value" id="card-patients">5</div>
+        <div class="card-sub">Active panel</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Missed Appointments</div>
+        <div class="card-value" id="card-missed">2</div>
+        <div class="card-sub">Last 30 days</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Pending Imaging</div>
+        <div class="card-value" id="card-imaging">3</div>
+        <div class="card-sub">Awaiting completion</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Urgent Faxes</div>
+        <div class="card-value" id="card-urgent-faxes">1</div>
+        <div class="card-sub">Unread</div>
+      </div>
+    </div>
+
+    <!-- TABS + SEARCH -->
+    <div class="tabs-row">
+      <div class="tabs">
+        <button class="tab-btn active" data-page="dashboard">Overview</button>
+        <button class="tab-btn" data-page="patients">Patients</button>
+        <button class="tab-btn" data-page="fax">Fax Triage</button>
+        <button class="tab-btn" data-page="calls">Calls</button>
+      </div>
+      <input id="search" class="search-input" placeholder="Search patients..." />
+    </div>
+
+    <!-- PANELS -->
+    <!-- DASHBOARD PAGE -->
+    <section id="page-dashboard" class="panel panel-full">
+      <div>
+        <div class="panel-section-title">Today's Work</div>
+        <div class="grid-cards" style="margin-bottom:10px;">
+          <div class="card">
+            <div class="card-label">Care Gaps</div>
+            <div class="card-value">7</div>
+            <div class="card-sub">Overdue labs, imaging, referrals</div>
+          </div>
+          <div class="card">
+            <div class="card-label">High-Risk Patients</div>
+            <div class="card-value">3</div>
+            <div class="card-sub">A1c &gt; 9 or recent ER visit</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Tasks</div>
+            <div class="card-value">9</div>
+            <div class="card-sub">Assigned to care team</div>
+          </div>
+        </div>
+
+        <div class="panel-section-title">Sample Patient List</div>
+        <div style="border-radius:10px;border:1px solid var(--border);overflow:auto;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Phone</th>
+                <th>DOB / Age</th>
+                <th>Diagnoses</th>
+                <th>Next Appt</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-patients"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PATIENTS PAGE -->
+    <section id="page-patients" class="panel panel-full" style="display:none;">
+      <div>
+        <div class="panel-section-title">Patients</div>
+        <div style="border-radius:10px;border:1px solid var(--border);overflow:auto;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Phone</th>
+                <th>DOB / Age</th>
+                <th>Diagnoses</th>
+                <th>Next Appt</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-patients-2"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAX TRIAGE PAGE -->
+    <section id="page-fax" class="panel" style="display:none;">
+      <div>
+        <div class="panel-section-title">Fax Triage</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+          <div class="dropzone" id="fax-dropzone">
+            <strong>Upload or drop fax</strong><br />
+            PDF or image – AI will extract clinical content and priority.
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <span style="font-size:11px;color:var(--muted);">Filter:</span>
+            <button class="pill active" data-fax-filter="all">All</button>
+            <button class="pill" data-fax-filter="urgent">Urgent</button>
+            <button class="pill" data-fax-filter="followup">Follow-Up</button>
+            <button class="pill" data-fax-filter="routine">Routine</button>
+          </div>
+        </div>
+
+        <div class="fax-list" id="fax-list"></div>
+      </div>
+
+      <div>
+        <div class="panel-section-title">Fax Details</div>
+        <div id="fax-detail-empty" class="detail-card" style="text-align:center;color:var(--muted);">
+          Select a fax to view AI summary, findings, and actions.
+        </div>
+        <div id="fax-detail" style="display:none;">
+          <div class="detail-card">
+            <div class="detail-label">Summary</div>
+            <div class="detail-value" id="fax-summary"></div>
+            <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
+              <span id="fax-priority-badge" class="badge badge-pri-normal">Normal</span>
+              <span id="fax-status-badge" class="badge badge-status-new">New</span>
+              <span id="fax-conf-badge" class="badge badge-conf">Confidence: 0.00</span>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-top:8px;">
+            <div class="detail-card">
+              <div class="detail-label">Findings</div>
+              <ul class="detail-list" id="fax-findings"></ul>
+
+              <div class="detail-label" style="margin-top:8px;">Matched Rules</div>
+              <div class="chips" id="fax-rules"></div>
+            </div>
+            <div class="detail-card">
+              <div class="detail-label">Patient Match</div>
+              <div id="fax-patient"></div>
+
+              <div class="detail-label" style="margin-top:8px;">Quick Actions</div>
+              <div class="actions-row">
+                <button class="btn btn-ghost" id="btn-create-referral">Create Referral</button>
+                <button class="btn btn-ghost" id="btn-create-imaging">Create Imaging Order</button>
+                <button class="btn btn-ghost" id="btn-add-dx">Add Diagnosis</button>
+                <button class="btn btn-primary" id="btn-mark-reviewed">Mark Reviewed</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CALLS PAGE -->
+    <section id="page-calls" class="panel panel-full" style="display:none;">
+      <div>
+        <div class="panel-section-title">Recent Calls</div>
+        <div style="border-radius:10px;border:1px solid var(--border);overflow:auto;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Phone</th>
+                <th>Provider</th>
+                <th>Outcome</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-calls"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- VOICE MODAL -->
+<div id="modal-voice" class="modal-backdrop" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Voice Intake – New Patient</div>
+      <button class="btn btn-ghost" id="voice-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mic-circle" id="mic-btn">
+        <span id="mic-icon">🎙️</span>
+      </div>
+      <div class="mic-status" id="mic-status">Tap to start dictation</div>
+      <div class="transcript-box" id="mic-transcript">Transcript will appear here.</div>
+
+      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="field">
+          <label>Patient Name</label>
+          <input id="voice-name" placeholder="Full name" />
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input id="voice-dob" type="date" />
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input id="voice-phone" placeholder="(845) 555-0100" />
+        </div>
+        <div class="field">
+          <label>Diagnoses</label>
+          <input id="voice-dx" placeholder="Comma-separated" />
+        </div>
+        <div class="field">
+          <label>Referrals</label>
+          <input id="voice-ref" placeholder="e.g. Cardiology - Dr. Smith" />
+        </div>
+        <div class="field">
+          <label>Imaging</label>
+          <input id="voice-img" placeholder="e.g. CT Chest" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="voice-cancel">Cancel</button>
+      <button class="btn btn-primary" id="voice-save">Save Patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PATIENT MODAL -->
+<div id="modal-add-patient" class="modal-backdrop" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Patient</div>
+      <button class="btn btn-ghost" id="addp-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Patient Name</label>
+        <input id="addp-name" placeholder="Full name" />
+      </div>
+      <div class="field">
+        <label>Date of Birth</label>
+        <input id="addp-dob" type="date" />
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input id="addp-phone" placeholder="(845) 555-0100" />
+      </div>
+      <div class="field">
+        <label>Diagnoses</label>
+        <input id="addp-dx" placeholder="Comma-separated" />
+      </div>
+      <div class="field">
+        <label>Next Appointment</label>
+        <input id="addp-appt" type="date" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="addp-cancel">Cancel</button>
+      <button class="btn btn-primary" id="addp-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ====== CONFIG: FILL THESE WHEN YOU HAVE SUPABASE ======
+  const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
+  const SUPABASE_ANON_KEY = "YOUR_ANON_PUBLIC_KEY";
+
+  let supabaseClient = null;
+  if (SUPABASE_URL !== "https://YOUR_PROJECT_ID.supabase.co") {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  // ====== DEMO DATA (LOCAL) ======
+  const demoPatients = [
+    {
+      id: "p1",
+      name: "Margaret Thompson",
+      dob: "1952-03-14",
+      phone: "(845) 555-0142",
+      dx: ["Type 2 diabetes", "Hypertension"],
+      appt: "2026-05-22"
+    },
+    {
+      id: "p2",
+      name: "Robert Chen",
+      dob: "1968-11-22",
+      phone: "(845) 555-0283",
+      dx: ["Hyperlipidemia"],
+      appt: "2026-05-18"
+    },
+    {
+      id: "p3",
+      name: "Diana Alvarez",
+      dob: "1945-07-08",
+      phone: "(845) 555-0391",
+      dx: ["COPD"],
+      appt: ""
+    }
+  ];
+
+  const demoFaxes = [
+    {
+      id: "fx1",
+      file: "CT_Chest_Thompson.pdf",
+      category: "Imaging Result",
+      priority: "urgent",
+      summary: "CT chest shows new right upper lobe mass concerning for malignancy. Recommend urgent pulmonology consult.",
+      findings: [
+        "Right upper lobe mass identified.",
+        "Suspicious for malignancy.",
+        "Recommend urgent pulmonology referral."
+      ],
+      matched_rules: ["Abnormal Imaging", "Specialist Recommendations"],
+      patientName: "Margaret Thompson",
+      confidence: 0.86,
+      status: "new",
+      created_at: "2026-05-20T09:12:00Z"
+    }
+  ];
+
+  const demoCalls = [
+    {
+      id: "c1",
+      patient: "Margaret Thompson",
+      phone: "(845) 555-0142",
+      provider: "RingCentral",
+      outcome: "Left voicemail",
+      notes: "Called to discuss CT results and schedule pulmonology consult."
+    },
+    {
+      id: "c2",
+      patient: "Robert Chen",
+      phone: "(845) 555-0283",
+      provider: "Zoom Phone",
+      outcome: "Spoke to patient",
+      notes: "Reviewed lab results and medication changes."
+    }
+  ];
+
+  // ====== UTILITIES ======
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.style.display = "flex";
+    setTimeout(() => (t.style.display = "none"), 2200);
+  }
+
+  function calcAge(dob) {
+    if (!dob) return "";
+    const d = new Date(dob);
+    const n = new Date();
+    let age = n.getFullYear() - d.getFullYear();
+    const m = n.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && n.getDate() < d.getDate())) age--;
+    return age;
+  }
+
+  function fmtDate(d) {
+    if (!d) return "";
+    return new Date(d + "T00:00:00").toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
+  }
+
+  function priorityClass(p) {
+    switch (p) {
+      case "urgent": return "badge-pri-urgent";
+      case "followup": return "badge-pri-followup";
+      case "routine": return "badge-pri-routine";
+      default: return "badge-pri-normal";
+    }
+  }
+
+  function statusClass(s) {
+    switch (s) {
+      case "new": return "badge-status-new";
+      case "reviewed": return "badge-status-reviewed";
+      case "actioned": return "badge-status-actioned";
+      default: return "badge-status-new";
+    }
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function blobToBase64(blob) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(",")[1]);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  // ====== RENDER PATIENTS ======
+  function renderPatients() {
+    const tb1 = document.getElementById("tbl-patients");
+    const tb2 = document.getElementById("tbl-patients-2");
+    [tb1, tb2].forEach(tb => tb && (tb.innerHTML = ""));
+    demoPatients.forEach(p => {
+      const age = calcAge(p.dob);
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td style="font-weight:600;">${p.name}</td>
+        <td>${p.phone || ""}</td>
+        <td style="color:var(--muted);">${fmtDate(p.dob)}${age ? " · " + age + "y" : ""}</td>
+        <td>${(p.dx || []).join(", ")}</td>
+        <td>${p.appt ? fmtDate(p.appt) : "<span style='color:var(--muted);'>None</span>"}</td>
+        <td style="text-align:right;">
+          <button class="btn btn-ghost btn-call" data-phone="${p.phone}" data-name="${p.name}">Call</button>
+        </td>
+      `;
+      tb1.appendChild(row.cloneNode(true));
+      tb2.appendChild(row);
+    });
+  }
+
+  // ====== RENDER FAXES ======
+  let faxFilter = "all";
+  let selectedFaxId = null;
+
+  function renderFaxes() {
+    const list = document.getElementById("fax-list");
+    list.innerHTML = "";
+    const filtered = demoFaxes.filter(f => faxFilter === "all" || f.priority === faxFilter);
+    if (!filtered.length) {
+      const empty = document.createElement("div");
+      empty.style.padding = "20px";
+      empty.style.textAlign = "center";
+      empty.style.color = "var(--muted)";
+      empty.textContent = "No faxes in this filter. Upload a fax to see AI triage.";
+      list.appendChild(empty);
+      return;
+    }
+    filtered.forEach(f => {
+      const row = document.createElement("div");
+      row.className = "fax-row";
+      row.dataset.id = f.id;
+      row.innerHTML = `
+        <div class="fax-row-main">
+          <div class="fax-row-title">${f.category}</div>
+          <div class="fax-row-sub">${f.summary}</div>
+        </div>
+        <div class="fax-row-meta">
+          <span class="badge ${priorityClass(f.priority)}">${f.priority.toUpperCase()}</span>
+          <span class="badge ${statusClass(f.status)}">${f.status}</span>
+          <span>Conf: ${(f.confidence || 0).toFixed(2)}</span>
+        </div>
+      `;
+      row.addEventListener("click", () => selectFax(f.id));
+      list.appendChild(row);
+    });
+  }
+
+  function selectFax(id) {
+    const f = demoFaxes.find(x => x.id === id);
+    if (!f) return;
+    selectedFaxId = id;
+    document.getElementById("fax-detail-empty").style.display = "none";
+    document.getElementById("fax-detail").style.display = "block";
+
+    document.getElementById("fax-summary").textContent = f.summary;
+    const priBadge = document.getElementById("fax-priority-badge");
+    priBadge.className = "badge " + priorityClass(f.priority);
+    priBadge.textContent = f.priority.charAt(0).toUpperCase() + f.priority.slice(1);
+
+    const stBadge = document.getElementById("fax-status-badge");
+    stBadge.className = "badge " + statusClass(f.status);
+    stBadge.textContent = f.status.charAt(0).toUpperCase() + f.status.slice(1);
+
+    document.getElementById("fax-conf-badge").textContent = "Confidence: " + (f.confidence || 0).toFixed(2);
+
+    const ul = document.getElementById("fax-findings");
+    ul.innerHTML = "";
+    (f.findings || []).forEach(line => {
+      const li = document.createElement("li");
+      li.textContent = line;
+      ul.appendChild(li);
+    });
+
+    const rules = document.getElementById("fax-rules");
+    rules.innerHTML = "";
+    (f.matched_rules || []).forEach(r => {
+      const span = document.createElement("span");
+      span.className = "chip";
+      span.textContent = r;
+      rules.appendChild(span);
+    });
+
+    const pDiv = document.getElementById("fax-patient");
+    pDiv.innerHTML = "";
+    const match = demoPatients.find(p => p.name === f.patientName);
+    if (match) {
+      pDiv.innerHTML = `
+        <div style="font-size:12px;font-weight:600;">${match.name}</div>
+        <div style="font-size:11px;color:var(--muted);">${fmtDate(match.dob)} · ${calcAge(match.dob)}y</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${match.phone}</div>
+      `;
+    } else {
+      pDiv.innerHTML = `<span style="font-size:11px;color:var(--muted);">No patient match. Link or create patient.</span>`;
+    }
+  }
+
+  // ====== RENDER CALLS ======
+  function renderCalls() {
+    const tb = document.getElementById("tbl-calls");
+    tb.innerHTML = "";
+    demoCalls.forEach(c => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${c.patient}</td>
+        <td>${c.phone}</td>
+        <td>${c.provider}</td>
+        <td>${c.outcome}</td>
+        <td>${c.notes}</td>
+      `;
+      tb.appendChild(row);
+    });
+  }
+
+  // ====== PAGE NAV ======
+  function setPage(page) {
+    ["dashboard", "patients", "fax", "calls"].forEach(p => {
+      document.getElementById("page-" + p).style.display = p === page ? (p === "fax" ? "grid" : "block") : "none";
+    });
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.page === page);
+    });
+    document.querySelectorAll(".nav-btn[data-page]").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.page === page);
+    });
+  }
+
+  function initNav() {
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => setPage(btn.dataset.page));
+    });
+    document.querySelectorAll(".nav-btn[data-page]").forEach(btn => {
+      btn.addEventListener("click", () => setPage(btn.dataset.page));
+    });
+  }
+
+  // ====== FAX UPLOAD: SUPABASE + AI OR DEMO ======
+  async function handleFaxUpload(file) {
+    if (!supabaseClient) {
+      showToast("Demo: simulating Fax AI (no Supabase configured).");
+      setTimeout(() => {
+        const newFax = {
+          id: "fx" + Date.now(),
+          file: file.name,
+          category: "Lab Result",
+          priority: "followup",
+          summary: "Lab panel shows elevated A1c requiring follow-up visit.",
+          findings: [
+            "A1c elevated above target.",
+            "Recommend follow-up appointment to adjust therapy."
+          ],
+          matched_rules: ["Critical Lab Values"],
+          patientName: "Robert Chen",
+          confidence: 0.78,
+          status: "new",
+          created_at: new Date().toISOString()
+        };
+        demoFaxes.unshift(newFax);
+        renderFaxes();
+        selectFax(newFax.id);
+        showToast("Fax AI triage complete (demo).");
+      }, 1200);
+      return;
+    }
+
+    try {
+      showToast("Uploading fax…");
+      const { data: upload, error: uploadErr } = await supabaseClient.storage
+        .from("faxes")
+        .upload(`fax_${Date.now()}_${file.name}`, file);
+
+      if (uploadErr) {
+        console.error(uploadErr);
+        showToast("Upload failed.");
+        return;
+      }
+
+      const filePath = upload.path;
+      const base64 = await fileToBase64(file);
+
+      showToast("AI analyzing fax…");
+      const { data: aiResp, error: aiErr } = await supabaseClient.functions.invoke(
+        "fax-triage",
+        {
+          body: {
+            base64,
+            mimeType: file.type,
+            activeRules: []
+          }
+        }
+      );
+
+      if (aiErr) {
+        console.error(aiErr);
+        showToast("AI failed.");
+        return;
+      }
+
+      const { data: faxRecord, error: insertErr } = await supabaseClient
+        .from("faxes")
+        .insert({
+          file_path: filePath,
+          category: aiResp.category,
+          priority: aiResp.priority,
+          summary: aiResp.summary,
+          findings: aiResp.findings,
+          matched_rules: aiResp.matched_rules,
+          confidence: aiResp.confidence,
+          status: "new"
+        })
+        .select()
+        .single();
+
+      if (insertErr) {
+        console.error(insertErr);
+        showToast("DB insert failed.");
+        return;
+      }
+
+      demoFaxes.unshift({
+        id: faxRecord.id,
+        file: file.name,
+        ...aiResp,
+        status: "new"
+      });
+
+      renderFaxes();
+      selectFax(faxRecord.id);
+      showToast("Fax AI triage complete.");
+    } catch (e) {
+      console.error(e);
+      showToast("Error processing fax.");
+    }
+  }
+
+  function initFaxUpload() {
+    const dz = document.getElementById("fax-dropzone");
+    dz.addEventListener("click", () => {
+      showToast("Use drag & drop to upload a fax file.");
+    });
+    dz.addEventListener("dragover", e => {
+      e.preventDefault();
+      dz.style.borderColor = "var(--accent)";
+    });
+    dz.addEventListener("dragleave", e => {
+      e.preventDefault();
+      dz.style.borderColor = "var(--border)";
+    });
+    dz.addEventListener("drop", e => {
+      e.preventDefault();
+      dz.style.borderColor = "var(--border)";
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      handleFaxUpload(file);
+    });
+  }
+
+  function initFaxFilters() {
+    document.querySelectorAll("[data-fax-filter]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-fax-filter]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        faxFilter = btn.dataset.faxFilter;
+        renderFaxes();
+      });
+    });
+  }
+
+  function initFaxActions() {
+    document.getElementById("btn-create-referral").addEventListener("click", () => {
+      if (!selectedFaxId) return;
+      showToast("In a real build, this opens a referral form pre-filled from fax AI.");
+    });
+    document.getElementById("btn-create-imaging").addEventListener("click", () => {
+      if (!selectedFaxId) return;
+      showToast("In a real build, this opens an imaging order form.");
+    });
+    document.getElementById("btn-add-dx").addEventListener("click", () => {
+      if (!selectedFaxId) return;
+      showToast("In a real build, this adds diagnoses to the patient record.");
+    });
+    document.getElementById("btn-mark-reviewed").addEventListener("click", () => {
+      if (!selectedFaxId) return;
+      const f = demoFaxes.find(x => x.id === selectedFaxId);
+      if (!f) return;
+      f.status = "reviewed";
+      renderFaxes();
+      selectFax(f.id);
+      showToast("Fax marked as reviewed.");
+    });
+  }
+
+  // ====== VOICE INTAKE: SUPABASE + WHISPER OR DEMO ======
+  let micOn = false;
+  let recorder = null;
+
+  async function startRecording() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const rec = new MediaRecorder(stream);
+    const chunks = [];
+    rec.ondataavailable = (e) => chunks.push(e.data);
+    rec.onstop = async () => {
+      const blob = new Blob(chunks, { type: "audio/webm" });
+      const base64 = await blobToBase64(blob);
+      await processVoiceIntake(base64);
+    };
+    rec.start();
+    return rec;
+  }
+
+  async function processVoiceIntake(base64Audio) {
+    if (!supabaseClient) {
+      showToast("Demo: simulating Whisper + LLM (no Supabase configured).");
+      setTimeout(() => {
+        const text = "New patient, Robert Chen, date of birth November 22 1968, phone 845 555 0283. Diagnosis type 2 diabetes and hypertension. Refer to cardiology, Dr. Smith. Order CT chest.";
+        document.getElementById("mic-transcript").textContent = text;
+        document.getElementById("mic-status").textContent = "Review parsed fields below.";
+        document.getElementById("voice-name").value = "Robert Chen";
+        document.getElementById("voice-dob").value = "1968-11-22";
+        document.getElementById("voice-phone").value = "(845) 555-0283";
+        document.getElementById("voice-dx").value = "Type 2 diabetes, Hypertension";
+        document.getElementById("voice-ref").value = "Cardiology - Dr. Smith";
+        document.getElementById("voice-img").value = "CT Chest";
+        showToast("Voice intake parsed (demo).");
+      }, 1500);
+      return;
+    }
+
+    try {
+      showToast("Transcribing audio…");
+      const { data: aiResp, error } = await supabaseClient.functions.invoke(
+        "voice-intake",
+        { body: { base64: base64Audio } }
+      );
+      if (error) {
+        console.error(error);
+        showToast("Voice AI failed.");
+        return;
+      }
+      document.getElementById("mic-transcript").textContent = aiResp.transcript || "";
+      document.getElementById("mic-status").textContent = "Review parsed fields below.";
+      document.getElementById("voice-name").value = aiResp.name || "";
+      document.getElementById("voice-dob").value = aiResp.dob || "";
+      document.getElementById("voice-phone").value = aiResp.phone || "";
+      document.getElementById("voice-dx").value = (aiResp.diagnoses || []).join(", ");
+      document.getElementById("voice-ref").value = (aiResp.referrals || []).join(", ");
+      document.getElementById("voice-img").value = (aiResp.imaging || []).join(", ");
+      showToast("Voice intake parsed.");
+    } catch (e) {
+      console.error(e);
+      showToast("Error processing voice.");
+    }
+  }
+
+  async function saveVoicePatient() {
+    const name = document.getElementById("voice-name").value.trim();
+    if (!name) {
+      showToast("Name is required.");
+      return;
+    }
+    const dob = document.getElementById("voice-dob").value || "";
+    const phone = document.getElementById("voice-phone").value || "";
+    const dx = (document.getElementById("voice-dx").value || "").split(",").map(s => s.trim()).filter(Boolean);
+
+    if (!supabaseClient) {
+      demoPatients.unshift({ id: "p" + Date.now(), name, dob, phone, dx, appt: "" });
+      renderPatients();
+      document.getElementById("card-patients").textContent = demoPatients.length;
+      document.getElementById("modal-voice").style.display = "none";
+      showToast("Patient created from voice intake (demo).");
+      return;
+    }
+
+    try {
+      const { data: patient, error } = await supabaseClient
+        .from("patients")
+        .insert({ name, dob: dob || null, phone: phone || null })
+        .select()
+        .single();
+
+      if (error) {
+        console.error(error);
+        showToast("DB insert failed.");
+        return;
+      }
+
+      demoPatients.unshift({
+        id: patient.id,
+        name,
+        dob,
+        phone,
+        dx,
+        appt: ""
+      });
+      renderPatients();
+      document.getElementById("card-patients").textContent = demoPatients.length;
+      document.getElementById("modal-voice").style.display = "none";
+      showToast("Patient saved.");
+    } catch (e) {
+      console.error(e);
+      showToast("Error saving patient.");
+    }
+  }
+
+  function initVoiceModal() {
+    const modal = document.getElementById("modal-voice");
+    const openBtn = document.getElementById("btn-voice-intake");
+    const closeBtns = [document.getElementById("voice-close"), document.getElementById("voice-cancel")];
+    const micBtn = document.getElementById("mic-btn");
+    const micStatus = document.getElementById("mic-status");
+    const micTranscript = document.getElementById("mic-transcript");
+    const micIcon = document.getElementById("mic-icon");
+    const saveBtn = document.getElementById("voice-save");
+
+    openBtn.addEventListener("click", () => {
+      modal.style.display = "flex";
+      micOn = false;
+      micStatus.textContent = "Tap to start dictation";
+      micTranscript.textContent = "Transcript will appear here.";
+    });
+    closeBtns.forEach(btn => btn.addEventListener("click", () => {
+      modal.style.display = "none";
+      if (recorder && recorder.state === "recording") recorder.stop();
+    }));
+
+    micBtn.addEventListener("click", async () => {
+      if (!micOn) {
+        micOn = true;
+        micStatus.textContent = supabaseClient ? "Listening…" : "Listening… (demo)";
+        micIcon.textContent = "🔴";
+        if (supabaseClient) {
+          recorder = await startRecording();
+        } else {
+          setTimeout(() => {
+            micOn = false;
+            micIcon.textContent = "🎙️";
+            processVoiceIntake(null);
+          }, 500);
+        }
+      } else {
+        micOn = false;
+        micIcon.textContent = "🎙️";
+        micStatus.textContent = "Processing…";
+        if (recorder && recorder.state === "recording") recorder.stop();
+      }
+    });
+
+    saveBtn.addEventListener("click", saveVoicePatient);
+  }
+
+  // ====== ADD PATIENT MODAL ======
+  function initAddPatientModal() {
+    const modal = document.getElementById("modal-add-patient");
+    const openBtn = document.getElementById("btn-add-patient");
+    const closeBtns = [document.getElementById("addp-close"), document.getElementById("addp-cancel")];
+    const saveBtn = document.getElementById("addp-save");
+
+    openBtn.addEventListener("click", () => {
+      modal.style.display = "flex";
+    });
+    closeBtns.forEach(btn => btn.addEventListener("click", () => {
+      modal.style.display = "none";
+    }));
+    saveBtn.addEventListener("click", async () => {
+      const name = document.getElementById("addp-name").value.trim();
+      if (!name) {
+        showToast("Name is required.");
+        return;
+      }
+      const dob = document.getElementById("addp-dob").value || "";
+      const phone = document.getElementById("addp-phone").value || "";
+      const dx = (document.getElementById("addp-dx").value || "").split(",").map(s => s.trim()).filter(Boolean);
+      const appt = document.getElementById("addp-appt").value || "";
+
+      if (!supabaseClient) {
+        demoPatients.unshift({ id: "p" + Date.now(), name, dob, phone, dx, appt });
+        renderPatients();
+        document.getElementById("card-patients").textContent = demoPatients.length;
+        modal.style.display = "none";
+        showToast("Patient added (demo).");
+        return;
+      }
+
+      try {
+        const { data: patient, error } = await supabaseClient
+          .from("patients")
+          .insert({ name, dob: dob || null, phone: phone || null })
+          .select()
+          .single();
+
+        if (error) {
+          console.error(error);
+          showToast("DB insert failed.");
+          return;
+        }
+
+        demoPatients.unshift({
+          id: patient.id,
+          name,
+          dob,
+          phone,
+          dx,
+          appt
+        });
+        renderPatients();
+        document.getElementById("card-patients").textContent = demoPatients.length;
+        modal.style.display = "none";
+        showToast("Patient added.");
+      } catch (e) {
+        console.error(e);
+        showToast("Error saving patient.");
+      }
+    });
+  }
+
+  // ====== CALL BUTTONS ======
+  function initCallButtons() {
+    document.body.addEventListener("click", e => {
+      const btn = e.target.closest(".btn-call");
+      if (!btn) return;
+      const phone = btn.dataset.phone;
+      const name = btn.dataset.name;
+      showToast("Would open VOIP call to " + name + " (" + phone + ") in a real build.");
+    });
+  }
+
+  // ====== INIT ======
+  renderPatients();
+  renderFaxes();
+  renderCalls();
+  initNav();
+  initFaxUpload();
+  initFaxFilters();
+  initFaxActions();
+  initVoiceModal();
+  initAddPatientModal();
+  initCallButtons();
+</script>
+</body>
+</html>
