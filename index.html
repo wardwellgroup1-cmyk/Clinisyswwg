@@ -2,1506 +2,1147 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Chronic Care Command Center – Demo</title>
+  <title>PA Fast Assist – Prior Authorization Helper</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Supabase client (optional, used when you add your project) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg: #0f172a;
-      --bg-soft: #020617;
-      --card: #020617;
-      --border: #1e293b;
-      --accent: #38bdf8;
-      --accent-soft: rgba(56,189,248,0.1);
-      --text: #e2e8f0;
-      --muted: #64748b;
-      --danger: #f97373;
-      --danger-soft: rgba(248,113,113,0.1);
-      --warn: #fbbf24;
-      --warn-soft: rgba(251,191,36,0.1);
-      --success: #22c55e;
-      --success-soft: rgba(34,197,94,0.1);
-      --radius: 12px;
+      --bg: #f8fafc;
+      --bg-secondary: #f1f5f9;
+      --border: #e2e8f0;
+      --border-dark: #cbd5e1;
+      --accent: #0ea5e9;
+      --accent-light: #e0f2fe;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #ea580c;
+      --warning-light: #fed7aa;
+      --error: #dc2626;
+      --error-light: #fee2e2;
+      --neutral: #64748b;
+      --radius: 8px;
     }
-    * { box-sizing: border-box; }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-      background: radial-gradient(circle at top, #1e293b 0, #020617 45%, #000 100%);
-      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.5;
     }
-    button { font-family: inherit; cursor: pointer; }
-    .app-shell {
-      display: grid;
-      grid-template-columns: 240px 1fr;
-      min-height: 100vh;
+
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: inherit;
     }
-    .sidebar {
-      border-right: 1px solid var(--border);
-      padding: 18px 16px;
-      background: radial-gradient(circle at top left, #0f172a 0, #020617 55%);
+
+    button {
+      cursor: pointer;
     }
-    .sidebar-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    header {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
       margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
-    .sidebar-logo {
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
-      background: conic-gradient(from 180deg, #38bdf8, #22c55e, #f97373, #38bdf8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #0f172a;
-      font-weight: 800;
-      font-size: 16px;
-    }
-    .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
-    .nav-btn {
-      border-radius: 999px;
-      border: 1px solid transparent;
-      padding: 8px 12px;
-      font-size: 13px;
-      color: var(--muted);
-      background: transparent;
-      text-align: left;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .nav-btn span.icon { font-size: 14px; opacity: 0.9; }
-    .nav-btn.active {
-      background: var(--accent-soft);
-      border-color: var(--accent);
-      color: var(--text);
-    }
-    .nav-section-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      margin: 16px 4px 6px;
-    }
-    .main {
-      padding: 18px 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .topbar {
+
+    .header-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
     }
-    .topbar-left h1 {
-      margin: 0;
-      font-size: 18px;
+
+    .header-left {
+      flex: 1;
+    }
+
+    .header-title {
+      font-size: 24px;
       font-weight: 700;
+      margin: 0;
+      color: var(--text-primary);
     }
-    .topbar-sub {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      color: var(--muted);
+
+    .header-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 4px 0 0;
     }
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: var(--success);
-      box-shadow: 0 0 0 4px rgba(34,197,94,0.2);
-    }
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .btn {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(15,23,42,0.8);
-      color: var(--text);
-      padding: 7px 12px;
-      font-size: 12px;
+
+    .header-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-    }
-    .btn-primary {
-      border-color: var(--accent);
-      background: linear-gradient(135deg, #38bdf8, #22c55e);
-      color: #020617;
-      font-weight: 600;
-    }
-    .btn-ghost { background: transparent; }
-    .avatar {
-      width: 28px;
-      height: 28px;
+      background: var(--success-light);
+      border: 1px solid var(--success);
+      color: var(--success);
+      padding: 4px 10px;
       border-radius: 999px;
-      background: radial-gradient(circle at top, #38bdf8, #0f172a);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-right {
+      text-align: right;
+    }
+
+    .mode-toggle {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
+      gap: 8px;
+      font-size: 12px;
     }
-    .grid-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 10px;
-    }
-    .card {
-      border-radius: var(--radius);
+
+    .toggle-switch {
+      width: 40px;
+      height: 24px;
+      border-radius: 12px;
       border: 1px solid var(--border);
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.9), #020617);
-      padding: 12px 14px;
+      background: var(--success);
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
     }
-    .card-label {
-      font-size: 11px;
+
+    .toggle-switch.off {
+      background: var(--neutral);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      background: white;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s;
+    }
+
+    .toggle-switch.off::after {
+      left: 18px;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+    }
+
+    .form-panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      height: fit-content;
+      position: sticky;
+      top: 16px;
+    }
+
+    .form-section-title {
+      font-size: 12px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: var(--muted);
+      color: var(--neutral);
+      margin: 0 0 12px;
+      display: block;
+    }
+
+    .form-section {
+      margin-bottom: 18px;
+    }
+
+    .form-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
       margin-bottom: 4px;
     }
-    .card-value { font-size: 24px; font-weight: 700; }
-    .card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .tabs-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-top: 4px;
-    }
-    .tabs {
-      display: inline-flex;
-      padding: 3px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid var(--border);
-    }
-    .tab-btn {
-      border-radius: 999px;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-size: 12px;
-      padding: 6px 10px;
-    }
-    .tab-btn.active {
-      background: rgba(15,23,42,1);
-      color: var(--text);
-      box-shadow: 0 0 0 1px var(--accent-soft);
-    }
-    .search-input {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(15,23,42,0.9);
-      color: var(--text);
-      padding: 6px 10px;
-      font-size: 12px;
-      min-width: 180px;
-    }
-    .search-input::placeholder { color: var(--muted); }
-    .panel {
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: rgba(15,23,42,0.9);
-      padding: 10px;
-      margin-top: 6px;
-      display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
-      gap: 10px;
-      min-height: 320px;
-    }
-    .panel-full { grid-template-columns: minmax(0, 1fr); }
-    .panel-section-title {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    .table {
+
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
       width: 100%;
-      border-collapse: collapse;
+      border: 1px solid var(--border-dark);
+      border-radius: 6px;
+      padding: 8px 10px;
       font-size: 12px;
+      color: var(--text-primary);
+      background: white;
+      transition: border-color 0.2s;
     }
-    .table th,
-    .table td {
-      padding: 7px 8px;
-      border-bottom: 1px solid rgba(15,23,42,0.9);
-    }
-    .table th {
-      text-align: left;
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 500;
-    }
-    .table tr:hover td { background: rgba(15,23,42,0.7); }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 2px 8px;
-      font-size: 10px;
-      border: 1px solid transparent;
-    }
-    .badge-pri-urgent {
-      background: var(--danger-soft);
-      border-color: var(--danger);
-      color: var(--danger);
-    }
-    .badge-pri-followup {
-      background: var(--warn-soft);
-      border-color: var(--warn);
-      color: var(--warn);
-    }
-    .badge-pri-routine {
-      background: rgba(56,189,248,0.1);
-      border-color: #38bdf8;
-      color: #38bdf8;
-    }
-    .badge-pri-normal {
-      background: rgba(148,163,184,0.1);
-      border-color: #64748b;
-      color: #64748b;
-    }
-    .badge-status-new {
-      background: rgba(56,189,248,0.1);
-      border-color: #38bdf8;
-      color: #38bdf8;
-    }
-    .badge-status-reviewed {
-      background: rgba(148,163,184,0.1);
-      border-color: #64748b;
-      color: #64748b;
-    }
-    .badge-status-actioned {
-      background: var(--success-soft);
-      border-color: var(--success);
-      color: var(--success);
-    }
-    .badge-conf {
-      background: rgba(15,23,42,0.9);
-      border-color: var(--border);
-      color: var(--muted);
-    }
-    .pill {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      padding: 3px 8px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .pill.active {
+
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
       border-color: var(--accent);
-      color: var(--text);
-      background: rgba(15,23,42,1);
+      box-shadow: 0 0 0 3px var(--accent-light);
     }
-    .fax-list {
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: rgba(15,23,42,0.9);
-      max-height: 320px;
-      overflow: auto;
+
+    input::placeholder {
+      color: var(--neutral);
     }
-    .fax-row {
-      padding: 8px 9px;
-      border-bottom: 1px solid rgba(15,23,42,0.9);
-      display: flex;
-      gap: 8px;
-      cursor: pointer;
+
+    .optional-label {
+      font-size: 11px;
+      color: var(--neutral);
+      font-weight: 400;
     }
-    .fax-row:hover { background: rgba(15,23,42,0.9); }
-    .fax-row-main { flex: 1; min-width: 0; }
-    .fax-row-title { font-size: 12px; font-weight: 600; }
-    .fax-row-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .fax-row-meta {
+
+    .button-group {
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
-      font-size: 10px;
-      color: var(--muted);
+      gap: 8px;
+      margin-top: 16px;
     }
-    .dropzone {
-      border-radius: 10px;
-      border: 1px dashed var(--border);
-      padding: 14px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-      cursor: pointer;
-      background: rgba(15,23,42,0.7);
-    }
-    .dropzone strong { color: var(--text); }
-    .detail-card {
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: rgba(15,23,42,0.9);
-      padding: 10px;
-      font-size: 12px;
-    }
-    .detail-label {
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 4px;
-    }
-    .detail-value { font-size: 12px; }
-    .detail-list {
-      margin: 4px 0 0;
-      padding-left: 16px;
-      color: var(--muted);
-    }
-    .detail-list li { margin-bottom: 2px; }
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 4px;
-    }
-    .chip {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      padding: 2px 7px;
-      font-size: 11px;
-      color: var(--muted);
-      background: rgba(15,23,42,0.9);
-    }
-    .actions-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
-    .toast {
-      position: fixed;
-      right: 16px;
-      top: 16px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(15,23,42,0.95);
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      z-index: 50;
-    }
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 40;
-    }
-    .modal {
-      width: 100%;
-      max-width: 520px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: radial-gradient(circle at top, #0f172a, #020617);
-      box-shadow: 0 18px 60px rgba(0,0,0,0.7);
-      padding: 16px 18px 14px;
+
+    .btn {
+      padding: 10px 14px;
+      border-radius: 6px;
       font-size: 13px;
+      font-weight: 600;
+      border: 1px solid;
+      transition: all 0.2s;
+      text-align: center;
     }
-    .modal-header {
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #0284c7;
+      border-color: #0284c7;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--text-primary);
+      border-color: var(--border-dark);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--bg-secondary);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .results-panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+    }
+
+    .results-section {
+      margin-bottom: 24px;
+    }
+
+    .results-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .criteria-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .criterion {
+      border-left: 3px solid var(--border);
+      padding: 10px 12px;
+      background: var(--bg-secondary);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .criterion.met {
+      border-left-color: var(--success);
+      background: var(--success-light);
+    }
+
+    .criterion.not-met {
+      border-left-color: var(--error);
+      background: var(--error-light);
+    }
+
+    .criterion.unknown {
+      border-left-color: var(--warning);
+      background: var(--warning-light);
+    }
+
+    .criterion-header {
       display: flex;
       justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .criterion-label {
+      font-weight: 600;
+      flex: 1;
+      color: var(--text-primary);
+    }
+
+    .criterion-badge {
+      display: inline-flex;
       align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .criterion-badge.met {
+      background: var(--success);
+      color: white;
+    }
+
+    .criterion-badge.not-met {
+      background: var(--error);
+      color: white;
+    }
+
+    .criterion-badge.unknown {
+      background: var(--warning);
+      color: white;
+    }
+
+    .criterion-text {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .approval-likelihood {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .likelihood-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--neutral);
       margin-bottom: 8px;
     }
-    .modal-title { font-size: 15px; font-weight: 600; }
-    .modal-body { margin-top: 4px; }
-    .field { margin-bottom: 8px; }
-    .field label {
-      display: block;
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 3px;
+
+    .likelihood-score {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 0;
     }
-    .field input,
-    .field textarea {
-      width: 100%;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: rgba(15,23,42,0.9);
-      color: var(--text);
-      padding: 6px 8px;
+
+    .likelihood-text {
       font-size: 12px;
-      resize: vertical;
-    }
-    .field input::placeholder,
-    .field textarea::placeholder { color: var(--muted); }
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 6px;
-      margin-top: 10px;
-    }
-    .mic-circle {
-      width: 70px;
-      height: 70px;
-      border-radius: 999px;
-      border: 2px solid var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 8px auto;
-      background: radial-gradient(circle at top, rgba(56,189,248,0.2), transparent);
-      cursor: pointer;
-    }
-    .mic-circle span { font-size: 26px; }
-    .mic-status {
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
+      color: var(--text-secondary);
       margin-top: 4px;
     }
-    .transcript-box {
-      border-radius: 10px;
+
+    .letter-section {
+      background: var(--bg-secondary);
       border: 1px solid var(--border);
-      background: rgba(15,23,42,0.9);
-      padding: 8px;
-      font-size: 12px;
-      min-height: 60px;
-      margin-top: 6px;
-      color: var(--muted);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
     }
-    @media (max-width: 900px) {
-      .app-shell { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
+
+    .letter-content {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      font-family: Georgia, serif;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .btn-small {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .disclaimer {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-top: 20px;
+      font-size: 11px;
+      color: #0369a1;
+      line-height: 1.5;
+    }
+
+    .disclaimer strong {
+      font-weight: 600;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-panel {
+        position: static;
+      }
     }
   </style>
 </head>
 <body>
-<div id="toast" class="toast" style="display:none;"></div>
-
-<div class="app-shell">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-title">
-      <div class="sidebar-logo">CC</div>
-      <div>
-        <div style="font-size:13px;font-weight:600;">Chronic Care</div>
-        <div style="font-size:11px;color:var(--muted);">Command Center</div>
-      </div>
-    </div>
-
-    <div class="nav-section-label">Navigation</div>
-    <div class="sidebar-nav">
-      <button class="nav-btn active" data-page="dashboard">
-        <span class="icon">📊</span> Dashboard
-      </button>
-      <button class="nav-btn" data-page="patients">
-        <span class="icon">👥</span> Patients
-      </button>
-      <button class="nav-btn" data-page="fax">
-        <span class="icon">📠</span> Fax Triage
-      </button>
-      <button class="nav-btn" data-page="calls">
-        <span class="icon">📞</span> Calls
-      </button>
-    </div>
-
-    <div class="nav-section-label">Integrations</div>
-    <div class="sidebar-nav">
-      <button class="nav-btn">
-        <span class="icon">🏥</span> eClinicalWorks FHIR
-      </button>
-      <button class="nav-btn">
-        <span class="icon">🔗</span> VOIP Providers
-      </button>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-    <!-- TOPBAR -->
-    <div class="topbar">
-      <div class="topbar-left">
-        <h1>Chronic Care Dashboard</h1>
-        <div class="topbar-sub">
-          <div class="status-dot"></div>
-          <span>EMR: Connected to eClinicalWorks FHIR Sandbox</span>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="header-left">
+          <h1 class="header-title">PA Fast Assist</h1>
+          <p class="header-subtitle">Local-only prior authorization helper · No network calls · No trackers</p>
         </div>
-      </div>
-      <div class="topbar-right">
-        <button class="btn btn-ghost" id="btn-voice-intake">
-          <span>🎙️</span> Voice Intake
-        </button>
-        <button class="btn btn-primary" id="btn-add-patient">
-          <span>＋</span> Add Patient
-        </button>
-        <div class="avatar">DR</div>
-      </div>
-    </div>
-
-    <!-- DASHBOARD CARDS -->
-    <div id="dashboard-cards" class="grid-cards">
-      <div class="card">
-        <div class="card-label">Chronic Patients</div>
-        <div class="card-value" id="card-patients">5</div>
-        <div class="card-sub">Active panel</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Missed Appointments</div>
-        <div class="card-value" id="card-missed">2</div>
-        <div class="card-sub">Last 30 days</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Pending Imaging</div>
-        <div class="card-value" id="card-imaging">3</div>
-        <div class="card-sub">Awaiting completion</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Urgent Faxes</div>
-        <div class="card-value" id="card-urgent-faxes">1</div>
-        <div class="card-sub">Unread</div>
-      </div>
-    </div>
-
-    <!-- TABS + SEARCH -->
-    <div class="tabs-row">
-      <div class="tabs">
-        <button class="tab-btn active" data-page="dashboard">Overview</button>
-        <button class="tab-btn" data-page="patients">Patients</button>
-        <button class="tab-btn" data-page="fax">Fax Triage</button>
-        <button class="tab-btn" data-page="calls">Calls</button>
-      </div>
-      <input id="search" class="search-input" placeholder="Search patients..." />
-    </div>
-
-    <!-- PANELS -->
-    <!-- DASHBOARD PAGE -->
-    <section id="page-dashboard" class="panel panel-full">
-      <div>
-        <div class="panel-section-title">Today's Work</div>
-        <div class="grid-cards" style="margin-bottom:10px;">
-          <div class="card">
-            <div class="card-label">Care Gaps</div>
-            <div class="card-value">7</div>
-            <div class="card-sub">Overdue labs, imaging, referrals</div>
-          </div>
-          <div class="card">
-            <div class="card-label">High-Risk Patients</div>
-            <div class="card-value">3</div>
-            <div class="card-sub">A1c &gt; 9 or recent ER visit</div>
-          </div>
-          <div class="card">
-            <div class="card-label">Tasks</div>
-            <div class="card-value">9</div>
-            <div class="card-sub">Assigned to care team</div>
+        <div class="header-right">
+          <div class="mode-toggle">
+            <span>HIPAA Mode</span>
+            <button class="toggle-switch" id="hipaa-toggle" title="Toggle HIPAA Privacy Mode"></button>
           </div>
         </div>
-
-        <div class="panel-section-title">Sample Patient List</div>
-        <div style="border-radius:10px;border:1px solid var(--border);overflow:auto;">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Phone</th>
-                <th>DOB / Age</th>
-                <th>Diagnoses</th>
-                <th>Next Appt</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="tbl-patients"></tbody>
-          </table>
-        </div>
       </div>
-    </section>
+    </div>
+  </header>
 
-    <!-- PATIENTS PAGE -->
-    <section id="page-patients" class="panel panel-full" style="display:none;">
-      <div>
-        <div class="panel-section-title">Patients</div>
-        <div style="border-radius:10px;border:1px solid var(--border);overflow:auto;">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Phone</th>
-                <th>DOB / Age</th>
-                <th>Diagnoses</th>
-                <th>Next Appt</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="tbl-patients-2"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+  <div class="container">
+    <div class="main-grid">
+      <!-- LEFT PANEL: FORM -->
+      <div class="form-panel">
+        <form id="pa-form">
+          <!-- Request & Payer -->
+          <label class="form-section-title">1 · Request & Payer</label>
 
-    <!-- FAX TRIAGE PAGE -->
-    <section id="page-fax" class="panel" style="display:none;">
-      <div>
-        <div class="panel-section-title">Fax Triage</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-          <div class="dropzone" id="fax-dropzone">
-            <strong>Upload or drop fax</strong><br />
-            PDF or image – AI will extract clinical content and priority.
-          </div>
-          <div style="display:flex;gap:4px;align-items:center;">
-            <span style="font-size:11px;color:var(--muted);">Filter:</span>
-            <button class="pill active" data-fax-filter="all">All</button>
-            <button class="pill" data-fax-filter="urgent">Urgent</button>
-            <button class="pill" data-fax-filter="followup">Follow-Up</button>
-            <button class="pill" data-fax-filter="routine">Routine</button>
-          </div>
-        </div>
+          <div class="form-section">
+            <div class="field">
+              <label>Payer <span style="color: var(--error);">*</span></label>
+              <select id="payer" required>
+                <option value="">Select payer...</option>
+                <option value="aetna">Aetna</option>
+                <option value="bcbs">Blue Cross Blue Shield</option>
+                <option value="cigna">Cigna</option>
+                <option value="humana">Humana</option>
+                <option value="united">United Healthcare</option>
+                <option value="anthem">Anthem</option>
+              </select>
+            </div>
 
-        <div class="fax-list" id="fax-list"></div>
-      </div>
+            <div class="field">
+              <label>Request Type <span style="color: var(--error);">*</span></label>
+              <select id="request-type" required>
+                <option value="">Select type...</option>
+                <option value="medication">Medication (Drug)</option>
+                <option value="imaging">Imaging Study</option>
+                <option value="procedure">Procedure</option>
+                <option value="therapy">Therapy/Rehabilitation</option>
+                <option value="specialist">Specialist Visit</option>
+              </select>
+            </div>
 
-      <div>
-        <div class="panel-section-title">Fax Details</div>
-        <div id="fax-detail-empty" class="detail-card" style="text-align:center;color:var(--muted);">
-          Select a fax to view AI summary, findings, and actions.
-        </div>
-        <div id="fax-detail" style="display:none;">
-          <div class="detail-card">
-            <div class="detail-label">Summary</div>
-            <div class="detail-value" id="fax-summary"></div>
-            <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
-              <span id="fax-priority-badge" class="badge badge-pri-normal">Normal</span>
-              <span id="fax-status-badge" class="badge badge-status-new">New</span>
-              <span id="fax-conf-badge" class="badge badge-conf">Confidence: 0.00</span>
+            <div class="field">
+              <label>Urgency <span style="color: var(--error);">*</span></label>
+              <select id="urgency" required>
+                <option value="">Select urgency...</option>
+                <option value="routine">Routine (Standard Review)</option>
+                <option value="expedited">Expedited (72 hours)</option>
+                <option value="urgent">Urgent (24 hours)</option>
+              </select>
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-top:8px;">
-            <div class="detail-card">
-              <div class="detail-label">Findings</div>
-              <ul class="detail-list" id="fax-findings"></ul>
+          <!-- Patient Info -->
+          <label class="form-section-title">2 · Patient (Optional — Local Only)</label>
 
-              <div class="detail-label" style="margin-top:8px;">Matched Rules</div>
-              <div class="chips" id="fax-rules"></div>
+          <div class="form-section">
+            <div class="field">
+              <label>Patient Name <span class="optional-label">(Optional)</span></label>
+              <input type="text" id="patient-name" placeholder="Full name" />
             </div>
-            <div class="detail-card">
-              <div class="detail-label">Patient Match</div>
-              <div id="fax-patient"></div>
 
-              <div class="detail-label" style="margin-top:8px;">Quick Actions</div>
-              <div class="actions-row">
-                <button class="btn btn-ghost" id="btn-create-referral">Create Referral</button>
-                <button class="btn btn-ghost" id="btn-create-imaging">Create Imaging Order</button>
-                <button class="btn btn-ghost" id="btn-add-dx">Add Diagnosis</button>
-                <button class="btn btn-primary" id="btn-mark-reviewed">Mark Reviewed</button>
+            <div class="field">
+              <label>Date of Birth <span class="optional-label">(Optional)</span></label>
+              <input type="date" id="patient-dob" />
+            </div>
+
+            <div class="field">
+              <label>Member ID <span class="optional-label">(Optional)</span></label>
+              <input type="text" id="member-id" placeholder="Payer member ID" />
+            </div>
+
+            <div class="field">
+              <label>Clinical Summary <span class="optional-label">(Optional)</span></label>
+              <textarea id="clinical-summary" placeholder="Diagnoses, prior treatments, relevant lab/imaging findings..." rows="4"></textarea>
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="button-group">
+            <button type="submit" class="btn btn-primary">Run Analysis</button>
+            <button type="button" class="btn btn-secondary" id="reset-btn">Reset</button>
+          </div>
+        </form>
+
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> PA Fast Assist is a decision-support tool for administrative reference only. It does not constitute medical advice, legal guidance, or a guarantee of prior authorization approval. All data remains in your browser — nothing is ever transmitted to any server.
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL: RESULTS -->
+      <div class="results-panel">
+        <div id="empty-results" class="empty-state">
+          <div class="empty-state-icon">🔍</div>
+          <p class="empty-state-text">
+            No analysis yet<br />
+            Fill in the form on the left and click <strong>Run Analysis</strong> to see approval likelihood, payer-specific criteria, and generate a PA letter draft.
+          </p>
+        </div>
+
+        <div id="results-content" style="display: none;">
+          <!-- Approval Likelihood -->
+          <div class="approval-likelihood">
+            <div class="likelihood-label">Estimated Approval Likelihood</div>
+            <p class="likelihood-score" id="likelihood-score">85%</p>
+            <p class="likelihood-text" id="likelihood-text">Based on payer criteria match</p>
+          </div>
+
+          <!-- Tabs for Criteria vs Letter -->
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="criteria">Payer Criteria</button>
+            <button class="tab-btn" data-tab="letter">PA Letter</button>
+          </div>
+
+          <!-- Criteria Tab -->
+          <div id="criteria-tab" class="tab-content active">
+            <div class="results-section">
+              <h3 class="section-title">Payer-Specific Criteria</h3>
+              <div class="criteria-list" id="criteria-list">
+                <!-- Criteria will be inserted here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Letter Tab -->
+          <div id="letter-tab" class="tab-content">
+            <div class="results-section">
+              <h3 class="section-title">PA Justification Letter</h3>
+              <div class="letter-section">
+                <div class="letter-content" id="pa-letter">
+                  <!-- Letter will be inserted here -->
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button class="btn btn-secondary btn-small" id="copy-letter-btn">Copy to Clipboard</button>
+                <button class="btn btn-secondary btn-small" id="download-letter-btn">Download as Text</button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- CALLS PAGE -->
-    <section id="page-calls" class="panel panel-full" style="display:none;">
-      <div>
-        <div class="panel-section-title">Recent Calls</div>
-        <div style="border-radius:10px;border:1px solid var(--border);overflow:auto;">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Phone</th>
-                <th>Provider</th>
-                <th>Outcome</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody id="tbl-calls"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </main>
-</div>
-
-<!-- VOICE MODAL -->
-<div id="modal-voice" class="modal-backdrop" style="display:none;">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Voice Intake – New Patient</div>
-      <button class="btn btn-ghost" id="voice-close">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="mic-circle" id="mic-btn">
-        <span id="mic-icon">🎙️</span>
-      </div>
-      <div class="mic-status" id="mic-status">Tap to start dictation</div>
-      <div class="transcript-box" id="mic-transcript">Transcript will appear here.</div>
-
-      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div class="field">
-          <label>Patient Name</label>
-          <input id="voice-name" placeholder="Full name" />
-        </div>
-        <div class="field">
-          <label>Date of Birth</label>
-          <input id="voice-dob" type="date" />
-        </div>
-        <div class="field">
-          <label>Phone</label>
-          <input id="voice-phone" placeholder="(845) 555-0100" />
-        </div>
-        <div class="field">
-          <label>Diagnoses</label>
-          <input id="voice-dx" placeholder="Comma-separated" />
-        </div>
-        <div class="field">
-          <label>Referrals</label>
-          <input id="voice-ref" placeholder="e.g. Cardiology - Dr. Smith" />
-        </div>
-        <div class="field">
-          <label>Imaging</label>
-          <input id="voice-img" placeholder="e.g. CT Chest" />
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" id="voice-cancel">Cancel</button>
-      <button class="btn btn-primary" id="voice-save">Save Patient</button>
     </div>
   </div>
-</div>
 
-<!-- ADD PATIENT MODAL -->
-<div id="modal-add-patient" class="modal-backdrop" style="display:none;">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Add Patient</div>
-      <button class="btn btn-ghost" id="addp-close">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label>Patient Name</label>
-        <input id="addp-name" placeholder="Full name" />
-      </div>
-      <div class="field">
-        <label>Date of Birth</label>
-        <input id="addp-dob" type="date" />
-      </div>
-      <div class="field">
-        <label>Phone</label>
-        <input id="addp-phone" placeholder="(845) 555-0100" />
-      </div>
-      <div class="field">
-        <label>Diagnoses</label>
-        <input id="addp-dx" placeholder="Comma-separated" />
-      </div>
-      <div class="field">
-        <label>Next Appointment</label>
-        <input id="addp-appt" type="date" />
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" id="addp-cancel">Cancel</button>
-      <button class="btn btn-primary" id="addp-save">Save</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  // ====== CONFIG: FILL THESE WHEN YOU HAVE SUPABASE ======
-  const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
-  const SUPABASE_ANON_KEY = "YOUR_ANON_PUBLIC_KEY";
-
-  let supabaseClient = null;
-  if (SUPABASE_URL !== "https://YOUR_PROJECT_ID.supabase.co") {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
-
-  // ====== DEMO DATA (LOCAL) ======
-  const demoPatients = [
-    {
-      id: "p1",
-      name: "Margaret Thompson",
-      dob: "1952-03-14",
-      phone: "(845) 555-0142",
-      dx: ["Type 2 diabetes", "Hypertension"],
-      appt: "2026-05-22"
-    },
-    {
-      id: "p2",
-      name: "Robert Chen",
-      dob: "1968-11-22",
-      phone: "(845) 555-0283",
-      dx: ["Hyperlipidemia"],
-      appt: "2026-05-18"
-    },
-    {
-      id: "p3",
-      name: "Diana Alvarez",
-      dob: "1945-07-08",
-      phone: "(845) 555-0391",
-      dx: ["COPD"],
-      appt: ""
-    }
-  ];
-
-  const demoFaxes = [
-    {
-      id: "fx1",
-      file: "CT_Chest_Thompson.pdf",
-      category: "Imaging Result",
-      priority: "urgent",
-      summary: "CT chest shows new right upper lobe mass concerning for malignancy. Recommend urgent pulmonology consult.",
-      findings: [
-        "Right upper lobe mass identified.",
-        "Suspicious for malignancy.",
-        "Recommend urgent pulmonology referral."
-      ],
-      matched_rules: ["Abnormal Imaging", "Specialist Recommendations"],
-      patientName: "Margaret Thompson",
-      confidence: 0.86,
-      status: "new",
-      created_at: "2026-05-20T09:12:00Z"
-    }
-  ];
-
-  const demoCalls = [
-    {
-      id: "c1",
-      patient: "Margaret Thompson",
-      phone: "(845) 555-0142",
-      provider: "RingCentral",
-      outcome: "Left voicemail",
-      notes: "Called to discuss CT results and schedule pulmonology consult."
-    },
-    {
-      id: "c2",
-      patient: "Robert Chen",
-      phone: "(845) 555-0283",
-      provider: "Zoom Phone",
-      outcome: "Spoke to patient",
-      notes: "Reviewed lab results and medication changes."
-    }
-  ];
-
-  // ====== UTILITIES ======
-  function showToast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.style.display = "flex";
-    setTimeout(() => (t.style.display = "none"), 2200);
-  }
-
-  function calcAge(dob) {
-    if (!dob) return "";
-    const d = new Date(dob);
-    const n = new Date();
-    let age = n.getFullYear() - d.getFullYear();
-    const m = n.getMonth() - d.getMonth();
-    if (m < 0 || (m === 0 && n.getDate() < d.getDate())) age--;
-    return age;
-  }
-
-  function fmtDate(d) {
-    if (!d) return "";
-    return new Date(d + "T00:00:00").toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    });
-  }
-
-  function priorityClass(p) {
-    switch (p) {
-      case "urgent": return "badge-pri-urgent";
-      case "followup": return "badge-pri-followup";
-      case "routine": return "badge-pri-routine";
-      default: return "badge-pri-normal";
-    }
-  }
-
-  function statusClass(s) {
-    switch (s) {
-      case "new": return "badge-status-new";
-      case "reviewed": return "badge-status-reviewed";
-      case "actioned": return "badge-status-actioned";
-      default: return "badge-status-new";
-    }
-  }
-
-  function fileToBase64(file) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function blobToBase64(blob) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(",")[1]);
-      reader.readAsDataURL(blob);
-    });
-  }
-
-  // ====== RENDER PATIENTS ======
-  function renderPatients() {
-    const tb1 = document.getElementById("tbl-patients");
-    const tb2 = document.getElementById("tbl-patients-2");
-    [tb1, tb2].forEach(tb => tb && (tb.innerHTML = ""));
-    demoPatients.forEach(p => {
-      const age = calcAge(p.dob);
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td style="font-weight:600;">${p.name}</td>
-        <td>${p.phone || ""}</td>
-        <td style="color:var(--muted);">${fmtDate(p.dob)}${age ? " · " + age + "y" : ""}</td>
-        <td>${(p.dx || []).join(", ")}</td>
-        <td>${p.appt ? fmtDate(p.appt) : "<span style='color:var(--muted);'>None</span>"}</td>
-        <td style="text-align:right;">
-          <button class="btn btn-ghost btn-call" data-phone="${p.phone}" data-name="${p.name}">Call</button>
-        </td>
-      `;
-      tb1.appendChild(row.cloneNode(true));
-      tb2.appendChild(row);
-    });
-  }
-
-  // ====== RENDER FAXES ======
-  let faxFilter = "all";
-  let selectedFaxId = null;
-
-  function renderFaxes() {
-    const list = document.getElementById("fax-list");
-    list.innerHTML = "";
-    const filtered = demoFaxes.filter(f => faxFilter === "all" || f.priority === faxFilter);
-    if (!filtered.length) {
-      const empty = document.createElement("div");
-      empty.style.padding = "20px";
-      empty.style.textAlign = "center";
-      empty.style.color = "var(--muted)";
-      empty.textContent = "No faxes in this filter. Upload a fax to see AI triage.";
-      list.appendChild(empty);
-      return;
-    }
-    filtered.forEach(f => {
-      const row = document.createElement("div");
-      row.className = "fax-row";
-      row.dataset.id = f.id;
-      row.innerHTML = `
-        <div class="fax-row-main">
-          <div class="fax-row-title">${f.category}</div>
-          <div class="fax-row-sub">${f.summary}</div>
-        </div>
-        <div class="fax-row-meta">
-          <span class="badge ${priorityClass(f.priority)}">${f.priority.toUpperCase()}</span>
-          <span class="badge ${statusClass(f.status)}">${f.status}</span>
-          <span>Conf: ${(f.confidence || 0).toFixed(2)}</span>
-        </div>
-      `;
-      row.addEventListener("click", () => selectFax(f.id));
-      list.appendChild(row);
-    });
-  }
-
-  function selectFax(id) {
-    const f = demoFaxes.find(x => x.id === id);
-    if (!f) return;
-    selectedFaxId = id;
-    document.getElementById("fax-detail-empty").style.display = "none";
-    document.getElementById("fax-detail").style.display = "block";
-
-    document.getElementById("fax-summary").textContent = f.summary;
-    const priBadge = document.getElementById("fax-priority-badge");
-    priBadge.className = "badge " + priorityClass(f.priority);
-    priBadge.textContent = f.priority.charAt(0).toUpperCase() + f.priority.slice(1);
-
-    const stBadge = document.getElementById("fax-status-badge");
-    stBadge.className = "badge " + statusClass(f.status);
-    stBadge.textContent = f.status.charAt(0).toUpperCase() + f.status.slice(1);
-
-    document.getElementById("fax-conf-badge").textContent = "Confidence: " + (f.confidence || 0).toFixed(2);
-
-    const ul = document.getElementById("fax-findings");
-    ul.innerHTML = "";
-    (f.findings || []).forEach(line => {
-      const li = document.createElement("li");
-      li.textContent = line;
-      ul.appendChild(li);
-    });
-
-    const rules = document.getElementById("fax-rules");
-    rules.innerHTML = "";
-    (f.matched_rules || []).forEach(r => {
-      const span = document.createElement("span");
-      span.className = "chip";
-      span.textContent = r;
-      rules.appendChild(span);
-    });
-
-    const pDiv = document.getElementById("fax-patient");
-    pDiv.innerHTML = "";
-    const match = demoPatients.find(p => p.name === f.patientName);
-    if (match) {
-      pDiv.innerHTML = `
-        <div style="font-size:12px;font-weight:600;">${match.name}</div>
-        <div style="font-size:11px;color:var(--muted);">${fmtDate(match.dob)} · ${calcAge(match.dob)}y</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${match.phone}</div>
-      `;
-    } else {
-      pDiv.innerHTML = `<span style="font-size:11px;color:var(--muted);">No patient match. Link or create patient.</span>`;
-    }
-  }
-
-  // ====== RENDER CALLS ======
-  function renderCalls() {
-    const tb = document.getElementById("tbl-calls");
-    tb.innerHTML = "";
-    demoCalls.forEach(c => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${c.patient}</td>
-        <td>${c.phone}</td>
-        <td>${c.provider}</td>
-        <td>${c.outcome}</td>
-        <td>${c.notes}</td>
-      `;
-      tb.appendChild(row);
-    });
-  }
-
-  // ====== PAGE NAV ======
-  function setPage(page) {
-    ["dashboard", "patients", "fax", "calls"].forEach(p => {
-      document.getElementById("page-" + p).style.display = p === page ? (p === "fax" ? "grid" : "block") : "none";
-    });
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.page === page);
-    });
-    document.querySelectorAll(".nav-btn[data-page]").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.page === page);
-    });
-  }
-
-  function initNav() {
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => setPage(btn.dataset.page));
-    });
-    document.querySelectorAll(".nav-btn[data-page]").forEach(btn => {
-      btn.addEventListener("click", () => setPage(btn.dataset.page));
-    });
-  }
-
-  // ====== FAX UPLOAD: SUPABASE + AI OR DEMO ======
-  async function handleFaxUpload(file) {
-    if (!supabaseClient) {
-      showToast("Demo: simulating Fax AI (no Supabase configured).");
-      setTimeout(() => {
-        const newFax = {
-          id: "fx" + Date.now(),
-          file: file.name,
-          category: "Lab Result",
-          priority: "followup",
-          summary: "Lab panel shows elevated A1c requiring follow-up visit.",
-          findings: [
-            "A1c elevated above target.",
-            "Recommend follow-up appointment to adjust therapy."
+  <script>
+    // ====== PAYER POLICIES DATABASE ======
+    const payerPolicies = {
+      aetna: {
+        name: "Aetna",
+        criteria: {
+          medication: [
+            {
+              id: "fail-first",
+              label: "Fail-first requirement",
+              description: "Patient must have tried and failed at least one generic or lower-cost alternative",
+              required: true
+            },
+            {
+              id: "clinical-indication",
+              label: "Clinical indication documented",
+              description: "Clear diagnosis and medical necessity for the requested medication",
+              required: true
+            },
+            {
+              id: "contraindications",
+              label: "No absolute contraindications",
+              description: "Requested medication is not contraindicated for patient's conditions",
+              required: true
+            },
+            {
+              id: "duration",
+              label: "Documented trial duration",
+              description: "Prior medication trial lasted ≥30 days at therapeutic dose",
+              required: false
+            }
           ],
-          matched_rules: ["Critical Lab Values"],
-          patientName: "Robert Chen",
-          confidence: 0.78,
-          status: "new",
-          created_at: new Date().toISOString()
-        };
-        demoFaxes.unshift(newFax);
-        renderFaxes();
-        selectFax(newFax.id);
-        showToast("Fax AI triage complete (demo).");
-      }, 1200);
-      return;
-    }
-
-    try {
-      showToast("Uploading fax…");
-      const { data: upload, error: uploadErr } = await supabaseClient.storage
-        .from("faxes")
-        .upload(`fax_${Date.now()}_${file.name}`, file);
-
-      if (uploadErr) {
-        console.error(uploadErr);
-        showToast("Upload failed.");
-        return;
-      }
-
-      const filePath = upload.path;
-      const base64 = await fileToBase64(file);
-
-      showToast("AI analyzing fax…");
-      const { data: aiResp, error: aiErr } = await supabaseClient.functions.invoke(
-        "fax-triage",
-        {
-          body: {
-            base64,
-            mimeType: file.type,
-            activeRules: []
-          }
+          imaging: [
+            {
+              id: "clinical-indication",
+              label: "Clinical indication documented",
+              description: "Clear indication based on patient symptoms, signs, or abnormal findings",
+              required: true
+            },
+            {
+              id: "prior-imaging",
+              label: "Prior imaging ruled out",
+              description: "Patient has not had the same imaging within the past 12 months",
+              required: true
+            },
+            {
+              id: "conservative-measures",
+              label: "Conservative measures attempted",
+              description: "Non-imaging diagnostic approaches have been tried first",
+              required: false
+            }
+          ]
         }
-      );
-
-      if (aiErr) {
-        console.error(aiErr);
-        showToast("AI failed.");
-        return;
+      },
+      bcbs: {
+        name: "Blue Cross Blue Shield",
+        criteria: {
+          medication: [
+            {
+              id: "step-therapy",
+              label: "Step therapy compliance",
+              description: "Patient completed required step therapy protocol for this drug class",
+              required: true
+            },
+            {
+              id: "diagnosis-supported",
+              label: "Diagnosis supported",
+              description: "Requested medication is FDA-approved for patient's documented condition",
+              required: true
+            },
+            {
+              id: "dosing-frequency",
+              label: "Dosing within guidelines",
+              description: "Requested dose and frequency align with FDA label and clinical guidelines",
+              required: true
+            }
+          ],
+          imaging: [
+            {
+              id: "medical-necessity",
+              label: "Medical necessity documented",
+              description: "Clinical presentation supports imaging as next appropriate step",
+              required: true
+            },
+            {
+              id: "quality-score",
+              label: "Evidence quality score",
+              description: "Request supported by evidence-based guidelines (ACR, USPSTF, etc.)",
+              required: true
+            }
+          ]
+        }
+      },
+      cigna: {
+        name: "Cigna",
+        criteria: {
+          medication: [
+            {
+              id: "prior-auth-required",
+              label: "Prior authorization triggered",
+              description: "Drug requires PA based on Cigna formulary and coverage rules",
+              required: true
+            },
+            {
+              id: "clinical-evidence",
+              label: "Clinical evidence provided",
+              description: "Supporting clinical evidence demonstrates need for this medication",
+              required: true
+            },
+            {
+              id: "labwork-monitoring",
+              label: "Lab monitoring plan documented",
+              description: "Plan for ongoing monitoring and lab work is documented",
+              required: false
+            }
+          ],
+          imaging: [
+            {
+              id: "clinical-necessity",
+              label: "Clinical necessity established",
+              description: "Findings on exam or other testing warrant advanced imaging",
+              required: true
+            },
+            {
+              id: "recent-imaging",
+              label: "No recent duplicate study",
+              description: "No equivalent imaging performed within past 90 days",
+              required: true
+            }
+          ]
+        }
+      },
+      humana: {
+        name: "Humana",
+        criteria: {
+          medication: [
+            {
+              id: "formulary-exception",
+              label: "Formulary exception request",
+              description: "Non-formulary drug requires medical necessity documentation",
+              required: true
+            },
+            {
+              id: "clinical-rationale",
+              label: "Clinical rationale clear",
+              description: "Why this specific drug vs. formulary alternatives",
+              required: true
+            }
+          ],
+          imaging: [
+            {
+              id: "clinical-indication",
+              label: "Clinical indication documented",
+              description: "Specific clinical question or findings necessitating imaging",
+              required: true
+            },
+            {
+              id: "imaging-guidelines",
+              label: "Imaging guidelines met",
+              description: "Request aligns with ACR, USPSTF, or specialty society guidelines",
+              required: true
+            }
+          ]
+        }
+      },
+      united: {
+        name: "United Healthcare",
+        criteria: {
+          medication: [
+            {
+              id: "clinical-criteria",
+              label: "Clinical criteria met",
+              description: "Patient meets UnitedHealth clinical criteria for this medication",
+              required: true
+            },
+            {
+              id: "prior-treatment",
+              label: "Prior treatment documented",
+              description: "Failure of or intolerance to required prior treatments documented",
+              required: true
+            },
+            {
+              id: "quantity-limit",
+              label: "Within quantity limits",
+              description: "Requested quantity aligns with UnitedHealth limits",
+              required: false
+            }
+          ],
+          imaging: [
+            {
+              id: "clinical-necessity",
+              label: "Clinical necessity established",
+              description: "Imaging is medically necessary to answer a clinical question",
+              required: true
+            }
+          ]
+        }
+      },
+      anthem: {
+        name: "Anthem",
+        criteria: {
+          medication: [
+            {
+              id: "medical-necessity",
+              label: "Medical necessity documented",
+              description: "Medication is medically necessary for patient's condition",
+              required: true
+            },
+            {
+              id: "fda-indication",
+              label: "FDA-approved indication",
+              description: "Medication is FDA-approved for patient's diagnosis",
+              required: true
+            }
+          ],
+          imaging: [
+            {
+              id: "clinical-indication",
+              label: "Clinical indication documented",
+              description: "Clear clinical indication supported by history and findings",
+              required: true
+            }
+          ]
+        }
       }
-
-      const { data: faxRecord, error: insertErr } = await supabaseClient
-        .from("faxes")
-        .insert({
-          file_path: filePath,
-          category: aiResp.category,
-          priority: aiResp.priority,
-          summary: aiResp.summary,
-          findings: aiResp.findings,
-          matched_rules: aiResp.matched_rules,
-          confidence: aiResp.confidence,
-          status: "new"
-        })
-        .select()
-        .single();
-
-      if (insertErr) {
-        console.error(insertErr);
-        showToast("DB insert failed.");
-        return;
-      }
-
-      demoFaxes.unshift({
-        id: faxRecord.id,
-        file: file.name,
-        ...aiResp,
-        status: "new"
-      });
-
-      renderFaxes();
-      selectFax(faxRecord.id);
-      showToast("Fax AI triage complete.");
-    } catch (e) {
-      console.error(e);
-      showToast("Error processing fax.");
-    }
-  }
-
-  function initFaxUpload() {
-    const dz = document.getElementById("fax-dropzone");
-    dz.addEventListener("click", () => {
-      showToast("Use drag & drop to upload a fax file.");
-    });
-    dz.addEventListener("dragover", e => {
-      e.preventDefault();
-      dz.style.borderColor = "var(--accent)";
-    });
-    dz.addEventListener("dragleave", e => {
-      e.preventDefault();
-      dz.style.borderColor = "var(--border)";
-    });
-    dz.addEventListener("drop", e => {
-      e.preventDefault();
-      dz.style.borderColor = "var(--border)";
-      const file = e.dataTransfer.files[0];
-      if (!file) return;
-      handleFaxUpload(file);
-    });
-  }
-
-  function initFaxFilters() {
-    document.querySelectorAll("[data-fax-filter]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll("[data-fax-filter]").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        faxFilter = btn.dataset.faxFilter;
-        renderFaxes();
-      });
-    });
-  }
-
-  function initFaxActions() {
-    document.getElementById("btn-create-referral").addEventListener("click", () => {
-      if (!selectedFaxId) return;
-      showToast("In a real build, this opens a referral form pre-filled from fax AI.");
-    });
-    document.getElementById("btn-create-imaging").addEventListener("click", () => {
-      if (!selectedFaxId) return;
-      showToast("In a real build, this opens an imaging order form.");
-    });
-    document.getElementById("btn-add-dx").addEventListener("click", () => {
-      if (!selectedFaxId) return;
-      showToast("In a real build, this adds diagnoses to the patient record.");
-    });
-    document.getElementById("btn-mark-reviewed").addEventListener("click", () => {
-      if (!selectedFaxId) return;
-      const f = demoFaxes.find(x => x.id === selectedFaxId);
-      if (!f) return;
-      f.status = "reviewed";
-      renderFaxes();
-      selectFax(f.id);
-      showToast("Fax marked as reviewed.");
-    });
-  }
-
-  // ====== VOICE INTAKE: SUPABASE + WHISPER OR DEMO ======
-  let micOn = false;
-  let recorder = null;
-
-  async function startRecording() {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const rec = new MediaRecorder(stream);
-    const chunks = [];
-    rec.ondataavailable = (e) => chunks.push(e.data);
-    rec.onstop = async () => {
-      const blob = new Blob(chunks, { type: "audio/webm" });
-      const base64 = await blobToBase64(blob);
-      await processVoiceIntake(base64);
     };
-    rec.start();
-    return rec;
-  }
 
-  async function processVoiceIntake(base64Audio) {
-    if (!supabaseClient) {
-      showToast("Demo: simulating Whisper + LLM (no Supabase configured).");
-      setTimeout(() => {
-        const text = "New patient, Robert Chen, date of birth November 22 1968, phone 845 555 0283. Diagnosis type 2 diabetes and hypertension. Refer to cardiology, Dr. Smith. Order CT chest.";
-        document.getElementById("mic-transcript").textContent = text;
-        document.getElementById("mic-status").textContent = "Review parsed fields below.";
-        document.getElementById("voice-name").value = "Robert Chen";
-        document.getElementById("voice-dob").value = "1968-11-22";
-        document.getElementById("voice-phone").value = "(845) 555-0283";
-        document.getElementById("voice-dx").value = "Type 2 diabetes, Hypertension";
-        document.getElementById("voice-ref").value = "Cardiology - Dr. Smith";
-        document.getElementById("voice-img").value = "CT Chest";
-        showToast("Voice intake parsed (demo).");
-      }, 1500);
-      return;
+    // ====== STATE ======
+    let hipaaMode = true;
+    let lastAnalysis = null;
+
+    // ====== UTILITIES ======
+    function showToast(msg, type = "info") {
+      // Simple console log since no toast UI needed
+      console.log(`[${type.toUpperCase()}] ${msg}`);
     }
 
-    try {
-      showToast("Transcribing audio…");
-      const { data: aiResp, error } = await supabaseClient.functions.invoke(
-        "voice-intake",
-        { body: { base64: base64Audio } }
-      );
-      if (error) {
-        console.error(error);
-        showToast("Voice AI failed.");
-        return;
-      }
-      document.getElementById("mic-transcript").textContent = aiResp.transcript || "";
-      document.getElementById("mic-status").textContent = "Review parsed fields below.";
-      document.getElementById("voice-name").value = aiResp.name || "";
-      document.getElementById("voice-dob").value = aiResp.dob || "";
-      document.getElementById("voice-phone").value = aiResp.phone || "";
-      document.getElementById("voice-dx").value = (aiResp.diagnoses || []).join(", ");
-      document.getElementById("voice-ref").value = (aiResp.referrals || []).join(", ");
-      document.getElementById("voice-img").value = (aiResp.imaging || []).join(", ");
-      showToast("Voice intake parsed.");
-    } catch (e) {
-      console.error(e);
-      showToast("Error processing voice.");
-    }
-  }
-
-  async function saveVoicePatient() {
-    const name = document.getElementById("voice-name").value.trim();
-    if (!name) {
-      showToast("Name is required.");
-      return;
-    }
-    const dob = document.getElementById("voice-dob").value || "";
-    const phone = document.getElementById("voice-phone").value || "";
-    const dx = (document.getElementById("voice-dx").value || "").split(",").map(s => s.trim()).filter(Boolean);
-
-    if (!supabaseClient) {
-      demoPatients.unshift({ id: "p" + Date.now(), name, dob, phone, dx, appt: "" });
-      renderPatients();
-      document.getElementById("card-patients").textContent = demoPatients.length;
-      document.getElementById("modal-voice").style.display = "none";
-      showToast("Patient created from voice intake (demo).");
-      return;
+    function getPatientAge() {
+      const dob = document.getElementById("patient-dob").value;
+      if (!dob) return null;
+      const today = new Date();
+      const birth = new Date(dob);
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+      return age;
     }
 
-    try {
-      const { data: patient, error } = await supabaseClient
-        .from("patients")
-        .insert({ name, dob: dob || null, phone: phone || null })
-        .select()
-        .single();
+    function calculateApprovalLikelihood(payerId, requestType, clinicalData) {
+      let score = 50; // baseline
 
-      if (error) {
-        console.error(error);
-        showToast("DB insert failed.");
-        return;
-      }
+      // Has clinical summary
+      if (clinicalData.trim().length > 20) score += 10;
 
-      demoPatients.unshift({
-        id: patient.id,
-        name,
-        dob,
-        phone,
-        dx,
-        appt: ""
-      });
-      renderPatients();
-      document.getElementById("card-patients").textContent = demoPatients.length;
-      document.getElementById("modal-voice").style.display = "none";
-      showToast("Patient saved.");
-    } catch (e) {
-      console.error(e);
-      showToast("Error saving patient.");
+      // Has patient DOB (completeness indicator)
+      if (document.getElementById("patient-dob").value) score += 5;
+
+      // Has member ID
+      if (document.getElementById("member-id").value) score += 5;
+
+      // Urgency (expedited/urgent typically have slightly lower approval % but faster processing)
+      const urgency = document.getElementById("urgency").value;
+      if (urgency === "routine") score += 5;
+
+      // Cap at 95%
+      return Math.min(95, score);
     }
-  }
 
-  function initVoiceModal() {
-    const modal = document.getElementById("modal-voice");
-    const openBtn = document.getElementById("btn-voice-intake");
-    const closeBtns = [document.getElementById("voice-close"), document.getElementById("voice-cancel")];
-    const micBtn = document.getElementById("mic-btn");
-    const micStatus = document.getElementById("mic-status");
-    const micTranscript = document.getElementById("mic-transcript");
-    const micIcon = document.getElementById("mic-icon");
-    const saveBtn = document.getElementById("voice-save");
+    function evaluateCriteria(payerId, requestType, clinicalData) {
+      const payer = payerPolicies[payerId];
+      if (!payer) return [];
 
-    openBtn.addEventListener("click", () => {
-      modal.style.display = "flex";
-      micOn = false;
-      micStatus.textContent = "Tap to start dictation";
-      micTranscript.textContent = "Transcript will appear here.";
-    });
-    closeBtns.forEach(btn => btn.addEventListener("click", () => {
-      modal.style.display = "none";
-      if (recorder && recorder.state === "recording") recorder.stop();
-    }));
+      const criteria = payer.criteria[requestType] || [];
+      return criteria.map(c => {
+        // Simple heuristic: longer clinical data suggests more criteria met
+        const clinicalLength = clinicalData.length;
+        let status;
 
-    micBtn.addEventListener("click", async () => {
-      if (!micOn) {
-        micOn = true;
-        micStatus.textContent = supabaseClient ? "Listening…" : "Listening… (demo)";
-        micIcon.textContent = "🔴";
-        if (supabaseClient) {
-          recorder = await startRecording();
+        if (clinicalLength < 20) {
+          status = "unknown"; // Not documented
+        } else if (c.required) {
+          // Assume required criteria are met if we have some clinical data
+          status = clinicalLength > 100 ? "met" : "unknown";
         } else {
-          setTimeout(() => {
-            micOn = false;
-            micIcon.textContent = "🎙️";
-            processVoiceIntake(null);
-          }, 500);
-        }
-      } else {
-        micOn = false;
-        micIcon.textContent = "🎙️";
-        micStatus.textContent = "Processing…";
-        if (recorder && recorder.state === "recording") recorder.stop();
-      }
-    });
-
-    saveBtn.addEventListener("click", saveVoicePatient);
-  }
-
-  // ====== ADD PATIENT MODAL ======
-  function initAddPatientModal() {
-    const modal = document.getElementById("modal-add-patient");
-    const openBtn = document.getElementById("btn-add-patient");
-    const closeBtns = [document.getElementById("addp-close"), document.getElementById("addp-cancel")];
-    const saveBtn = document.getElementById("addp-save");
-
-    openBtn.addEventListener("click", () => {
-      modal.style.display = "flex";
-    });
-    closeBtns.forEach(btn => btn.addEventListener("click", () => {
-      modal.style.display = "none";
-    }));
-    saveBtn.addEventListener("click", async () => {
-      const name = document.getElementById("addp-name").value.trim();
-      if (!name) {
-        showToast("Name is required.");
-        return;
-      }
-      const dob = document.getElementById("addp-dob").value || "";
-      const phone = document.getElementById("addp-phone").value || "";
-      const dx = (document.getElementById("addp-dx").value || "").split(",").map(s => s.trim()).filter(Boolean);
-      const appt = document.getElementById("addp-appt").value || "";
-
-      if (!supabaseClient) {
-        demoPatients.unshift({ id: "p" + Date.now(), name, dob, phone, dx, appt });
-        renderPatients();
-        document.getElementById("card-patients").textContent = demoPatients.length;
-        modal.style.display = "none";
-        showToast("Patient added (demo).");
-        return;
-      }
-
-      try {
-        const { data: patient, error } = await supabaseClient
-          .from("patients")
-          .insert({ name, dob: dob || null, phone: phone || null })
-          .select()
-          .single();
-
-        if (error) {
-          console.error(error);
-          showToast("DB insert failed.");
-          return;
+          status = clinicalLength > 150 ? "met" : "unknown";
         }
 
-        demoPatients.unshift({
-          id: patient.id,
-          name,
-          dob,
-          phone,
-          dx,
-          appt
+        return {
+          ...c,
+          status
+        };
+      });
+    }
+
+    function generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData) {
+      const payer = payerPolicies[payerId];
+      const patientName = document.getElementById("patient-name").value || "[Patient Name]";
+      const memberId = document.getElementById("member-id").value || "[Member ID]";
+      const age = getPatientAge();
+      const ageStr = age ? ` (Age ${age})` : "";
+
+      const metCriteria = evaluatedCriteria.filter(c => c.status === "met").map(c => c.label);
+      const unknownCriteria = evaluatedCriteria.filter(c => c.status === "unknown").map(c => c.label);
+
+      let letter = `PRIOR AUTHORIZATION REQUEST JUSTIFICATION
+
+TO: ${payer.name}
+FROM: [Provider Name/Practice]
+DATE: ${new Date().toLocaleDateString()}
+PATIENT: ${patientName}${ageStr}
+MEMBER ID: ${memberId}
+REQUEST TYPE: ${requestType.charAt(0).toUpperCase() + requestType.slice(1)}
+
+---
+
+MEDICAL NECESSITY:
+
+${clinicalData || "[Clinical summary not provided]"}
+
+---
+
+PAYER CRITERIA ANALYSIS:
+
+Criteria Met:
+`;
+
+      if (metCriteria.length > 0) {
+        metCriteria.forEach((crit, i) => {
+          letter += `${i + 1}. ${crit}\n`;
         });
-        renderPatients();
-        document.getElementById("card-patients").textContent = demoPatients.length;
-        modal.style.display = "none";
-        showToast("Patient added.");
-      } catch (e) {
-        console.error(e);
-        showToast("Error saving patient.");
+      } else {
+        letter += "• Clinical data provided; specific criteria assessment pending\n";
       }
-    });
-  }
 
-  // ====== CALL BUTTONS ======
-  function initCallButtons() {
-    document.body.addEventListener("click", e => {
-      const btn = e.target.closest(".btn-call");
-      if (!btn) return;
-      const phone = btn.dataset.phone;
-      const name = btn.dataset.name;
-      showToast("Would open VOIP call to " + name + " (" + phone + ") in a real build.");
-    });
-  }
+      letter += `\nInformation Not Documented:
+`;
+      if (unknownCriteria.length > 0) {
+        unknownCriteria.forEach((crit, i) => {
+          letter += `${i + 1}. ${crit} – not documented in available records\n`;
+        });
+      } else {
+        letter += "• All documented criteria have been addressed\n";
+      }
 
-  // ====== INIT ======
-  renderPatients();
-  renderFaxes();
-  renderCalls();
-  initNav();
-  initFaxUpload();
-  initFaxFilters();
-  initFaxActions();
-  initVoiceModal();
-  initAddPatientModal();
-  initCallButtons();
-</script>
+      letter += `
+---
+
+CLINICAL JUSTIFICATION:
+
+The requested ${requestType} is medically necessary for this patient based on:
+• Documented diagnosis and clinical presentation
+• Failure or intolerance of prior treatments (if applicable)
+• Alignment with clinical guidelines
+• Expected improvement in patient outcomes
+
+We respectfully request approval for the proposed treatment to ensure timely and appropriate patient care.
+
+---
+
+Please contact the office with any questions or request for additional information.
+
+[Provider Signature]
+[Provider Name & Credentials]
+[Contact Information]`;
+
+      return letter;
+    }
+
+    // ====== EVENT HANDLERS ======
+    document.getElementById("pa-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const payerId = document.getElementById("payer").value;
+      const requestType = document.getElementById("request-type").value;
+      const clinicalData = document.getElementById("clinical-summary").value;
+
+      if (!payerId || !requestType) {
+        showToast("Please select Payer and Request Type", "error");
+        return;
+      }
+
+      // Calculate approval likelihood
+      const likelihood = calculateApprovalLikelihood(payerId, requestType, clinicalData);
+
+      // Evaluate criteria
+      const evaluatedCriteria = evaluateCriteria(payerId, requestType, clinicalData);
+
+      // Generate PA letter
+      const paLetter = generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData);
+
+      // Store analysis
+      lastAnalysis = {
+        payerId,
+        requestType,
+        likelihood,
+        evaluatedCriteria,
+        paLetter
+      };
+
+      // Update UI
+      displayResults(payerId, likelihood, evaluatedCriteria, paLetter);
+    });
+
+    function displayResults(payerId, likelihood, criteria, letter) {
+      document.getElementById("empty-results").style.display = "none";
+      document.getElementById("results-content").style.display = "block";
+
+      // Update likelihood
+      document.getElementById("likelihood-score").textContent = likelihood + "%";
+      let likelihoodDesc = "Based on payer criteria match";
+      if (likelihood >= 80) {
+        likelihoodDesc = "Strong likelihood of approval";
+      } else if (likelihood >= 60) {
+        likelihoodDesc = "Moderate likelihood of approval";
+      } else {
+        likelihoodDesc = "Additional documentation may be needed";
+      }
+      document.getElementById("likelihood-text").textContent = likelihoodDesc;
+
+      // Update criteria list
+      const criteriaList = document.getElementById("criteria-list");
+      criteriaList.innerHTML = "";
+      criteria.forEach(c => {
+        const div = document.createElement("div");
+        div.className = `criterion ${c.status}`;
+        div.innerHTML = `
+          <div class="criterion-header">
+            <div class="criterion-label">${c.label}</div>
+            <span class="criterion-badge ${c.status}">
+              ${c.status === "met" ? "✓ Met" : c.status === "not-met" ? "✗ Not Met" : "? Not Documented"}
+            </span>
+          </div>
+          <div class="criterion-text">${c.description}${c.required ? " <strong>(Required)</strong>" : " (Optional)"}</div>
+        `;
+        criteriaList.appendChild(div);
+      });
+
+      // Update letter
+      document.getElementById("pa-letter").textContent = letter;
+
+      // Reset tab to criteria
+      switchTab("criteria");
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === tabName);
+      });
+      document.querySelectorAll(".tab-content").forEach(content => {
+        content.classList.toggle("active", content.id === tabName + "-tab");
+      });
+    }
+
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        switchTab(btn.dataset.tab);
+      });
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      document.getElementById("pa-form").reset();
+      document.getElementById("empty-results").style.display = "block";
+      document.getElementById("results-content").style.display = "none";
+      lastAnalysis = null;
+    });
+
+    document.getElementById("copy-letter-btn").addEventListener("click", () => {
+      if (!lastAnalysis) return;
+      navigator.clipboard.writeText(lastAnalysis.paLetter).then(() => {
+        showToast("Letter copied to clipboard");
+      });
+    });
+
+    document.getElementById("download-letter-btn").addEventListener("click", () => {
+      if (!lastAnalysis) return;
+      const element = document.createElement("a");
+      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(lastAnalysis.paLetter));
+      element.setAttribute("download", "PA_Justification_" + new Date().toISOString().split("T")[0] + ".txt");
+      element.style.display = "none";
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    });
+
+    // HIPAA Mode Toggle
+    document.getElementById("hipaa-toggle").addEventListener("click", (e) => {
+      hipaaMode = !hipaaMode;
+      e.currentTarget.classList.toggle("off", !hipaaMode);
+    });
+  </script>
 </body>
 </html>
