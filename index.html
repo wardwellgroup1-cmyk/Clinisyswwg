@@ -1,1148 +1,926 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>PA Fast Assist – Prior Authorization Helper</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --bg-secondary: #f1f5f9;
-      --border: #e2e8f0;
-      --border-dark: #cbd5e1;
-      --accent: #0ea5e9;
-      --accent-light: #e0f2fe;
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
-      --success: #16a34a;
-      --success-light: #dcfce7;
-      --warning: #ea580c;
-      --warning-light: #fed7aa;
-      --error: #dc2626;
-      --error-light: #fee2e2;
-      --neutral: #64748b;
-      --radius: 8px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-      background: var(--bg);
-      color: var(--text-primary);
-      line-height: 1.5;
-    }
-
-    button, input, select, textarea {
-      font-family: inherit;
-      font-size: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-
-    header {
-      background: white;
-      border-bottom: 1px solid var(--border);
-      padding: 16px 0;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-left {
-      flex: 1;
-    }
-
-    .header-title {
-      font-size: 24px;
-      font-weight: 700;
-      margin: 0;
-      color: var(--text-primary);
-    }
-
-    .header-subtitle {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin: 4px 0 0;
-    }
-
-    .header-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--success-light);
-      border: 1px solid var(--success);
-      color: var(--success);
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .header-right {
-      text-align: right;
-    }
-
-    .mode-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-    }
-
-    .toggle-switch {
-      width: 40px;
-      height: 24px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--success);
-      cursor: pointer;
-      position: relative;
-      transition: background 0.2s;
-    }
-
-    .toggle-switch.off {
-      background: var(--neutral);
-    }
-
-    .toggle-switch::after {
-      content: '';
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 10px;
-      background: white;
-      top: 2px;
-      left: 2px;
-      transition: left 0.2s;
-    }
-
-    .toggle-switch.off::after {
-      left: 18px;
-    }
-
-    .main-grid {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 20px;
-    }
-
-    .form-panel {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      height: fit-content;
-      position: sticky;
-      top: 16px;
-    }
-
-    .form-section-title {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--neutral);
-      margin: 0 0 12px;
-      display: block;
-    }
-
-    .form-section {
-      margin-bottom: 18px;
-    }
-
-    .form-section:last-child {
-      margin-bottom: 0;
-    }
-
-    .field {
-      margin-bottom: 12px;
-    }
-
-    .field:last-child {
-      margin-bottom: 0;
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 4px;
-    }
-
-    input[type="text"],
-    input[type="date"],
-    select,
-    textarea {
-      width: 100%;
-      border: 1px solid var(--border-dark);
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 12px;
-      color: var(--text-primary);
-      background: white;
-      transition: border-color 0.2s;
-    }
-
-    input[type="text"]:focus,
-    input[type="date"]:focus,
-    select:focus,
-    textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-light);
-    }
-
-    input::placeholder {
-      color: var(--neutral);
-    }
-
-    .optional-label {
-      font-size: 11px;
-      color: var(--neutral);
-      font-weight: 400;
-    }
-
-    .button-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .btn {
-      padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      border: 1px solid;
-      transition: all 0.2s;
-      text-align: center;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background: #0284c7;
-      border-color: #0284c7;
-    }
-
-    .btn-secondary {
-      background: white;
-      color: var(--text-primary);
-      border-color: var(--border-dark);
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background: var(--bg-secondary);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .results-panel {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-secondary);
-    }
-
-    .empty-state-icon {
-      font-size: 40px;
-      margin-bottom: 12px;
-      opacity: 0.6;
-    }
-
-    .empty-state-text {
-      font-size: 14px;
-    }
-
-    .results-section {
-      margin-bottom: 24px;
-    }
-
-    .results-section:last-child {
-      margin-bottom: 0;
-    }
-
-    .section-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 12px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--border);
-    }
-
-    .criteria-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .criterion {
-      border-left: 3px solid var(--border);
-      padding: 10px 12px;
-      background: var(--bg-secondary);
-      border-radius: 4px;
-      font-size: 12px;
-    }
-
-    .criterion.met {
-      border-left-color: var(--success);
-      background: var(--success-light);
-    }
-
-    .criterion.not-met {
-      border-left-color: var(--error);
-      background: var(--error-light);
-    }
-
-    .criterion.unknown {
-      border-left-color: var(--warning);
-      background: var(--warning-light);
-    }
-
-    .criterion-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    .criterion-label {
-      font-weight: 600;
-      flex: 1;
-      color: var(--text-primary);
-    }
-
-    .criterion-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
-    }
-
-    .criterion-badge.met {
-      background: var(--success);
-      color: white;
-    }
-
-    .criterion-badge.not-met {
-      background: var(--error);
-      color: white;
-    }
-
-    .criterion-badge.unknown {
-      background: var(--warning);
-      color: white;
-    }
-
-    .criterion-text {
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-
-    .approval-likelihood {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
-      text-align: center;
-    }
-
-    .likelihood-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--neutral);
-      margin-bottom: 8px;
-    }
-
-    .likelihood-score {
-      font-size: 32px;
-      font-weight: 700;
-      color: var(--accent);
-      margin: 0;
-    }
-
-    .likelihood-text {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
-
-    .letter-section {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    .letter-content {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--text-primary);
-      font-family: Georgia, serif;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .btn-small {
-      padding: 8px 12px;
-      font-size: 12px;
-    }
-
-    .disclaimer {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: var(--radius);
-      padding: 12px;
-      margin-top: 20px;
-      font-size: 11px;
-      color: #0369a1;
-      line-height: 1.5;
-    }
-
-    .disclaimer strong {
-      font-weight: 600;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .tab-btn {
-      padding: 8px 12px;
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    @media (max-width: 1024px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .form-panel {
-        position: static;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HEDIS CareGap">
+
+    <title>HEDIS Care Gap Mobile App + Progress Note Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body {
+            padding-top: max(0px, env(safe-area-inset-top));
+            padding-bottom: max(0px, env(safe-area-inset-bottom));
+            padding-left: max(0px, env(safe-area-inset-left));
+            padding-right: max(0px, env(safe-area-inset-right));
+        }
+
+        header {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 13px;
+            min-height: 80px;
+            resize: none;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+            flex: 1;
+            min-width: 80px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(14, 165, 233, 0.3);
+        }
+
+        .btn-voice {
+            padding: 12px;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .btn-start { background: #15803d; color: white; }
+        .btn-pause { background: #f59e0b; color: white; }
+        .btn-resume { background: #3b82f6; color: white; }
+        .btn-stop { background: #dc2626; color: white; }
+
+        .gap-item {
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 4px solid;
+            font-size: 12px;
+        }
+
+        .gap-green {
+            background: #f0fdf4;
+            border-left-color: #15803d;
+        }
+
+        .gap-red {
+            background: #fee2e2;
+            border-left-color: #dc2626;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: flex-end;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            border-radius: 16px 16px 0 0;
+            padding: 20px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .progress-note {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 14px;
+            border-radius: 8px;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        .note-section {
+            margin-bottom: 14px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+
+        .note-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 6px;
+            text-decoration: underline;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .stat-number {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-export {
+            padding: 10px 12px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .btn-export:active {
+            background: #059669;
+        }
+
+        .demo-item {
+            background: #dbeafe;
+            border-left: 4px solid #0ea5e9;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 8px;
+        }
+
+        .tab-btn {
+            padding: 8px 12px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .tab-btn.active {
+            color: #0ea5e9;
+            border-bottom-color: #0ea5e9;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .footer {
+            background: white;
+            padding: 12px;
+            text-align: center;
+            font-size: 10px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        .icd-code {
+            background: #f0fdf4;
+            border-left: 3px solid #15803d;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+
+        .icd-code-num {
+            font-weight: 700;
+            color: #15803d;
+            font-family: 'Courier New', monospace;
+        }
+
+        .icd-code-desc {
+            color: #475569;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        .treatment-item {
+            background: #dbeafe;
+            border-left: 3px solid #0ea5e9;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+
+        .treatment-title {
+            font-weight: 700;
+            color: #0c4a6e;
+        }
+
+        .treatment-detail {
+            color: #0c4a6e;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+    </style>
 </head>
 <body>
-  <header>
+    <!-- HEADER -->
+    <header>
+        <div class="header-top">
+            <div>
+                <div class="header-title">🏥 HEDIS CareGap</div>
+                <div style="font-size: 12px; opacity: 0.9;">Clinical Documentation + HEDIS</div>
+            </div>
+            <div class="header-icons">
+                <button class="icon-btn" onclick="openSettings()">⚙️</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
     <div class="container">
-      <div class="header-content">
-        <div class="header-left">
-          <h1 class="header-title">PA Fast Assist</h1>
-          <p class="header-subtitle">Local-only prior authorization helper · No network calls · No trackers</p>
-        </div>
-        <div class="header-right">
-          <div class="mode-toggle">
-            <span>HIPAA Mode</span>
-            <button class="toggle-switch" id="hipaa-toggle" title="Toggle HIPAA Privacy Mode"></button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <div class="container">
-    <div class="main-grid">
-      <!-- LEFT PANEL: FORM -->
-      <div class="form-panel">
-        <form id="pa-form">
-          <!-- Request & Payer -->
-          <label class="form-section-title">1 · Request & Payer</label>
-
-          <div class="form-section">
-            <div class="field">
-              <label>Payer <span style="color: var(--error);">*</span></label>
-              <select id="payer" required>
-                <option value="">Select payer...</option>
-                <option value="aetna">Aetna</option>
-                <option value="bcbs">Blue Cross Blue Shield</option>
-                <option value="cigna">Cigna</option>
-                <option value="humana">Humana</option>
-                <option value="united">United Healthcare</option>
-                <option value="anthem">Anthem</option>
-              </select>
+        <!-- VOICE CONTROLS -->
+        <div class="card">
+            <div class="card-title">🎤 Voice Input</div>
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                <button class="btn btn-voice btn-start" id="startBtn" onclick="startRecording()">▶️ START</button>
+                <button class="btn btn-voice btn-pause" id="pauseBtn" onclick="pauseRecording()" disabled>⏸️ PAUSE</button>
+                <button class="btn btn-voice btn-resume" id="resumeBtn" onclick="resumeRecording()" disabled style="display: none;">▶️ RESUME</button>
+                <button class="btn btn-voice btn-stop" id="stopBtn" onclick="stopRecording()" disabled>⏹️ STOP</button>
             </div>
-
-            <div class="field">
-              <label>Request Type <span style="color: var(--error);">*</span></label>
-              <select id="request-type" required>
-                <option value="">Select type...</option>
-                <option value="medication">Medication (Drug)</option>
-                <option value="imaging">Imaging Study</option>
-                <option value="procedure">Procedure</option>
-                <option value="therapy">Therapy/Rehabilitation</option>
-                <option value="specialist">Specialist Visit</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label>Urgency <span style="color: var(--error);">*</span></label>
-              <select id="urgency" required>
-                <option value="">Select urgency...</option>
-                <option value="routine">Routine (Standard Review)</option>
-                <option value="expedited">Expedited (72 hours)</option>
-                <option value="urgent">Urgent (24 hours)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Patient Info -->
-          <label class="form-section-title">2 · Patient (Optional — Local Only)</label>
-
-          <div class="form-section">
-            <div class="field">
-              <label>Patient Name <span class="optional-label">(Optional)</span></label>
-              <input type="text" id="patient-name" placeholder="Full name" />
-            </div>
-
-            <div class="field">
-              <label>Date of Birth <span class="optional-label">(Optional)</span></label>
-              <input type="date" id="patient-dob" />
-            </div>
-
-            <div class="field">
-              <label>Member ID <span class="optional-label">(Optional)</span></label>
-              <input type="text" id="member-id" placeholder="Payer member ID" />
-            </div>
-
-            <div class="field">
-              <label>Clinical Summary <span class="optional-label">(Optional)</span></label>
-              <textarea id="clinical-summary" placeholder="Diagnoses, prior treatments, relevant lab/imaging findings..." rows="4"></textarea>
-            </div>
-          </div>
-
-          <!-- Buttons -->
-          <div class="button-group">
-            <button type="submit" class="btn btn-primary">Run Analysis</button>
-            <button type="button" class="btn btn-secondary" id="reset-btn">Reset</button>
-          </div>
-        </form>
-
-        <div class="disclaimer">
-          <strong>Disclaimer:</strong> PA Fast Assist is a decision-support tool for administrative reference only. It does not constitute medical advice, legal guidance, or a guarantee of prior authorization approval. All data remains in your browser — nothing is ever transmitted to any server.
-        </div>
-      </div>
-
-      <!-- RIGHT PANEL: RESULTS -->
-      <div class="results-panel">
-        <div id="empty-results" class="empty-state">
-          <div class="empty-state-icon">🔍</div>
-          <p class="empty-state-text">
-            No analysis yet<br />
-            Fill in the form on the left and click <strong>Run Analysis</strong> to see approval likelihood, payer-specific criteria, and generate a PA letter draft.
-          </p>
+            <div id="voiceStatus" style="font-size: 11px; padding: 8px; background: #dbeafe; border-radius: 6px; color: #0c4a6e; display: none;">Status here</div>
         </div>
 
-        <div id="results-content" style="display: none;">
-          <!-- Approval Likelihood -->
-          <div class="approval-likelihood">
-            <div class="likelihood-label">Estimated Approval Likelihood</div>
-            <p class="likelihood-score" id="likelihood-score">85%</p>
-            <p class="likelihood-text" id="likelihood-text">Based on payer criteria match</p>
-          </div>
-
-          <!-- Tabs for Criteria vs Letter -->
-          <div class="tabs">
-            <button class="tab-btn active" data-tab="criteria">Payer Criteria</button>
-            <button class="tab-btn" data-tab="letter">PA Letter</button>
-          </div>
-
-          <!-- Criteria Tab -->
-          <div id="criteria-tab" class="tab-content active">
-            <div class="results-section">
-              <h3 class="section-title">Payer-Specific Criteria</h3>
-              <div class="criteria-list" id="criteria-list">
-                <!-- Criteria will be inserted here -->
-              </div>
+        <!-- TRANSCRIPT -->
+        <div class="card">
+            <div class="card-title">📝 Clinical Notes</div>
+            <textarea id="voiceTranscript" placeholder="Your voice will appear here..."></textarea>
+            <div class="button-row">
+                <button class="btn btn-primary" onclick="generateProgressNote()">📋 Generate Progress Note</button>
             </div>
-          </div>
+        </div>
 
-          <!-- Letter Tab -->
-          <div id="letter-tab" class="tab-content">
-            <div class="results-section">
-              <h3 class="section-title">PA Justification Letter</h3>
-              <div class="letter-section">
-                <div class="letter-content" id="pa-letter">
-                  <!-- Letter will be inserted here -->
+        <!-- RESULTS TABS -->
+        <div class="card">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('gaps')">Care Gaps</button>
+                <button class="tab-btn" onclick="switchTab('codes')">ICD-10</button>
+                <button class="tab-btn" onclick="switchTab('treatment')">Treatment</button>
+                <button class="tab-btn" onclick="switchTab('metrics')">Metrics</button>
+            </div>
+
+            <!-- GAPS TAB -->
+            <div id="gaps-tab" class="tab-content active">
+                <div style="margin-bottom: 10px;">
+                    <strong style="font-size: 12px; color: #15803d;">✅ Addressed</strong>
+                    <div id="greenGapsContainer" style="margin-top: 6px;">
+                        <div class="empty-state">Gaps closed here</div>
+                    </div>
                 </div>
-              </div>
-              <div class="action-buttons">
-                <button class="btn btn-secondary btn-small" id="copy-letter-btn">Copy to Clipboard</button>
-                <button class="btn btn-secondary btn-small" id="download-letter-btn">Download as Text</button>
-              </div>
+
+                <div>
+                    <strong style="font-size: 12px; color: #dc2626;">❌ Missed</strong>
+                    <div id="redGapsContainer" style="margin-top: 6px;">
+                        <div class="empty-state">Gaps missed here</div>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            <!-- ICD-10 TAB -->
+            <div id="codes-tab" class="tab-content">
+                <div id="codesContainer">
+                    <div class="empty-state">ICD-10 codes appear here</div>
+                </div>
+            </div>
+
+            <!-- TREATMENT TAB -->
+            <div id="treatment-tab" class="tab-content">
+                <div id="treatmentContainer">
+                    <div class="empty-state">Treatment plans appear here</div>
+                </div>
+            </div>
+
+            <!-- METRICS TAB -->
+            <div id="metrics-tab" class="tab-content">
+                <div class="stat-card">
+                    <div class="stat-number" id="closureRate">0%</div>
+                    <div class="stat-label">Gap Closure Rate</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="stat-card" style="background: #10b981;">
+                        <div class="stat-number" id="closedCount">0</div>
+                        <div class="stat-label">Closed</div>
+                    </div>
+                    <div class="stat-card" style="background: #dc2626;">
+                        <div class="stat-number" id="openCount">0</div>
+                        <div class="stat-label">Open</div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <script>
-    // ====== PAYER POLICIES DATABASE ======
-    const payerPolicies = {
-      aetna: {
-        name: "Aetna",
-        criteria: {
-          medication: [
-            {
-              id: "fail-first",
-              label: "Fail-first requirement",
-              description: "Patient must have tried and failed at least one generic or lower-cost alternative",
-              required: true
-            },
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear diagnosis and medical necessity for the requested medication",
-              required: true
-            },
-            {
-              id: "contraindications",
-              label: "No absolute contraindications",
-              description: "Requested medication is not contraindicated for patient's conditions",
-              required: true
-            },
-            {
-              id: "duration",
-              label: "Documented trial duration",
-              description: "Prior medication trial lasted ≥30 days at therapeutic dose",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear indication based on patient symptoms, signs, or abnormal findings",
-              required: true
-            },
-            {
-              id: "prior-imaging",
-              label: "Prior imaging ruled out",
-              description: "Patient has not had the same imaging within the past 12 months",
-              required: true
-            },
-            {
-              id: "conservative-measures",
-              label: "Conservative measures attempted",
-              description: "Non-imaging diagnostic approaches have been tried first",
-              required: false
-            }
-          ]
-        }
-      },
-      bcbs: {
-        name: "Blue Cross Blue Shield",
-        criteria: {
-          medication: [
-            {
-              id: "step-therapy",
-              label: "Step therapy compliance",
-              description: "Patient completed required step therapy protocol for this drug class",
-              required: true
-            },
-            {
-              id: "diagnosis-supported",
-              label: "Diagnosis supported",
-              description: "Requested medication is FDA-approved for patient's documented condition",
-              required: true
-            },
-            {
-              id: "dosing-frequency",
-              label: "Dosing within guidelines",
-              description: "Requested dose and frequency align with FDA label and clinical guidelines",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "medical-necessity",
-              label: "Medical necessity documented",
-              description: "Clinical presentation supports imaging as next appropriate step",
-              required: true
-            },
-            {
-              id: "quality-score",
-              label: "Evidence quality score",
-              description: "Request supported by evidence-based guidelines (ACR, USPSTF, etc.)",
-              required: true
-            }
-          ]
-        }
-      },
-      cigna: {
-        name: "Cigna",
-        criteria: {
-          medication: [
-            {
-              id: "prior-auth-required",
-              label: "Prior authorization triggered",
-              description: "Drug requires PA based on Cigna formulary and coverage rules",
-              required: true
-            },
-            {
-              id: "clinical-evidence",
-              label: "Clinical evidence provided",
-              description: "Supporting clinical evidence demonstrates need for this medication",
-              required: true
-            },
-            {
-              id: "labwork-monitoring",
-              label: "Lab monitoring plan documented",
-              description: "Plan for ongoing monitoring and lab work is documented",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-necessity",
-              label: "Clinical necessity established",
-              description: "Findings on exam or other testing warrant advanced imaging",
-              required: true
-            },
-            {
-              id: "recent-imaging",
-              label: "No recent duplicate study",
-              description: "No equivalent imaging performed within past 90 days",
-              required: true
-            }
-          ]
-        }
-      },
-      humana: {
-        name: "Humana",
-        criteria: {
-          medication: [
-            {
-              id: "formulary-exception",
-              label: "Formulary exception request",
-              description: "Non-formulary drug requires medical necessity documentation",
-              required: true
-            },
-            {
-              id: "clinical-rationale",
-              label: "Clinical rationale clear",
-              description: "Why this specific drug vs. formulary alternatives",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Specific clinical question or findings necessitating imaging",
-              required: true
-            },
-            {
-              id: "imaging-guidelines",
-              label: "Imaging guidelines met",
-              description: "Request aligns with ACR, USPSTF, or specialty society guidelines",
-              required: true
-            }
-          ]
-        }
-      },
-      united: {
-        name: "United Healthcare",
-        criteria: {
-          medication: [
-            {
-              id: "clinical-criteria",
-              label: "Clinical criteria met",
-              description: "Patient meets UnitedHealth clinical criteria for this medication",
-              required: true
-            },
-            {
-              id: "prior-treatment",
-              label: "Prior treatment documented",
-              description: "Failure of or intolerance to required prior treatments documented",
-              required: true
-            },
-            {
-              id: "quantity-limit",
-              label: "Within quantity limits",
-              description: "Requested quantity aligns with UnitedHealth limits",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-necessity",
-              label: "Clinical necessity established",
-              description: "Imaging is medically necessary to answer a clinical question",
-              required: true
-            }
-          ]
-        }
-      },
-      anthem: {
-        name: "Anthem",
-        criteria: {
-          medication: [
-            {
-              id: "medical-necessity",
-              label: "Medical necessity documented",
-              description: "Medication is medically necessary for patient's condition",
-              required: true
-            },
-            {
-              id: "fda-indication",
-              label: "FDA-approved indication",
-              description: "Medication is FDA-approved for patient's diagnosis",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear clinical indication supported by history and findings",
-              required: true
-            }
-          ]
-        }
-      }
-    };
+    <!-- FOOTER -->
+    <div class="footer">
+        Version 11.0 | Progress Note Generator | Offline-First | Clinical Documentation
+    </div>
 
-    // ====== STATE ======
-    let hipaaMode = true;
-    let lastAnalysis = null;
+    <!-- PROGRESS NOTE MODAL -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>📋 Complete Progress Note</span>
+                <button class="close-btn" onclick="closeModal('noteModal')">✕</button>
+            </div>
 
-    // ====== UTILITIES ======
-    function showToast(msg, type = "info") {
-      // Simple console log since no toast UI needed
-      console.log(`[${type.toUpperCase()}] ${msg}`);
-    }
+            <div class="export-buttons">
+                <button class="btn-export" onclick="copyNote()">📋 Copy Note</button>
+                <button class="btn-export" style="background: #8b5cf6;" onclick="downloadNote()">⬇️ Download MD</button>
+                <button class="btn-export" style="background: #f59e0b;" onclick="printNote()">🖨️ Print</button>
+            </div>
 
-    function getPatientAge() {
-      const dob = document.getElementById("patient-dob").value;
-      if (!dob) return null;
-      const today = new Date();
-      const birth = new Date(dob);
-      let age = today.getFullYear() - birth.getFullYear();
-      const m = today.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-      return age;
-    }
+            <div class="progress-note" id="progressNoteContent">
+                Progress note will appear here...
+            </div>
+        </div>
+    </div>
 
-    function calculateApprovalLikelihood(payerId, requestType, clinicalData) {
-      let score = 50; // baseline
+    <!-- SETTINGS MODAL -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Settings</span>
+                <button class="close-btn" onclick="closeModal('settingsModal')">✕</button>
+            </div>
+            <div style="font-size: 13px;">
+                <div style="margin-bottom: 16px;">
+                    <strong>App Information</strong><br>
+                    <div style="color: #64748b; font-size: 12px; margin-top: 8px;">
+                        <div>Name: HEDIS CareGap Mobile</div>
+                        <div>Version: 11.0</div>
+                        <div>Features: Voice Input + Progress Notes</div>
+                    </div>
+                </div>
 
-      // Has clinical summary
-      if (clinicalData.trim().length > 20) score += 10;
+                <div>
+                    <strong>About</strong><br>
+                    <div style="color: #64748b; font-size: 12px; margin-top: 8px;">
+                        Real-time voice-to-text clinical documentation<br>
+                        Automatic progress note generation<br>
+                        ICD-10 code suggestions<br>
+                        Treatment plan generation<br>
+                        HEDIS gap detection<br>
+                        ✓ Offline-first architecture<br>
+                        ✓ HIPAA-safe (no transmission)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-      // Has patient DOB (completeness indicator)
-      if (document.getElementById("patient-dob").value) score += 5;
-
-      // Has member ID
-      if (document.getElementById("member-id").value) score += 5;
-
-      // Urgency (expedited/urgent typically have slightly lower approval % but faster processing)
-      const urgency = document.getElementById("urgency").value;
-      if (urgency === "routine") score += 5;
-
-      // Cap at 95%
-      return Math.min(95, score);
-    }
-
-    function evaluateCriteria(payerId, requestType, clinicalData) {
-      const payer = payerPolicies[payerId];
-      if (!payer) return [];
-
-      const criteria = payer.criteria[requestType] || [];
-      return criteria.map(c => {
-        // Simple heuristic: longer clinical data suggests more criteria met
-        const clinicalLength = clinicalData.length;
-        let status;
-
-        if (clinicalLength < 20) {
-          status = "unknown"; // Not documented
-        } else if (c.required) {
-          // Assume required criteria are met if we have some clinical data
-          status = clinicalLength > 100 ? "met" : "unknown";
-        } else {
-          status = clinicalLength > 150 ? "met" : "unknown";
-        }
-
-        return {
-          ...c,
-          status
+    <script>
+        // CLINICAL DATA
+        const ICD10_CODES = {
+            diabetes: { code: 'E11.9', description: 'Type 2 diabetes mellitus without complications' },
+            hypertension: { code: 'I10', description: 'Essential (primary) hypertension' },
+            ckd: { code: 'N18.9', description: 'Chronic kidney disease, unspecified' },
+            afib: { code: 'I48.91', description: 'Unspecified atrial fibrillation' },
+            chf: { code: 'I50.9', description: 'Heart failure, unspecified' },
+            copd: { code: 'J44.9', description: 'Chronic obstructive pulmonary disease, unspecified' },
+            cad: { code: 'I25.10', description: 'Atherosclerotic heart disease' },
+            stroke: { code: 'I63.9', description: 'Cerebral infarction, unspecified' }
         };
-      });
-    }
 
-    function generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData) {
-      const payer = payerPolicies[payerId];
-      const patientName = document.getElementById("patient-name").value || "[Patient Name]";
-      const memberId = document.getElementById("member-id").value || "[Member ID]";
-      const age = getPatientAge();
-      const ageStr = age ? ` (Age ${age})` : "";
+        const TREATMENT_PLANS = {
+            diabetes: 'Metformin 500-2000mg daily, A1C monitoring q3 months, annual eye and foot exam',
+            hypertension: 'Lisinopril 10-40mg daily, BP goal <130/80, monitor weekly x 2 weeks then monthly',
+            ckd: 'ACE-I/ARB therapy, BP goal <120/80, monitor GFR q3-6 months, nephrology referral if eGFR <30',
+            afib: 'Rate control (HR <110), anticoagulation per CHA2DS2-VASc score, cardiac monitoring',
+            chf: 'GDMT optimization (ACE-I, beta-blocker, MRA), diuretics PRN, sodium restriction <2g',
+            copd: 'Smoking cessation critical, pulmonary function testing, inhaler technique assessment',
+            cad: 'Aspirin 81mg daily, statin therapy, beta-blocker, nitrates PRN for angina',
+            stroke: 'Aspirin 325mg daily, manage HTN/DM, physical therapy referral, speech therapy if needed'
+        };
 
-      const metCriteria = evaluatedCriteria.filter(c => c.status === "met").map(c => c.label);
-      const unknownCriteria = evaluatedCriteria.filter(c => c.status === "unknown").map(c => c.label);
+        const GREEN_TRIGGERS = {
+            mammogram: /mammogra|breast cancer screening/,
+            colorectal: /colonoscopy|fit test|screening completed/,
+            flu_vaccine: /flu (shot|vaccine)/,
+            pneumococcal: /pneumococcal|pneumonia vaccine/,
+            a1c: /a1c|hemoglobin|glucose/,
+            eye_exam: /eye exam|optometry|ophthalmology/,
+            foot_exam: /foot exam|podiatry/
+        };
 
-      let letter = `PRIOR AUTHORIZATION REQUEST JUSTIFICATION
+        // VOICE RECOGNITION
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognizer = null;
+        let isRecording = false;
+        let isPaused = false;
 
-TO: ${payer.name}
-FROM: [Provider Name/Practice]
-DATE: ${new Date().toLocaleDateString()}
-PATIENT: ${patientName}${ageStr}
-MEMBER ID: ${memberId}
-REQUEST TYPE: ${requestType.charAt(0).toUpperCase() + requestType.slice(1)}
+        if (SpeechRecognition) {
+            recognizer = new SpeechRecognition();
+            recognizer.continuous = true;
+            recognizer.interimResults = true;
+            recognizer.language = 'en-US';
 
----
+            recognizer.onstart = () => {
+                isRecording = true;
+                isPaused = false;
+                updateVoiceUI();
+                showVoiceStatus('🎤 Recording...', 'recording');
+            };
 
-MEDICAL NECESSITY:
+            recognizer.onresult = (event) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    }
+                }
+                if (finalTranscript) {
+                    document.getElementById('voiceTranscript').value += finalTranscript;
+                }
+            };
 
-${clinicalData || "[Clinical summary not provided]"}
+            recognizer.onend = () => {
+                isRecording = false;
+                if (!isPaused) updateVoiceUI();
+            };
+        }
 
----
+        function updateVoiceUI() {
+            document.getElementById('startBtn').disabled = isRecording;
+            document.getElementById('pauseBtn').disabled = !isRecording || isPaused;
+            document.getElementById('resumeBtn').disabled = !isPaused;
+            document.getElementById('resumeBtn').style.display = isPaused && isRecording ? 'block' : 'none';
+            document.getElementById('pauseBtn').style.display = isRecording && !isPaused ? 'block' : 'none';
+            document.getElementById('stopBtn').disabled = !isRecording;
+        }
 
-PAYER CRITERIA ANALYSIS:
+        function startRecording() {
+            if (!recognizer) {
+                alert('Speech recognition not supported on this device.');
+                return;
+            }
+            isRecording = true;
+            isPaused = false;
+            recognizer.start();
+        }
 
-Criteria Met:
+        function pauseRecording() {
+            isPaused = true;
+            recognizer.stop();
+            updateVoiceUI();
+        }
+
+        function resumeRecording() {
+            isPaused = false;
+            recognizer.start();
+            updateVoiceUI();
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            isPaused = false;
+            recognizer.stop();
+            updateVoiceUI();
+            showVoiceStatus('✓ Recording complete. Click "Generate Progress Note"', 'success');
+        }
+
+        function showVoiceStatus(msg, type) {
+            const el = document.getElementById('voiceStatus');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.background = type === 'success' ? '#dcfce7' : '#fee2e2';
+            el.style.color = type === 'success' ? '#166534' : '#991b1b';
+        }
+
+        // EXTRACT DEMOGRAPHICS
+        function extractDemographics(text) {
+            let age = null;
+            let gender = null;
+            const ageMatch = text.match(/(\d{2,3})\s*(?:year|yo|yr|years old)/i);
+            if (ageMatch) age = parseInt(ageMatch[1]);
+            if (text.toLowerCase().match(/\bfemale\b|\bwoman\b/)) gender = 'FEMALE';
+            else if (text.toLowerCase().match(/\bmale\b|\bman\b/)) gender = 'MALE';
+            return { age, gender };
+        }
+
+        // EXTRACT CHIEF COMPLAINT
+        function extractChiefComplaint(text) {
+            const lines = text.split('.');
+            return lines[0] || 'Patient visit';
+        }
+
+        // EXTRACT CONDITIONS
+        function extractConditions(text) {
+            const lowerText = text.toLowerCase();
+            const found = [];
+            if (lowerText.match(/diabetes|dm|diabetic|type 2/)) found.push('diabetes');
+            if (lowerText.match(/hypertension|htn|high blood pressure/)) found.push('hypertension');
+            if (lowerText.match(/ckd|chronic kidney|renal|gfr/)) found.push('ckd');
+            if (lowerText.match(/afib|atrial fibrillation/)) found.push('afib');
+            if (lowerText.match(/heart failure|chf|congestive/)) found.push('chf');
+            if (lowerText.match(/copd|chronic obstructive/)) found.push('copd');
+            if (lowerText.match(/cad|coronary artery|angina/)) found.push('cad');
+            if (lowerText.match(/stroke|cva|cerebrovascular/)) found.push('stroke');
+            return found;
+        }
+
+        // GENERATE COMPLETE PROGRESS NOTE
+        function generateProgressNote() {
+            const transcript = document.getElementById('voiceTranscript').value;
+            if (!transcript.trim()) {
+                alert('Please enter or record provider notes');
+                return;
+            }
+
+            const demo = extractDemographics(transcript);
+            const cc = extractChiefComplaint(transcript);
+            const conditions = extractConditions(transcript);
+            const lowerText = transcript.toLowerCase();
+
+            // Detect HEDIS gaps
+            let greenGaps = [];
+            let redGaps = [];
+
+            Object.entries(GREEN_TRIGGERS).forEach(([gap, pattern]) => {
+                if (lowerText.match(pattern)) {
+                    greenGaps.push(gap);
+                } else {
+                    redGaps.push(gap);
+                }
+            });
+
+            // Generate progress note
+            const timestamp = new Date().toLocaleString();
+            let progressNote = `PROGRESS NOTE
+═══════════════════════════════════════════════════════════════════════════
+Date/Time: ${timestamp}
+${demo.age ? `Patient Age: ${demo.age} years\n` : ''}${demo.gender ? `Gender: ${demo.gender}\n` : ''}
+
+CHIEF COMPLAINT
+───────────────────────────────────────────────────────────────────────────
+${cc}
+
+HISTORY OF PRESENT ILLNESS
+───────────────────────────────────────────────────────────────────────────
+${transcript}
+
+ASSESSMENT
+───────────────────────────────────────────────────────────────────────────
 `;
 
-      if (metCriteria.length > 0) {
-        metCriteria.forEach((crit, i) => {
-          letter += `${i + 1}. ${crit}\n`;
-        });
-      } else {
-        letter += "• Clinical data provided; specific criteria assessment pending\n";
-      }
+            conditions.forEach(cond => {
+                const code = ICD10_CODES[cond];
+                if (code) {
+                    progressNote += `• ${cond.toUpperCase()} [${code.code}] - ${code.description}\n`;
+                }
+            });
 
-      letter += `\nInformation Not Documented:
+            progressNote += `
+
+PHYSICAL EXAMINATION
+───────────────────────────────────────────────────────────────────────────
+Vital signs reviewed. Physical examination performed and documented.
 `;
-      if (unknownCriteria.length > 0) {
-        unknownCriteria.forEach((crit, i) => {
-          letter += `${i + 1}. ${crit} – not documented in available records\n`;
-        });
-      } else {
-        letter += "• All documented criteria have been addressed\n";
-      }
 
-      letter += `
----
+            if (demo.age) {
+                progressNote += `Patient age: ${demo.age} years\n`;
+            }
 
-CLINICAL JUSTIFICATION:
+            progressNote += `
 
-The requested ${requestType} is medically necessary for this patient based on:
-• Documented diagnosis and clinical presentation
-• Failure or intolerance of prior treatments (if applicable)
-• Alignment with clinical guidelines
-• Expected improvement in patient outcomes
+ICD-10 CODES
+───────────────────────────────────────────────────────────────────────────
+`;
 
-We respectfully request approval for the proposed treatment to ensure timely and appropriate patient care.
+            conditions.forEach(cond => {
+                const code = ICD10_CODES[cond];
+                if (code) {
+                    progressNote += `${code.code} - ${code.description}\n`;
+                }
+            });
 
----
+            progressNote += `
 
-Please contact the office with any questions or request for additional information.
+TREATMENT PLAN
+───────────────────────────────────────────────────────────────────────────
+`;
 
-[Provider Signature]
-[Provider Name & Credentials]
-[Contact Information]`;
+            conditions.forEach(cond => {
+                if (TREATMENT_PLANS[cond]) {
+                    progressNote += `${cond.toUpperCase()}:\n${TREATMENT_PLANS[cond]}\n\n`;
+                }
+            });
 
-      return letter;
-    }
+            progressNote += `HEDIS CARE GAP STATUS
+───────────────────────────────────────────────────────────────────────────
+Gaps Addressed: ${greenGaps.length}
+`;
 
-    // ====== EVENT HANDLERS ======
-    document.getElementById("pa-form").addEventListener("submit", (e) => {
-      e.preventDefault();
+            greenGaps.forEach(gap => {
+                progressNote += `✅ ${gap.replace(/_/g, ' ').toUpperCase()}\n`;
+            });
 
-      const payerId = document.getElementById("payer").value;
-      const requestType = document.getElementById("request-type").value;
-      const clinicalData = document.getElementById("clinical-summary").value;
+            progressNote += `\nGaps Missed: ${redGaps.length}\n`;
 
-      if (!payerId || !requestType) {
-        showToast("Please select Payer and Request Type", "error");
-        return;
-      }
+            redGaps.forEach(gap => {
+                progressNote += `❌ ${gap.replace(/_/g, ' ').toUpperCase()}\n`;
+            });
 
-      // Calculate approval likelihood
-      const likelihood = calculateApprovalLikelihood(payerId, requestType, clinicalData);
+            const closure = conditions.length > 0 ? Math.round((greenGaps.length / (greenGaps.length + redGaps.length || 1)) * 100) : 0;
 
-      // Evaluate criteria
-      const evaluatedCriteria = evaluateCriteria(payerId, requestType, clinicalData);
+            progressNote += `
 
-      // Generate PA letter
-      const paLetter = generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData);
+METRICS
+───────────────────────────────────────────────────────────────────────────
+Conditions Identified: ${conditions.length}
+Care Gap Closure Rate: ${closure}%
 
-      // Store analysis
-      lastAnalysis = {
-        payerId,
-        requestType,
-        likelihood,
-        evaluatedCriteria,
-        paLetter
-      };
+═══════════════════════════════════════════════════════════════════════════
+Reviewed and attested by: _________________________ Date: _____________
+═══════════════════════════════════════════════════════════════════════════`;
 
-      // Update UI
-      displayResults(payerId, likelihood, evaluatedCriteria, paLetter);
-    });
+            // Display results
+            displayAnalysis(demo, conditions, greenGaps, redGaps);
+            displayProgressNote(progressNote);
+            window.currentProgressNote = progressNote;
 
-    function displayResults(payerId, likelihood, criteria, letter) {
-      document.getElementById("empty-results").style.display = "none";
-      document.getElementById("results-content").style.display = "block";
+            // Show note modal
+            setTimeout(() => {
+                document.getElementById('noteModal').classList.add('active');
+            }, 300);
+        }
 
-      // Update likelihood
-      document.getElementById("likelihood-score").textContent = likelihood + "%";
-      let likelihoodDesc = "Based on payer criteria match";
-      if (likelihood >= 80) {
-        likelihoodDesc = "Strong likelihood of approval";
-      } else if (likelihood >= 60) {
-        likelihoodDesc = "Moderate likelihood of approval";
-      } else {
-        likelihoodDesc = "Additional documentation may be needed";
-      }
-      document.getElementById("likelihood-text").textContent = likelihoodDesc;
+        function displayAnalysis(demo, conditions, green, red) {
+            // Gaps
+            let html = '';
+            green.forEach(gap => {
+                html += `<div class="gap-item gap-green"><strong>✅ ${gap.replace(/_/g, ' ').toUpperCase()}</strong></div>`;
+            });
+            document.getElementById('greenGapsContainer').innerHTML = html || '<div class="empty-state">None</div>';
 
-      // Update criteria list
-      const criteriaList = document.getElementById("criteria-list");
-      criteriaList.innerHTML = "";
-      criteria.forEach(c => {
-        const div = document.createElement("div");
-        div.className = `criterion ${c.status}`;
-        div.innerHTML = `
-          <div class="criterion-header">
-            <div class="criterion-label">${c.label}</div>
-            <span class="criterion-badge ${c.status}">
-              ${c.status === "met" ? "✓ Met" : c.status === "not-met" ? "✗ Not Met" : "? Not Documented"}
-            </span>
-          </div>
-          <div class="criterion-text">${c.description}${c.required ? " <strong>(Required)</strong>" : " (Optional)"}</div>
-        `;
-        criteriaList.appendChild(div);
-      });
+            html = '';
+            red.forEach(gap => {
+                html += `<div class="gap-item gap-red"><strong>❌ ${gap.replace(/_/g, ' ').toUpperCase()}</strong></div>`;
+            });
+            document.getElementById('redGapsContainer').innerHTML = html || '<div class="empty-state">All addressed!</div>';
 
-      // Update letter
-      document.getElementById("pa-letter").textContent = letter;
+            // ICD-10 Codes
+            html = '';
+            conditions.forEach(cond => {
+                const code = ICD10_CODES[cond];
+                if (code) {
+                    html += `
+                        <div class="icd-code">
+                            <div class="icd-code-num">${code.code}</div>
+                            <div class="icd-code-desc">${code.description}</div>
+                        </div>
+                    `;
+                }
+            });
+            document.getElementById('codesContainer').innerHTML = html || '<div class="empty-state">None detected</div>';
 
-      // Reset tab to criteria
-      switchTab("criteria");
-    }
+            // Treatment
+            html = '';
+            conditions.forEach(cond => {
+                if (TREATMENT_PLANS[cond]) {
+                    html += `
+                        <div class="treatment-item">
+                            <div class="treatment-title">${cond.toUpperCase()}</div>
+                            <div class="treatment-detail">${TREATMENT_PLANS[cond]}</div>
+                        </div>
+                    `;
+                }
+            });
+            document.getElementById('treatmentContainer').innerHTML = html || '<div class="empty-state">None</div>';
 
-    function switchTab(tabName) {
-      document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.tab === tabName);
-      });
-      document.querySelectorAll(".tab-content").forEach(content => {
-        content.classList.toggle("active", content.id === tabName + "-tab");
-      });
-    }
+            // Metrics
+            const total = green.length + red.length;
+            const rate = total > 0 ? Math.round((green.length / total) * 100) : 0;
+            document.getElementById('closureRate').textContent = rate + '%';
+            document.getElementById('closedCount').textContent = green.length;
+            document.getElementById('openCount').textContent = red.length;
+        }
 
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        switchTab(btn.dataset.tab);
-      });
-    });
+        function displayProgressNote(note) {
+            document.getElementById('progressNoteContent').textContent = note;
+        }
 
-    document.getElementById("reset-btn").addEventListener("click", () => {
-      document.getElementById("pa-form").reset();
-      document.getElementById("empty-results").style.display = "block";
-      document.getElementById("results-content").style.display = "none";
-      lastAnalysis = null;
-    });
+        function copyNote() {
+            if (!window.currentProgressNote) {
+                alert('Generate a progress note first');
+                return;
+            }
+            navigator.clipboard.writeText(window.currentProgressNote);
+            alert('✓ Progress note copied to clipboard!');
+        }
 
-    document.getElementById("copy-letter-btn").addEventListener("click", () => {
-      if (!lastAnalysis) return;
-      navigator.clipboard.writeText(lastAnalysis.paLetter).then(() => {
-        showToast("Letter copied to clipboard");
-      });
-    });
+        function downloadNote() {
+            if (!window.currentProgressNote) {
+                alert('Generate a progress note first');
+                return;
+            }
+            const link = document.createElement('a');
+            link.href = 'data:text/markdown,' + encodeURIComponent(window.currentProgressNote);
+            link.download = `progress_note_${new Date().toISOString().split('T')[0]}.md`;
+            link.click();
+        }
 
-    document.getElementById("download-letter-btn").addEventListener("click", () => {
-      if (!lastAnalysis) return;
-      const element = document.createElement("a");
-      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(lastAnalysis.paLetter));
-      element.setAttribute("download", "PA_Justification_" + new Date().toISOString().split("T")[0] + ".txt");
-      element.style.display = "none";
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    });
+        function printNote() {
+            if (!window.currentProgressNote) {
+                alert('Generate a progress note first');
+                return;
+            }
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write('<pre>' + window.currentProgressNote + '</pre>');
+            printWindow.document.close();
+            printWindow.print();
+        }
 
-    // HIPAA Mode Toggle
-    document.getElementById("hipaa-toggle").addEventListener("click", (e) => {
-      hipaaMode = !hipaaMode;
-      e.currentTarget.classList.toggle("off", !hipaaMode);
-    });
-  </script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+    </script>
 </body>
 </html>
