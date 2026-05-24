@@ -846,9 +846,8 @@
             </div>
 
             <div class="field" id="diagnosis-field" style="display: none;">
-              <label>Relevant ICD-10 Diagnoses <span class="optional-label">(Optional)</span></label>
-              <input type="text" id="diagnosis-search" placeholder="Search diagnoses..." />
-              <div id="diagnosis-list" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border-dark); border-radius: 6px; margin-top: 6px; background: white;"></div>
+              <label>Relevant ICD-10 Diagnoses <span class="optional-label">(Click to select)</span></label>
+              <div id="diagnosis-checkboxes" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-dark); border-radius: 6px; padding: 8px; background: #fafafa;"></div>
               <div id="selected-diagnoses" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
             </div>
 
@@ -950,29 +949,58 @@
     // ====== MEDICATION & IMAGING REQUEST MAPPINGS ======
     const requestMappings = {
       medication: {
-        "GLP-1 Receptor Agonist": ["E11", "E11.9", "E13", "E78.5"],
-        "SGLT2 Inhibitor": ["E11", "E11.9", "I50.9", "I50.1", "N18.3"],
+        // ADHD Stimulants
+        "Adderall (amphetamine)": ["F90.0", "F90.1", "F90.2", "F90.9"],
+        "Vyvanse (lisdexamfetamine)": ["F90.0", "F90.1", "F90.2", "F90.9"],
+        "Concerta (methylphenidate)": ["F90.0", "F90.1", "F90.2", "F90.9"],
+        "Focalin (dexmethylphenidate)": ["F90.0", "F90.1", "F90.2", "F90.9"],
+
+        // GLP-1 Weight Loss
+        "Wegovy (semaglutide)": ["E66.01", "E66.9", "Z68.30", "Z68.35", "Z68.40", "Z68.45"],
+        "Zepbound (tirzepatide)": ["E66.01", "E66.9", "Z68.30", "Z68.35", "Z68.40", "Z68.45"],
+        "Saxenda (liraglutide)": ["E66.01", "E66.9", "Z68.30", "Z68.35", "Z68.40"],
+
+        // GLP-1 Diabetes
+        "Ozempic (semaglutide)": ["E11.65", "E11.9", "E11.69"],
+        "Mounjaro (tirzepatide)": ["E11.65", "E11.9", "E11.69"],
+        "Trulicity (dulaglutide)": ["E11.65", "E11.9", "E11.69"],
+
+        // COPD/Asthma
+        "Trelegy (fluticasone/umeclidinium/vilanterol)": ["J44.1", "J44.9", "J45.40"],
+        "Breztri (beclomethasone/formoterol/glycopyrrolate)": ["J44.1", "J44.9", "J45.40"],
+        "Symbicort (budesonide/formoterol)": ["J44.1", "J44.9", "J45.40", "J45.50"],
+        "Advair (fluticasone/salmeterol)": ["J44.1", "J44.9", "J45.40", "J45.50"],
+
+        // Other High-Frequency
         "Statin (High-intensity)": ["E78.0", "E78.1", "E78.5", "I25.10", "I21.9"],
         "ACE Inhibitor/ARB": ["I10", "I11", "I50.9", "N18.3", "N18.4"],
+        "SGLT2 Inhibitor": ["E11", "E11.9", "I50.9", "I50.1", "N18.3"],
         "Biologic (TNF inhibitor)": ["M05.9", "M06.9", "M07", "M32.9"],
-        "COPD Medication": ["J44.9", "J44.0", "J44.1", "J43.9"],
-        "Asthma Controller": ["J45.9", "J45.901"],
         "Antidepressant": ["F32.9", "F33.9", "F41.1"],
-        "ADHD Medication": ["F90.9"],
         "Anticoagulant": ["I21.9", "I63.9", "I64"],
         "Biologics for IBD": ["K50.9", "K51.9"],
-        "Migraine Preventive": ["G89.29"],
-        "Osteoporosis Medication": ["M80", "M81"],
-        "Specialty Diabetes Drug": ["E11", "E11.9", "E13"],
-        "Immunosuppressant": ["M05.9", "M32.9", "K50.9"],
-        "Weight Loss Medication (GLP-1)": ["E66.2", "E66.9", "Z68.40", "Z68.45"],
-        "Obesity Medication (Non-GLP-1)": ["E66.2", "E66.9", "Z68.35", "Z68.40"],
         "Bariatric Surgery": ["E66.2", "E66.209", "Z68.41", "Z68.45", "I10", "E11.9"]
       },
       imaging: {
+        // MRI Brain (indications: stroke, dementia, Parkinson's, seizures, headaches)
+        "MRI Brain": ["G30.9", "G31.83", "G20", "G47.30", "G47.32", "G47.33", "I63.9", "I64", "G89.29"],
+
+        // MRI Abdomen (indications: cirrhosis, pancreatitis, GI cancer, liver disease)
+        "MRI Abdomen": ["K70.9", "K74.6", "K80.9", "K81.9", "K50.9", "K51.9", "C20"],
+
+        // MRI Pelvis (indications: prostate cancer, gynecologic issues, pelvic pain)
+        "MRI Pelvis": ["C61", "K50.9", "K51.9", "G89.29"],
+
+        // MRI Breast
+        "MRI Breast": ["C50.9"],
+
+        // CT Chest (COPD, lung cancer, PE, heart disease)
         "CT Chest": ["J44.9", "J44.1", "C34.9", "I50.1", "I21.9", "I63.9"],
-        "CT Abdomen/Pelvis": ["K80.9", "K80.00", "K81.9", "K70.9", "C20"],
-        "MRI Brain": ["G30.9", "G31.83", "G20", "I63.9", "I64"],
+
+        // CT Abdomen/Pelvis
+        "CT Abdomen/Pelvis": ["K80.9", "K80.00", "K81.9", "K70.9", "C20", "C61"],
+
+        // Other Imaging
         "Ultrasound Abdomen": ["K80.9", "K81.9", "K70.9", "N18.5"],
         "X-Ray Chest": ["J44.9", "J40", "J45.9", "I50.1"],
         "Echocardiogram": ["I50.9", "I50.1", "I50.2", "I25.10", "I11"],
@@ -981,7 +1009,6 @@
         "Colonoscopy": ["K50.9", "K51.9", "K92.2"],
         "Endoscopy": ["K21.9", "K92.2"],
         "Mammogram": ["C50.9"],
-        "CT Pelvis": ["C61"],
         "Bone Scan": ["M80", "M81", "C61", "C80.1"],
         "Renal Ultrasound": ["N18.3", "N18.4", "N18.5", "N17.9"],
         "Liver Ultrasound": ["K70.9", "K74.6"]
@@ -1085,6 +1112,16 @@
       "G89.21": "Chronic pain due to trauma",
       "G25.5": "Tremor, unspecified",
       "G20": "Parkinson disease",
+
+      // Sleep Apnea (G47 series)
+      "G47.30": "Obstructive sleep apnea, unspecified",
+      "G47.31": "Obstructive sleep apnea, mild",
+      "G47.32": "Obstructive sleep apnea, moderate",
+      "G47.33": "Obstructive sleep apnea, severe",
+      "G47.34": "Obstructive sleep apnea with comorbidities",
+      "G47.35": "Central sleep apnea, idiopathic",
+      "G47.36": "Central sleep apnea due to high altitude periodic breathing",
+      "G47.37": "Central sleep apnea due to underlying condition",
 
       // Mental Health
       "F32.9": "Major depressive disorder, single episode, unspecified",
@@ -1730,7 +1767,7 @@ SUPPORTING DOCUMENTATION:
       updateSelectedDiagnoses();
       document.getElementById("diagnosis-field").style.display = "none";
       document.getElementById("specific-request-field").style.display = "none";
-      document.getElementById("diagnosis-list").innerHTML = "";
+      document.getElementById("diagnosis-checkboxes").innerHTML = "";
       document.getElementById("empty-results").style.display = "block";
       document.getElementById("results-content").style.display = "none";
       lastAnalysis = null;
@@ -1779,21 +1816,7 @@ SUPPORTING DOCUMENTATION:
     });
 
     // ====== DIAGNOSIS SELECTION ======
-    function toggleDiagnosis(code, label) {
-      if (selectedDiagnoses[code]) {
-        delete selectedDiagnoses[code];
-      } else {
-        selectedDiagnoses[code] = label;
-      }
-      // Re-render relevant diagnoses to update highlighting
-      const requestType = document.getElementById("request-type").value;
-      const specificRequest = document.getElementById("specific-request").value;
-      if (specificRequest && requestMappings[requestType]) {
-        const relevantCodes = requestMappings[requestType][specificRequest] || [];
-        renderRelevantDiagnoses(relevantCodes);
-      }
-      updateSelectedDiagnoses();
-    }
+    // Checkboxes now handle selection directly, no need for toggle function
 
     function updateSelectedDiagnoses() {
       const container = document.getElementById("selected-diagnoses");
@@ -1811,10 +1834,18 @@ SUPPORTING DOCUMENTATION:
           border-radius: 4px;
           font-size: 11px;
         `;
-        chip.innerHTML = `
-          <strong>${code}</strong>
-          <button style="background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font-size: 14px; line-height: 1;" onclick="event.stopPropagation(); delete selectedDiagnoses['${code}']; updateSelectedDiagnoses(); const rt = document.getElementById('request-type').value; const sr = document.getElementById('specific-request').value; if (sr && requestMappings[rt]) renderRelevantDiagnoses(requestMappings[rt][sr]);">✕</button>
-        `;
+        const btn = document.createElement("button");
+        btn.innerHTML = "✕";
+        btn.style.cssText = "background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font-size: 14px; line-height: 1;";
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          delete selectedDiagnoses[code];
+          const checkbox = document.getElementById(`diag-${code}`);
+          if (checkbox) checkbox.checked = false;
+          updateSelectedDiagnoses();
+        });
+        chip.innerHTML = `<strong>${code}</strong>`;
+        chip.appendChild(btn);
         container.appendChild(chip);
       });
     }
@@ -1870,30 +1901,60 @@ SUPPORTING DOCUMENTATION:
     });
 
     function renderRelevantDiagnoses(codesArray) {
-      const diagnosisList = document.getElementById("diagnosis-list");
-      diagnosisList.innerHTML = "";
+      const container = document.getElementById("diagnosis-checkboxes");
+      container.innerHTML = "";
 
       codesArray.forEach(code => {
         const label = icd10Diagnoses[code];
         if (!label) return;
 
-        const div = document.createElement("div");
         const isSelected = selectedDiagnoses[code];
-        div.style.cssText = `
-          padding: 8px 10px;
-          cursor: pointer;
-          border-bottom: 1px solid var(--border);
-          background: ${isSelected ? 'var(--accent-light)' : 'transparent'};
-          font-size: 12px;
+
+        const checkboxDiv = document.createElement("div");
+        checkboxDiv.style.cssText = `
+          display: flex;
+          align-items: center;
+          padding: 6px 0;
+          border-bottom: 1px solid #e0e0e0;
         `;
-        div.innerHTML = `<strong>${code}</strong> – ${label}`;
-        div.addEventListener("click", () => toggleDiagnosis(code, label));
-        diagnosisList.appendChild(div);
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = `diag-${code}`;
+        checkbox.checked = isSelected;
+        checkbox.style.cssText = `
+          cursor: pointer;
+          margin-right: 8px;
+          width: 16px;
+          height: 16px;
+          accent-color: var(--accent);
+        `;
+
+        const label2 = document.createElement("label");
+        label2.htmlFor = `diag-${code}`;
+        label2.style.cssText = `
+          cursor: pointer;
+          font-size: 12px;
+          flex: 1;
+        `;
+        label2.innerHTML = `<strong>${code}</strong> – ${label}`;
+
+        checkbox.addEventListener("change", () => {
+          if (checkbox.checked) {
+            selectedDiagnoses[code] = label;
+          } else {
+            delete selectedDiagnoses[code];
+          }
+          updateSelectedDiagnoses();
+        });
+
+        checkboxDiv.appendChild(checkbox);
+        checkboxDiv.appendChild(label2);
+        container.appendChild(checkboxDiv);
       });
     }
 
-    // Initialize (diagnosis list hidden until request selected)
-    document.getElementById("diagnosis-list").innerHTML = "";
+    // Initialize (diagnosis checkboxes hidden until request selected)
   </script>
 </body>
 </html>
