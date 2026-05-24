@@ -591,7 +591,12 @@
 
             <div class="field">
               <label>Clinical Summary <span class="optional-label">(Optional)</span></label>
-              <textarea id="clinical-summary" placeholder="Prior treatments, relevant lab/imaging findings..." rows="4"></textarea>
+              <textarea id="clinical-summary" placeholder="Prior treatments, relevant lab/imaging findings..." rows="3"></textarea>
+            </div>
+
+            <div class="field">
+              <label>Additional Clinical Notes <span class="optional-label">(Optional)</span></label>
+              <textarea id="additional-notes" placeholder="E.g., completed 6 months Weight Watchers + activity regime; imaging found abnormal lesion, rule out malignancy..." rows="3"></textarea>
             </div>
           </div>
 
@@ -625,10 +630,11 @@
             <p class="likelihood-text" id="likelihood-text">Based on payer criteria match</p>
           </div>
 
-          <!-- Tabs for Criteria vs Letter -->
+          <!-- Tabs for Criteria vs Letters -->
           <div class="tabs">
             <button class="tab-btn active" data-tab="criteria">Payer Criteria</button>
             <button class="tab-btn" data-tab="letter">PA Letter</button>
+            <button class="tab-btn" data-tab="medical-necessity">Medical Necessity</button>
           </div>
 
           <!-- Criteria Tab -->
@@ -653,6 +659,22 @@
               <div class="action-buttons">
                 <button class="btn btn-secondary btn-small" id="copy-letter-btn">Copy to Clipboard</button>
                 <button class="btn btn-secondary btn-small" id="download-letter-btn">Download as Text</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medical Necessity Tab -->
+          <div id="medical-necessity-tab" class="tab-content">
+            <div class="results-section">
+              <h3 class="section-title">Comprehensive Medical Necessity Statement</h3>
+              <div class="letter-section">
+                <div class="letter-content" id="medical-necessity-letter">
+                  <!-- Letter will be inserted here -->
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button class="btn btn-secondary btn-small" id="copy-medical-btn">Copy to Clipboard</button>
+                <button class="btn btn-secondary btn-small" id="download-medical-btn">Download as Text</button>
               </div>
             </div>
           </div>
@@ -1131,6 +1153,157 @@ Please contact the office with any questions or request for additional informati
       return letter;
     }
 
+    function generateMedicalNecessityLetter(payerId, requestType, evaluatedCriteria, clinicalData) {
+      const payer = payerPolicies[payerId];
+      const patientName = document.getElementById("patient-name").value || "[Patient Name]";
+      const memberId = document.getElementById("member-id").value || "[Member ID]";
+      const age = getPatientAge();
+      const ageStr = age ? `, age ${age}` : "";
+      const additionalNotes = document.getElementById("additional-notes").value;
+
+      // Build diagnosis section
+      let diagnosisText = "";
+      if (Object.keys(selectedDiagnoses).length > 0) {
+        diagnosisText = "\nPRIMARY DIAGNOSES:\n";
+        Object.entries(selectedDiagnoses).forEach(([code, label]) => {
+          diagnosisText += `${code} – ${label}\n`;
+        });
+        diagnosisText += "\n";
+      }
+
+      // Request type context
+      const requestTypeMap = {
+        medication: "medication therapy",
+        imaging: "diagnostic imaging study",
+        procedure: "medical procedure",
+        therapy: "therapeutic intervention",
+        specialist: "specialist evaluation"
+      };
+      const requestContext = requestTypeMap[requestType] || requestType;
+
+      // Build medical necessity narrative
+      let letter = `MEDICAL NECESSITY STATEMENT
+
+Patient: ${patientName}${ageStr}
+Member ID: ${memberId}
+Insurance Carrier: ${payer.name}
+Date of Request: ${new Date().toLocaleDateString()}
+Requested Service: ${requestContext.charAt(0).toUpperCase() + requestContext.slice(1)}
+
+${diagnosisText}
+
+CLINICAL PRESENTATION AND HISTORY:
+
+${clinicalData ? clinicalData + "\n" : "[Clinical summary not provided]\n"}
+`;
+
+      // Add context based on request type
+      if (requestType === "imaging") {
+        letter += `
+IMAGING JUSTIFICATION:
+
+Based on the patient's clinical presentation and examination findings, advanced diagnostic imaging is medically necessary to:
+• Evaluate the abnormal findings noted on clinical examination or prior imaging
+• Rule out significant pathology and potential malignancy
+• Guide further clinical decision-making and treatment planning
+• Establish a baseline for future comparison and monitoring
+
+The clinical context necessitates imaging to exclude serious underlying conditions that could impact patient morbidity and mortality.
+`;
+      } else if (requestType === "medication") {
+        letter += `
+MEDICATION JUSTIFICATION:
+
+The requested medication is medically necessary because:
+• The patient has documented disease requiring pharmacologic management
+• Prior therapeutic attempts with first-line agents have been unsuccessful or poorly tolerated
+• The requested medication is indicated for the patient's documented condition(s)
+• Evidence-based guidelines support this therapeutic approach
+• The anticipated benefits outweigh potential risks in this clinical context
+
+This medication represents the next appropriate step in the patient's therapeutic pathway.
+`;
+      } else if (requestType === "procedure") {
+        letter += `
+PROCEDURE JUSTIFICATION:
+
+The requested procedure is medically necessary because:
+• The patient has clinical indications supporting this intervention
+• Conservative measures have been attempted or are contraindicated
+• The procedure is evidence-based and supported by clinical guidelines
+• Expected outcomes will improve patient function and quality of life
+• The clinical benefit justifies the procedural risks
+
+This intervention is the appropriate next step in addressing the patient's medical needs.
+`;
+      }
+
+      if (additionalNotes) {
+        letter += `
+ADDITIONAL CLINICAL CONTEXT:
+
+${additionalNotes}
+`;
+      }
+
+      letter += `
+PAYER CRITERIA ALIGNMENT:
+
+This request aligns with ${payer.name}'s coverage criteria:
+`;
+
+      const metCriteria = evaluatedCriteria.filter(c => c.status === "met");
+      const unknownCriteria = evaluatedCriteria.filter(c => c.status === "unknown");
+
+      if (metCriteria.length > 0) {
+        letter += "\nDocumented Criteria Met:\n";
+        metCriteria.forEach(c => {
+          letter += `✓ ${c.label}\n`;
+        });
+      }
+
+      if (unknownCriteria.length > 0) {
+        letter += "\nAdditional Supporting Information:\n";
+        unknownCriteria.forEach(c => {
+          letter += `• ${c.label} – Documentation available upon request\n`;
+        });
+      }
+
+      letter += `
+CLINICAL OUTCOME EXPECTATIONS:
+
+Implementation of the requested ${requestContext} is expected to:
+• Provide accurate diagnostic information for clinical decision-making
+• Initiate appropriate therapeutic intervention
+• Improve patient symptoms and functional status
+• Prevent disease progression or complications
+• Support optimal clinical outcomes and quality of life
+
+CONCLUSION:
+
+Based on the clinical presentation, examination findings, and documentation provided, the requested ${requestContext} is medically necessary and appropriate for this patient. We respectfully request approval to proceed with this clinically important intervention.
+
+Should ${payer.name} require additional clinical information or clarification, please do not hesitate to contact our office.
+
+Respectfully submitted,
+
+_________________________
+[Provider Name]
+[Credentials/Specialty]
+[Practice Name]
+[Contact Information]
+[Date]
+
+SUPPORTING DOCUMENTATION:
+☐ Chart notes
+☐ Lab/imaging results
+☐ Prior treatment records
+☐ Consultation reports
+☐ Medication list`;
+
+      return letter;
+    }
+
     // ====== EVENT HANDLERS ======
     document.getElementById("pa-form").addEventListener("submit", (e) => {
       e.preventDefault();
@@ -1150,8 +1323,9 @@ Please contact the office with any questions or request for additional informati
       // Evaluate criteria
       const evaluatedCriteria = evaluateCriteria(payerId, requestType, clinicalData);
 
-      // Generate PA letter
+      // Generate PA letter and medical necessity letter
       const paLetter = generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData);
+      const medicalNecessityLetter = generateMedicalNecessityLetter(payerId, requestType, evaluatedCriteria, clinicalData);
 
       // Store analysis
       lastAnalysis = {
@@ -1159,14 +1333,15 @@ Please contact the office with any questions or request for additional informati
         requestType,
         likelihood,
         evaluatedCriteria,
-        paLetter
+        paLetter,
+        medicalNecessityLetter
       };
 
       // Update UI
-      displayResults(payerId, likelihood, evaluatedCriteria, paLetter);
+      displayResults(payerId, likelihood, evaluatedCriteria, paLetter, medicalNecessityLetter);
     });
 
-    function displayResults(payerId, likelihood, criteria, letter) {
+    function displayResults(payerId, likelihood, criteria, letter, medicalNecessityLetter) {
       document.getElementById("empty-results").style.display = "none";
       document.getElementById("results-content").style.display = "block";
 
@@ -1200,8 +1375,9 @@ Please contact the office with any questions or request for additional informati
         criteriaList.appendChild(div);
       });
 
-      // Update letter
+      // Update letters
       document.getElementById("pa-letter").textContent = letter;
+      document.getElementById("medical-necessity-letter").textContent = medicalNecessityLetter;
 
       // Reset tab to criteria
       switchTab("criteria");
@@ -1244,6 +1420,24 @@ Please contact the office with any questions or request for additional informati
       const element = document.createElement("a");
       element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(lastAnalysis.paLetter));
       element.setAttribute("download", "PA_Justification_" + new Date().toISOString().split("T")[0] + ".txt");
+      element.style.display = "none";
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    });
+
+    document.getElementById("copy-medical-btn").addEventListener("click", () => {
+      if (!lastAnalysis) return;
+      navigator.clipboard.writeText(lastAnalysis.medicalNecessityLetter).then(() => {
+        showToast("Medical necessity letter copied to clipboard");
+      });
+    });
+
+    document.getElementById("download-medical-btn").addEventListener("click", () => {
+      if (!lastAnalysis) return;
+      const element = document.createElement("a");
+      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(lastAnalysis.medicalNecessityLetter));
+      element.setAttribute("download", "Medical_Necessity_" + new Date().toISOString().split("T")[0] + ".txt");
       element.style.display = "none";
       document.body.appendChild(element);
       element.click();
