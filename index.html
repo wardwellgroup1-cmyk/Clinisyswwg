@@ -583,8 +583,15 @@
             </div>
 
             <div class="field">
+              <label>ICD-10 Diagnoses <span class="optional-label">(Optional)</span></label>
+              <input type="text" id="diagnosis-search" placeholder="Search diagnoses... (e.g., 'diabetes', 'E11')" />
+              <div id="diagnosis-list" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border-dark); border-radius: 6px; margin-top: 6px; background: white;"></div>
+              <div id="selected-diagnoses" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
+            </div>
+
+            <div class="field">
               <label>Clinical Summary <span class="optional-label">(Optional)</span></label>
-              <textarea id="clinical-summary" placeholder="Diagnoses, prior treatments, relevant lab/imaging findings..." rows="4"></textarea>
+              <textarea id="clinical-summary" placeholder="Prior treatments, relevant lab/imaging findings..." rows="4"></textarea>
             </div>
           </div>
 
@@ -655,6 +662,98 @@
   </div>
 
   <script>
+    // ====== ICD-10 DIAGNOSIS DATABASE ======
+    const icd10Diagnoses = {
+      // Endocrine/Metabolic
+      "E11": "Type 2 Diabetes Mellitus",
+      "E11.9": "Type 2 Diabetes - without complications",
+      "E11.22": "Type 2 Diabetes - with hyperosmolarity",
+      "E13": "Other Specified Diabetes Mellitus",
+      "E10": "Type 1 Diabetes Mellitus",
+      "E78.5": "Hyperlipidemia, unspecified",
+      "E78.0": "Pure hypercholesterolemia",
+      "E78.1": "Pure hypertriglyceridemia",
+      "E66.9": "Obesity, unspecified",
+      "E66.01": "Drug-induced obesity",
+
+      // Cardiovascular
+      "I10": "Essential (primary) hypertension",
+      "I15": "Secondary hypertension",
+      "I11": "Hypertensive heart disease",
+      "I50.9": "Heart failure, unspecified",
+      "I50.1": "Left ventricular failure",
+      "I50.2": "Systolic heart failure",
+      "I21.9": "Acute myocardial infarction, unspecified",
+      "I25.10": "Atherosclerotic heart disease",
+      "I63.9": "Cerebral infarction, unspecified",
+      "I64": "Stroke, not specified as hemorrhage or infarction",
+
+      // Pulmonary
+      "J44.9": "Chronic obstructive pulmonary disease (COPD), unspecified",
+      "J44.0": "COPD with acute lower respiratory infection",
+      "J44.1": "COPD with acute exacerbation",
+      "J45.9": "Asthma, unspecified",
+      "J45.901": "Unspecified asthma with (acute) exacerbation",
+      "J43.9": "Emphysema, unspecified",
+      "J40": "Bronchitis, not specified as acute or chronic",
+      "J47.9": "Bronchiectasis, unspecified",
+
+      // Rheumatologic
+      "M05.9": "Rheumatoid arthritis, unspecified",
+      "M06.9": "Unspecified rheumatoid arthritis",
+      "M07": "Psoriatic and enteropathic arthropathies",
+      "M08.9": "Juvenile arthritis, unspecified",
+      "M32.9": "Systemic lupus erythematosus (SLE), unspecified",
+      "M05.0": "RA with rheumatoid factor",
+
+      // GI/Hepatic
+      "K80.9": "Cholelithiasis without cholecystitis",
+      "K80.00": "Cholelithiasis with acute cholecystitis",
+      "K81.9": "Cholecystitis, unspecified",
+      "K70.9": "Unspecified cirrhosis of liver",
+      "K74.6": "Cirrhosis of liver, unspecified",
+      "K50.9": "Crohn disease, unspecified",
+      "K51.9": "Ulcerative colitis, unspecified",
+      "K92.2": "Gastrointestinal hemorrhage, unspecified",
+
+      // Renal
+      "N18.3": "Chronic kidney disease, stage 3",
+      "N18.4": "Chronic kidney disease, stage 4",
+      "N18.5": "Chronic kidney disease, stage 5",
+      "N18.9": "Chronic kidney disease, unspecified",
+      "N17.9": "Acute kidney injury, unspecified",
+
+      // Neoplastic
+      "C34.9": "Malignant neoplasm of lung, unspecified",
+      "C50.9": "Malignant neoplasm of breast, unspecified",
+      "C61": "Malignant neoplasm of prostate",
+      "C80.1": "Malignant neoplasm, unspecified",
+      "C20": "Malignant neoplasm of rectum",
+
+      // Neurological
+      "G30.9": "Alzheimer disease, unspecified",
+      "G31.83": "Dementia with Lewy bodies",
+      "G89.29": "Chronic pain, unspecified",
+      "G89.21": "Chronic pain due to trauma",
+      "G25.5": "Tremor, unspecified",
+      "G20": "Parkinson disease",
+
+      // Mental Health
+      "F32.9": "Major depressive disorder, single episode, unspecified",
+      "F33.9": "Major depressive disorder, recurrent, unspecified",
+      "F41.1": "Generalized anxiety disorder",
+      "F41.9": "Anxiety disorder, unspecified",
+      "F90.9": "Attention-deficit hyperactivity disorder (ADHD), unspecified",
+      "F60.3": "Dependent personality disorder",
+
+      // Other Common
+      "M79.3": "Panniculitis, unspecified",
+      "L89.90": "Pressure ulcer, unspecified site, unspecified stage",
+      "I87.2": "Venous insufficiency (chronic) (peripheral)",
+      "K21.9": "Unspecified gastro-esophageal reflux disease",
+      "J06.9": "Acute upper respiratory infection, unspecified"
+    };
+
     // ====== PAYER POLICIES DATABASE ======
     const payerPolicies = {
       aetna: {
@@ -884,6 +983,7 @@
     // ====== STATE ======
     let hipaaMode = true;
     let lastAnalysis = null;
+    let selectedDiagnoses = {}; // { code: "E11.9", label: "Type 2 Diabetes..." }
 
     // ====== UTILITIES ======
     function showToast(msg, type = "info") {
@@ -958,6 +1058,15 @@
       const metCriteria = evaluatedCriteria.filter(c => c.status === "met").map(c => c.label);
       const unknownCriteria = evaluatedCriteria.filter(c => c.status === "unknown").map(c => c.label);
 
+      // Build diagnoses section
+      let diagnosesSection = "";
+      if (Object.keys(selectedDiagnoses).length > 0) {
+        diagnosesSection = "\nDIAGNOSES (ICD-10):\n";
+        Object.entries(selectedDiagnoses).forEach(([code, label]) => {
+          diagnosesSection += `• ${code} – ${label}\n`;
+        });
+      }
+
       let letter = `PRIOR AUTHORIZATION REQUEST JUSTIFICATION
 
 TO: ${payer.name}
@@ -965,7 +1074,7 @@ FROM: [Provider Name/Practice]
 DATE: ${new Date().toLocaleDateString()}
 PATIENT: ${patientName}${ageStr}
 MEMBER ID: ${memberId}
-REQUEST TYPE: ${requestType.charAt(0).toUpperCase() + requestType.slice(1)}
+REQUEST TYPE: ${requestType.charAt(0).toUpperCase() + requestType.slice(1)}${diagnosesSection}
 
 ---
 
@@ -1115,6 +1224,9 @@ Please contact the office with any questions or request for additional informati
 
     document.getElementById("reset-btn").addEventListener("click", () => {
       document.getElementById("pa-form").reset();
+      selectedDiagnoses = {};
+      updateSelectedDiagnoses();
+      renderDiagnosisList();
       document.getElementById("empty-results").style.display = "block";
       document.getElementById("results-content").style.display = "none";
       lastAnalysis = null;
@@ -1143,6 +1255,86 @@ Please contact the office with any questions or request for additional informati
       hipaaMode = !hipaaMode;
       e.currentTarget.classList.toggle("off", !hipaaMode);
     });
+
+    // ====== DIAGNOSIS SEARCH & SELECT ======
+    function renderDiagnosisList(searchTerm = "") {
+      const diagnosisList = document.getElementById("diagnosis-list");
+      diagnosisList.innerHTML = "";
+
+      let matches = [];
+      const searchLower = searchTerm.toLowerCase();
+
+      // Find matching diagnoses
+      Object.entries(icd10Diagnoses).forEach(([code, label]) => {
+        if (searchTerm === "" || code.toLowerCase().includes(searchLower) || label.toLowerCase().includes(searchLower)) {
+          matches.push({ code, label });
+        }
+      });
+
+      // Show first 20 matches
+      matches.slice(0, 20).forEach(({ code, label }) => {
+        const div = document.createElement("div");
+        const isSelected = selectedDiagnoses[code];
+        div.style.cssText = `
+          padding: 8px 10px;
+          cursor: pointer;
+          border-bottom: 1px solid var(--border);
+          background: ${isSelected ? 'var(--accent-light)' : 'transparent'};
+          font-size: 12px;
+        `;
+        div.innerHTML = `<strong>${code}</strong> – ${label}`;
+        div.addEventListener("click", () => toggleDiagnosis(code, label));
+        diagnosisList.appendChild(div);
+      });
+
+      if (matches.length === 0 && searchTerm) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "padding: 10px; color: var(--neutral); font-size: 12px;";
+        empty.textContent = "No diagnoses found";
+        diagnosisList.appendChild(empty);
+      }
+    }
+
+    function toggleDiagnosis(code, label) {
+      if (selectedDiagnoses[code]) {
+        delete selectedDiagnoses[code];
+      } else {
+        selectedDiagnoses[code] = label;
+      }
+      renderDiagnosisList(document.getElementById("diagnosis-search").value);
+      updateSelectedDiagnoses();
+    }
+
+    function updateSelectedDiagnoses() {
+      const container = document.getElementById("selected-diagnoses");
+      container.innerHTML = "";
+      Object.entries(selectedDiagnoses).forEach(([code, label]) => {
+        const chip = document.createElement("span");
+        chip.style.cssText = `
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: var(--accent-light);
+          border: 1px solid var(--accent);
+          color: var(--accent);
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 11px;
+        `;
+        chip.innerHTML = `
+          <strong>${code}</strong>
+          <button style="background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font-size: 14px; line-height: 1;" onclick="event.stopPropagation(); delete selectedDiagnoses['${code}']; updateSelectedDiagnoses(); renderDiagnosisList(document.getElementById('diagnosis-search').value);">✕</button>
+        `;
+        container.appendChild(chip);
+      });
+    }
+
+    document.getElementById("diagnosis-search").addEventListener("input", (e) => {
+      renderDiagnosisList(e.target.value);
+    });
+
+    // Initialize diagnosis list
+    renderDiagnosisList();
   </script>
 </body>
 </html>
