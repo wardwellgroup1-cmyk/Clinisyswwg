@@ -197,11 +197,21 @@
       width: 100%;
       border: 1px solid var(--border-dark);
       border-radius: 6px;
-      padding: 8px 10px;
+      padding: 10px;
       font-size: 12px;
       color: var(--text-primary);
       background: white;
       transition: border-color 0.2s;
+      min-height: 40px;
+    }
+
+    @supports (-webkit-touch-callout: none) {
+      input[type="text"],
+      input[type="date"],
+      select,
+      textarea {
+        font-size: 16px;
+      }
     }
 
     input[type="text"]:focus,
@@ -238,6 +248,10 @@
       border: 1px solid;
       transition: all 0.2s;
       text-align: center;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .btn-primary {
@@ -496,6 +510,248 @@
 
       .form-panel {
         position: static;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 12px;
+      }
+
+      header {
+        padding: 12px 0;
+        margin-bottom: 16px;
+      }
+
+      .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .header-right {
+        width: 100%;
+        text-align: right;
+      }
+
+      .header-title {
+        font-size: 20px;
+      }
+
+      .header-subtitle {
+        font-size: 11px;
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .form-panel {
+        padding: 16px;
+        border-radius: 8px;
+      }
+
+      .form-section-title {
+        font-size: 11px;
+        margin-bottom: 10px;
+      }
+
+      .field {
+        margin-bottom: 10px;
+      }
+
+      label {
+        font-size: 11px;
+        margin-bottom: 3px;
+      }
+
+      input[type="text"],
+      input[type="date"],
+      select,
+      textarea {
+        padding: 10px;
+        font-size: 14px;
+        border-radius: 6px;
+      }
+
+      .button-group {
+        margin-top: 14px;
+        gap: 6px;
+      }
+
+      .btn {
+        padding: 12px 14px;
+        font-size: 13px;
+        width: 100%;
+      }
+
+      .disclaimer {
+        padding: 10px;
+        font-size: 10px;
+        margin-top: 14px;
+      }
+
+      #diagnosis-list {
+        max-height: 120px;
+      }
+
+      .selected-diagnoses {
+        gap: 4px;
+      }
+
+      .chip {
+        font-size: 10px;
+        padding: 3px 6px;
+      }
+
+      .results-panel {
+        padding: 16px;
+        border-radius: 8px;
+      }
+
+      .approval-likelihood {
+        padding: 12px;
+      }
+
+      .likelihood-score {
+        font-size: 28px;
+      }
+
+      .likelihood-label,
+      .likelihood-text {
+        font-size: 11px;
+      }
+
+      .section-title {
+        font-size: 13px;
+        padding-bottom: 8px;
+        margin-bottom: 10px;
+      }
+
+      .tabs {
+        gap: 4px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .tab-btn {
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+
+      .criterion {
+        padding: 8px 10px;
+        font-size: 11px;
+        border-radius: 4px;
+      }
+
+      .criterion-header {
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .criterion-label {
+        font-size: 11px;
+      }
+
+      .criterion-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+      }
+
+      .criterion-text {
+        font-size: 10px;
+      }
+
+      .letter-section {
+        padding: 12px;
+      }
+
+      .letter-content {
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .action-buttons {
+        gap: 6px;
+        flex-direction: column;
+      }
+
+      .btn-small {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+
+      .empty-state {
+        padding: 30px 16px;
+      }
+
+      .empty-state-icon {
+        font-size: 32px;
+      }
+
+      .empty-state-text {
+        font-size: 13px;
+      }
+
+      .criteria-list {
+        gap: 8px;
+      }
+
+      .tabs-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .search-input {
+        min-width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 10px;
+      }
+
+      .header-title {
+        font-size: 18px;
+      }
+
+      .form-panel,
+      .results-panel {
+        padding: 12px;
+      }
+
+      .btn {
+        padding: 11px 12px;
+        font-size: 12px;
+      }
+
+      .likelihood-score {
+        font-size: 24px;
+      }
+
+      .letter-content {
+        font-size: 10px;
+      }
+
+      .tab-btn {
+        padding: 5px 6px;
+        font-size: 10px;
+      }
+
+      input[type="text"],
+      input[type="date"],
+      select,
+      textarea {
+        padding: 10px;
+        font-size: 14px;
+      }
+
+      label {
+        font-size: 10px;
       }
     }
   </style>
