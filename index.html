@@ -1131,6 +1131,36 @@
       "K51.9": "Ulcerative colitis, unspecified",
       "K92.2": "Gastrointestinal hemorrhage, unspecified",
 
+      // Imaging-specific diagnoses (for PA rules)
+      "G40.909": "Epilepsy, unspecified, not intractable",
+      "R56.9": "Unspecified convulsions",
+      "G43.119": "Migraine with aura, not intractable, with status migrainosus",
+      "G45.9": "Transient ischemic attack, unspecified",
+      "R29.818": "Other specified symptoms involving nervous system",
+      "R42": "Dizziness and giddiness",
+      "M54.16": "Radiculopathy, lumbar region",
+      "M51.16": "Intervertebral disc disorder with radiculopathy, lumbar region",
+      "M48.061": "Lumbar spinal stenosis",
+      "S83.241A": "Tear of meniscus, current injury",
+      "S83.511A": "Sprain of anterior cruciate ligament",
+      "M23.221": "Derangement of anterior horn of meniscus",
+      "M25.561": "Pain in knee",
+      "M17.11": "Primary osteoarthritis, right knee",
+      "R91.1": "Solitary pulmonary nodule",
+      "R91.8": "Other nonspecific abnormal finding of lung field",
+      "C34.90": "Malignant neoplasm of unspecified part of unspecified lung",
+      "R06.02": "Shortness of breath",
+      "R07.9": "Chest pain, unspecified",
+      "R79.1": "Elevated blood glucose",
+      "I26.99": "Pulmonary embolism without acute cor pulmonale",
+      "R10.31": "Right upper quadrant pain",
+      "R10.32": "Right lower quadrant pain",
+      "K35.80": "Unspecified acute appendicitis",
+      "K57.32": "Diverticulitis of colon without perforation or abscess without bleeding",
+      "N20.0": "Calculus of kidney",
+      "R10.9": "Unspecified abdominal pain",
+      "R19.00": "Intra-abdominal and pelvic swelling, mass and lump, unspecified site",
+
       // Renal
       "N18.3": "Chronic kidney disease, stage 3",
       "N18.4": "Chronic kidney disease, stage 4",
@@ -1956,13 +1986,15 @@ SUPPORTING DOCUMENTATION:
       selectedDiagnoses = {};
       updateSelectedDiagnoses();
 
-      if (specificRequest && requestMappings[requestType]) {
-        const relevantCodes = requestMappings[requestType][specificRequest] || [];
+      if (specificRequest) {
+        const relevantCodes = requestMappings[requestType] && requestMappings[requestType][specificRequest] ? requestMappings[requestType][specificRequest] : [];
 
         // Show only relevant diagnoses
-        if (relevantCodes.length > 0) {
+        if (relevantCodes && relevantCodes.length > 0) {
           diagnosisField.style.display = "block";
           renderRelevantDiagnoses(relevantCodes);
+        } else {
+          diagnosisField.style.display = "none";
         }
       } else {
         diagnosisField.style.display = "none";
@@ -1973,9 +2005,18 @@ SUPPORTING DOCUMENTATION:
       const container = document.getElementById("diagnosis-checkboxes");
       container.innerHTML = "";
 
+      if (!codesArray || codesArray.length === 0) {
+        container.innerHTML = "<div style='padding: 10px; color: var(--neutral); font-size: 12px;'>No diagnoses available for this selection.</div>";
+        return;
+      }
+
+      let addedCount = 0;
       codesArray.forEach(code => {
         const label = icd10Diagnoses[code];
-        if (!label) return;
+        if (!label) {
+          console.warn(`Missing ICD-10 label for code: ${code}`);
+          return;
+        }
 
         const isSelected = selectedDiagnoses[code];
 
@@ -1983,8 +2024,10 @@ SUPPORTING DOCUMENTATION:
         checkboxDiv.style.cssText = `
           display: flex;
           align-items: center;
-          padding: 6px 0;
+          padding: 8px 6px;
           border-bottom: 1px solid #e0e0e0;
+          background: ${isSelected ? 'var(--accent-light)' : 'transparent'};
+          border-radius: 4px;
         `;
 
         const checkbox = document.createElement("input");
@@ -2005,6 +2048,7 @@ SUPPORTING DOCUMENTATION:
           cursor: pointer;
           font-size: 12px;
           flex: 1;
+          user-select: none;
         `;
         label2.innerHTML = `<strong>${code}</strong> – ${label}`;
 
@@ -2014,13 +2058,19 @@ SUPPORTING DOCUMENTATION:
           } else {
             delete selectedDiagnoses[code];
           }
+          renderRelevantDiagnoses(codesArray); // Re-render to update backgrounds
           updateSelectedDiagnoses();
         });
 
         checkboxDiv.appendChild(checkbox);
         checkboxDiv.appendChild(label2);
         container.appendChild(checkboxDiv);
+        addedCount++;
       });
+
+      if (addedCount === 0) {
+        container.innerHTML = "<div style='padding: 10px; color: var(--warning); font-size: 12px;'>Note: Some diagnosis codes may not be in the database. Please add them manually or contact support.</div>";
+      }
     }
 
     // Initialize (diagnosis checkboxes hidden until request selected)
