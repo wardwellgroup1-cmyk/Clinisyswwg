@@ -808,6 +808,13 @@
               </select>
             </div>
 
+            <div class="field" id="specific-request-field" style="display: none;">
+              <label id="specific-request-label">Specific Medication <span style="color: var(--error);">*</span></label>
+              <select id="specific-request" required>
+                <option value="">Select specific...</option>
+              </select>
+            </div>
+
             <div class="field">
               <label>Urgency <span style="color: var(--error);">*</span></label>
               <select id="urgency" required>
@@ -838,9 +845,9 @@
               <input type="text" id="member-id" placeholder="Payer member ID" />
             </div>
 
-            <div class="field">
-              <label>ICD-10 Diagnoses <span class="optional-label">(Optional)</span></label>
-              <input type="text" id="diagnosis-search" placeholder="Search diagnoses... (e.g., 'diabetes', 'E11')" />
+            <div class="field" id="diagnosis-field" style="display: none;">
+              <label>Relevant ICD-10 Diagnoses <span class="optional-label">(Optional)</span></label>
+              <input type="text" id="diagnosis-search" placeholder="Search diagnoses..." />
               <div id="diagnosis-list" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border-dark); border-radius: 6px; margin-top: 6px; background: white;"></div>
               <div id="selected-diagnoses" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
             </div>
@@ -940,6 +947,44 @@
   </div>
 
   <script>
+    // ====== MEDICATION & IMAGING REQUEST MAPPINGS ======
+    const requestMappings = {
+      medication: {
+        "GLP-1 Receptor Agonist": ["E11", "E11.9", "E13", "E78.5"],
+        "SGLT2 Inhibitor": ["E11", "E11.9", "I50.9", "I50.1", "N18.3"],
+        "Statin (High-intensity)": ["E78.0", "E78.1", "E78.5", "I25.10", "I21.9"],
+        "ACE Inhibitor/ARB": ["I10", "I11", "I50.9", "N18.3", "N18.4"],
+        "Biologic (TNF inhibitor)": ["M05.9", "M06.9", "M07", "M32.9"],
+        "COPD Medication": ["J44.9", "J44.0", "J44.1", "J43.9"],
+        "Asthma Controller": ["J45.9", "J45.901"],
+        "Antidepressant": ["F32.9", "F33.9", "F41.1"],
+        "ADHD Medication": ["F90.9"],
+        "Anticoagulant": ["I21.9", "I63.9", "I64"],
+        "Biologics for IBD": ["K50.9", "K51.9"],
+        "Migraine Preventive": ["G89.29"],
+        "Osteoporosis Medication": ["M80", "M81"],
+        "Specialty Diabetes Drug": ["E11", "E11.9", "E13"],
+        "Immunosuppressant": ["M05.9", "M32.9", "K50.9"]
+      },
+      imaging: {
+        "CT Chest": ["J44.9", "J44.1", "C34.9", "I50.1", "I21.9", "I63.9"],
+        "CT Abdomen/Pelvis": ["K80.9", "K80.00", "K81.9", "K70.9", "C20"],
+        "MRI Brain": ["G30.9", "G31.83", "G20", "I63.9", "I64"],
+        "Ultrasound Abdomen": ["K80.9", "K81.9", "K70.9", "N18.5"],
+        "X-Ray Chest": ["J44.9", "J40", "J45.9", "I50.1"],
+        "Echocardiogram": ["I50.9", "I50.1", "I50.2", "I25.10", "I11"],
+        "Stress Test": ["I25.10", "I21.9", "I10"],
+        "Carotid Ultrasound": ["I63.9", "I64", "I25.10"],
+        "Colonoscopy": ["K50.9", "K51.9", "K92.2"],
+        "Endoscopy": ["K21.9", "K92.2"],
+        "Mammogram": ["C50.9"],
+        "CT Pelvis": ["C61"],
+        "Bone Scan": ["M80", "M81", "C61", "C80.1"],
+        "Renal Ultrasound": ["N18.3", "N18.4", "N18.5", "N17.9"],
+        "Liver Ultrasound": ["K70.9", "K74.6"]
+      }
+    };
+
     // ====== ICD-10 DIAGNOSIS DATABASE ======
     const icd10Diagnoses = {
       // Endocrine/Metabolic
@@ -1658,7 +1703,9 @@ SUPPORTING DOCUMENTATION:
       document.getElementById("pa-form").reset();
       selectedDiagnoses = {};
       updateSelectedDiagnoses();
-      renderDiagnosisList();
+      document.getElementById("diagnosis-field").style.display = "none";
+      document.getElementById("specific-request-field").style.display = "none";
+      document.getElementById("diagnosis-list").innerHTML = "";
       document.getElementById("empty-results").style.display = "block";
       document.getElementById("results-content").style.display = "none";
       lastAnalysis = null;
@@ -1706,52 +1753,20 @@ SUPPORTING DOCUMENTATION:
       e.currentTarget.classList.toggle("off", !hipaaMode);
     });
 
-    // ====== DIAGNOSIS SEARCH & SELECT ======
-    function renderDiagnosisList(searchTerm = "") {
-      const diagnosisList = document.getElementById("diagnosis-list");
-      diagnosisList.innerHTML = "";
-
-      let matches = [];
-      const searchLower = searchTerm.toLowerCase();
-
-      // Find matching diagnoses
-      Object.entries(icd10Diagnoses).forEach(([code, label]) => {
-        if (searchTerm === "" || code.toLowerCase().includes(searchLower) || label.toLowerCase().includes(searchLower)) {
-          matches.push({ code, label });
-        }
-      });
-
-      // Show first 20 matches
-      matches.slice(0, 20).forEach(({ code, label }) => {
-        const div = document.createElement("div");
-        const isSelected = selectedDiagnoses[code];
-        div.style.cssText = `
-          padding: 8px 10px;
-          cursor: pointer;
-          border-bottom: 1px solid var(--border);
-          background: ${isSelected ? 'var(--accent-light)' : 'transparent'};
-          font-size: 12px;
-        `;
-        div.innerHTML = `<strong>${code}</strong> – ${label}`;
-        div.addEventListener("click", () => toggleDiagnosis(code, label));
-        diagnosisList.appendChild(div);
-      });
-
-      if (matches.length === 0 && searchTerm) {
-        const empty = document.createElement("div");
-        empty.style.cssText = "padding: 10px; color: var(--neutral); font-size: 12px;";
-        empty.textContent = "No diagnoses found";
-        diagnosisList.appendChild(empty);
-      }
-    }
-
+    // ====== DIAGNOSIS SELECTION ======
     function toggleDiagnosis(code, label) {
       if (selectedDiagnoses[code]) {
         delete selectedDiagnoses[code];
       } else {
         selectedDiagnoses[code] = label;
       }
-      renderDiagnosisList(document.getElementById("diagnosis-search").value);
+      // Re-render relevant diagnoses to update highlighting
+      const requestType = document.getElementById("request-type").value;
+      const specificRequest = document.getElementById("specific-request").value;
+      if (specificRequest && requestMappings[requestType]) {
+        const relevantCodes = requestMappings[requestType][specificRequest] || [];
+        renderRelevantDiagnoses(relevantCodes);
+      }
       updateSelectedDiagnoses();
     }
 
@@ -1773,18 +1788,87 @@ SUPPORTING DOCUMENTATION:
         `;
         chip.innerHTML = `
           <strong>${code}</strong>
-          <button style="background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font-size: 14px; line-height: 1;" onclick="event.stopPropagation(); delete selectedDiagnoses['${code}']; updateSelectedDiagnoses(); renderDiagnosisList(document.getElementById('diagnosis-search').value);">✕</button>
+          <button style="background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font-size: 14px; line-height: 1;" onclick="event.stopPropagation(); delete selectedDiagnoses['${code}']; updateSelectedDiagnoses(); const rt = document.getElementById('request-type').value; const sr = document.getElementById('specific-request').value; if (sr && requestMappings[rt]) renderRelevantDiagnoses(requestMappings[rt][sr]);">✕</button>
         `;
         container.appendChild(chip);
       });
     }
 
-    document.getElementById("diagnosis-search").addEventListener("input", (e) => {
-      renderDiagnosisList(e.target.value);
+    // ====== REQUEST TYPE & SPECIFIC REQUEST HANDLING ======
+    document.getElementById("request-type").addEventListener("change", (e) => {
+      const requestType = e.target.value;
+      const specificField = document.getElementById("specific-request-field");
+      const specificSelect = document.getElementById("specific-request");
+      const diagnosisField = document.getElementById("diagnosis-field");
+      const specificLabel = document.getElementById("specific-request-label");
+
+      specificSelect.innerHTML = '<option value="">Select specific...</option>';
+      diagnosisField.style.display = "none";
+      selectedDiagnoses = {};
+      updateSelectedDiagnoses();
+
+      if (requestType === "medication" || requestType === "imaging") {
+        specificField.style.display = "block";
+        specificLabel.textContent = requestType === "medication" ? "Specific Medication" : "Imaging Type";
+
+        const options = requestMappings[requestType];
+        Object.keys(options).forEach(name => {
+          const opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          specificSelect.appendChild(opt);
+        });
+      } else {
+        specificField.style.display = "none";
+      }
     });
 
-    // Initialize diagnosis list
-    renderDiagnosisList();
+    document.getElementById("specific-request").addEventListener("change", (e) => {
+      const requestType = document.getElementById("request-type").value;
+      const specificRequest = e.target.value;
+      const diagnosisField = document.getElementById("diagnosis-field");
+
+      selectedDiagnoses = {};
+      updateSelectedDiagnoses();
+
+      if (specificRequest && requestMappings[requestType]) {
+        const relevantCodes = requestMappings[requestType][specificRequest] || [];
+
+        // Show only relevant diagnoses
+        if (relevantCodes.length > 0) {
+          diagnosisField.style.display = "block";
+          renderRelevantDiagnoses(relevantCodes);
+        }
+      } else {
+        diagnosisField.style.display = "none";
+      }
+    });
+
+    function renderRelevantDiagnoses(codesArray) {
+      const diagnosisList = document.getElementById("diagnosis-list");
+      diagnosisList.innerHTML = "";
+
+      codesArray.forEach(code => {
+        const label = icd10Diagnoses[code];
+        if (!label) return;
+
+        const div = document.createElement("div");
+        const isSelected = selectedDiagnoses[code];
+        div.style.cssText = `
+          padding: 8px 10px;
+          cursor: pointer;
+          border-bottom: 1px solid var(--border);
+          background: ${isSelected ? 'var(--accent-light)' : 'transparent'};
+          font-size: 12px;
+        `;
+        div.innerHTML = `<strong>${code}</strong> – ${label}`;
+        div.addEventListener("click", () => toggleDiagnosis(code, label));
+        diagnosisList.appendChild(div);
+      });
+    }
+
+    // Initialize (diagnosis list hidden until request selected)
+    document.getElementById("diagnosis-list").innerHTML = "";
   </script>
 </body>
 </html>
