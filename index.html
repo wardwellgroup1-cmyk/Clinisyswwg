@@ -946,6 +946,55 @@
   </div>
 
   <script>
+    // ====== IMAGING PA RULES DATABASE (High-Yield Studies) ======
+    const imagingPARules = {
+      "MRI Brain (CPT 70553, 70551)": {
+        cpt: ["70553", "70551"],
+        icd10: ["G40.909", "R56.9", "G43.119", "I63.9", "G45.9", "R29.818", "R51.9", "R42"],
+        paLogic: [
+          "Use specific neurologic diagnoses (seizure, stroke, TIA, focal deficits) when clinically accurate",
+          "Avoid only using nonspecific 'headache' if more precise codes are supported by documentation",
+          "Document red flag symptoms (focal deficits, seizure, altered mental status, trauma)"
+        ]
+      },
+      "MRI Lumbar Spine (CPT 72148)": {
+        cpt: ["72148"],
+        icd10: ["M54.16", "M51.16", "M48.061", "M54.50", "G89.29"],
+        paLogic: [
+          "Prefer radiculopathy/stenosis/disc codes over generic low back pain when exam supports it",
+          "Document duration, failed conservative therapy (PT, NSAIDs), and red flags if present",
+          "Avoid imaging for acute, uncomplicated low back pain without red flags"
+        ]
+      },
+      "MRI Knee (CPT 73721)": {
+        cpt: ["73721"],
+        icd10: ["S83.241A", "S83.511A", "M23.221", "M25.561", "M17.11"],
+        paLogic: [
+          "Use injury/tear codes when there is clear traumatic or mechanical history",
+          "Document mechanical symptoms (locking, giving way) and failed conservative management",
+          "Generic 'knee pain' alone is weaker than structural or injury codes"
+        ]
+      },
+      "CT Chest (CPT 71260, 71275)": {
+        cpt: ["71260", "71275"],
+        icd10: ["R91.1", "R91.8", "J18.9", "C34.90", "R06.02", "R07.9", "R79.1", "I26.99"],
+        paLogic: [
+          "For CTA chest, pair chest pain or dyspnea with elevated D-dimer when appropriate",
+          "For CT chest, use nodule/mass/pneumonia codes instead of only 'cough' when supported",
+          "Include smoking history and risk factors in documentation for nodules"
+        ]
+      },
+      "CT Abdomen/Pelvis (CPT 74177, 74178)": {
+        cpt: ["74177", "74178"],
+        icd10: ["R10.31", "R10.32", "K35.80", "K57.32", "N20.0", "R10.9", "R19.00"],
+        paLogic: [
+          "Use quadrant-specific pain codes when exam localizes pain",
+          "Document fever, leukocytosis, hematuria, or other supporting findings",
+          "Use specific pathology codes (appendicitis, diverticulitis, nephrolithiasis) when confirmed or strongly suspected"
+        ]
+      }
+    };
+
     // ====== MEDICATION & IMAGING REQUEST MAPPINGS ======
     const requestMappings = {
       medication: {
@@ -982,25 +1031,16 @@
         "Bariatric Surgery": ["E66.2", "E66.209", "Z68.41", "Z68.45", "I10", "E11.9"]
       },
       imaging: {
-        // MRI Brain (indications: stroke, dementia, Parkinson's, seizures, headaches)
-        "MRI Brain": ["G30.9", "G31.83", "G20", "G47.30", "G47.32", "G47.33", "I63.9", "I64", "G89.29"],
+        // MRI studies with CPT codes and validated ICD-10s
+        "MRI Brain (CPT 70553, 70551)": ["G40.909", "R56.9", "G43.119", "I63.9", "G45.9", "R29.818", "R51.9", "R42"],
+        "MRI Lumbar Spine (CPT 72148)": ["M54.16", "M51.16", "M48.061", "M54.50", "G89.29"],
+        "MRI Knee (CPT 73721)": ["S83.241A", "S83.511A", "M23.221", "M25.561", "M17.11"],
 
-        // MRI Abdomen (indications: cirrhosis, pancreatitis, GI cancer, liver disease)
-        "MRI Abdomen": ["K70.9", "K74.6", "K80.9", "K81.9", "K50.9", "K51.9", "C20"],
+        // CT studies with CPT codes and validated ICD-10s
+        "CT Chest (CPT 71260, 71275)": ["R91.1", "R91.8", "J18.9", "C34.90", "R06.02", "R07.9", "R79.1", "I26.99"],
+        "CT Abdomen/Pelvis (CPT 74177, 74178)": ["R10.31", "R10.32", "K35.80", "K57.32", "N20.0", "R10.9", "R19.00"],
 
-        // MRI Pelvis (indications: prostate cancer, gynecologic issues, pelvic pain)
-        "MRI Pelvis": ["C61", "K50.9", "K51.9", "G89.29"],
-
-        // MRI Breast
-        "MRI Breast": ["C50.9"],
-
-        // CT Chest (COPD, lung cancer, PE, heart disease)
-        "CT Chest": ["J44.9", "J44.1", "C34.9", "I50.1", "I21.9", "I63.9"],
-
-        // CT Abdomen/Pelvis
-        "CT Abdomen/Pelvis": ["K80.9", "K80.00", "K81.9", "K70.9", "C20", "C61"],
-
-        // Other Imaging
+        // Other imaging (legacy support)
         "Ultrasound Abdomen": ["K80.9", "K81.9", "K70.9", "N18.5"],
         "X-Ray Chest": ["J44.9", "J40", "J45.9", "I50.1"],
         "Echocardiogram": ["I50.9", "I50.1", "I50.2", "I25.10", "I11"],
@@ -1452,6 +1492,16 @@
         });
       }
 
+      // Add CPT codes for imaging
+      let cptSection = "";
+      if (requestType === "imaging") {
+        const specificRequest = document.getElementById("specific-request").value;
+        const imagingRule = imagingPARules[specificRequest];
+        if (imagingRule) {
+          cptSection = `\nCPT CODE(S): ${imagingRule.cpt.join(", ")}`;
+        }
+      }
+
       let letter = `PRIOR AUTHORIZATION REQUEST JUSTIFICATION
 
 TO: ${payer.name}
@@ -1459,7 +1509,7 @@ FROM: [Provider Name/Practice]
 DATE: ${new Date().toLocaleDateString()}
 PATIENT: ${patientName}${ageStr}
 MEMBER ID: ${memberId}
-REQUEST TYPE: ${requestType.charAt(0).toUpperCase() + requestType.slice(1)}${diagnosesSection}
+REQUEST TYPE: ${requestType.charAt(0).toUpperCase() + requestType.slice(1)}${cptSection}${diagnosesSection}
 
 ---
 
@@ -1607,6 +1657,25 @@ ADDITIONAL CLINICAL CONTEXT:
 
 ${additionalNotes}
 `;
+      }
+
+      // Add PA Logic guidance for imaging
+      if (requestType === "imaging") {
+        const specificRequest = document.getElementById("specific-request").value;
+        const imagingRule = imagingPARules[specificRequest];
+
+        if (imagingRule) {
+          letter += `
+PAYER PA LOGIC & GUIDANCE:
+
+CPT Code(s): ${imagingRule.cpt.join(", ")}
+
+Clinical Guidance:
+${imagingRule.paLogic.map((logic, i) => `${i + 1}. ${logic}`).join("\n")}
+
+This request aligns with established imaging PA criteria and documentation standards.
+`;
+        }
       }
 
       letter += `
