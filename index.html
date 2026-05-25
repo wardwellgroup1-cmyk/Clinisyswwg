@@ -790,6 +790,7 @@
                 <option value="aetna">Aetna</option>
                 <option value="bcbs">Blue Cross Blue Shield</option>
                 <option value="cigna">Cigna</option>
+                <option value="fidelis">Fidelis Care</option>
                 <option value="humana">Humana</option>
                 <option value="united">United Healthcare</option>
                 <option value="anthem">Anthem</option>
@@ -1436,6 +1437,57 @@
               label: "Clinical indication documented",
               description: "Clear clinical indication supported by history and findings",
               required: true
+            }
+          ]
+        }
+      },
+      fidelis: {
+        name: "Fidelis Care",
+        criteria: {
+          medication: [
+            {
+              id: "medicaid-formulary",
+              label: "Medicaid formulary check",
+              description: "Drug is on Fidelis Medicaid formulary or prior authorization requested",
+              required: true
+            },
+            {
+              id: "step-therapy",
+              label: "Step therapy completed",
+              description: "Required step therapy protocol completed or documented intolerance",
+              required: true
+            },
+            {
+              id: "clinical-justification",
+              label: "Clinical justification documented",
+              description: "Clear medical necessity with specific diagnosis and prior treatment attempts",
+              required: true
+            },
+            {
+              id: "member-eligibility",
+              label: "Member eligibility verified",
+              description: "Patient is active Fidelis member with no claim issues",
+              required: false
+            }
+          ],
+          imaging: [
+            {
+              id: "medical-necessity-imaging",
+              label: "Medical necessity established",
+              description: "Imaging is medically necessary to answer specific clinical question",
+              required: true
+            },
+            {
+              id: "guideline-adherence",
+              label: "Guideline adherence",
+              description: "Imaging request aligns with ACR, specialty society, or Fidelis guidelines",
+              required: true
+            },
+            {
+              id: "prior-testing",
+              label: "Prior testing documented",
+              description: "Document any prior imaging, labs, or conservative measures attempted",
+              required: false
             }
           ]
         }
