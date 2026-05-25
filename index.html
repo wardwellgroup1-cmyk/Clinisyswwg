@@ -790,8 +790,10 @@
                 <option value="aetna">Aetna</option>
                 <option value="bcbs">Blue Cross Blue Shield</option>
                 <option value="cigna">Cigna</option>
+                <option value="empire">Empire BlueCross BlueShield</option>
                 <option value="fidelis">Fidelis Care</option>
                 <option value="humana">Humana</option>
+                <option value="nyship">NYSHIP (NY State Health Plan)</option>
                 <option value="united">United Healthcare</option>
                 <option value="anthem">Anthem</option>
               </select>
@@ -1487,6 +1489,108 @@
               id: "prior-testing",
               label: "Prior testing documented",
               description: "Document any prior imaging, labs, or conservative measures attempted",
+              required: false
+            }
+          ]
+        }
+      },
+      empire: {
+        name: "Empire BlueCross BlueShield",
+        criteria: {
+          medication: [
+            {
+              id: "clinical-criteria-met",
+              label: "Empire clinical criteria met",
+              description: "Request meets Empire's published clinical criteria for the medication",
+              required: true
+            },
+            {
+              id: "prior-authorization-triggered",
+              label: "Prior authorization requirement documented",
+              description: "Medication requires PA per Empire formulary; non-preferred or restricted",
+              required: true
+            },
+            {
+              id: "diagnosis-code-supported",
+              label: "Diagnosis code supported",
+              description: "Patient diagnosis is within FDA indication for requested medication",
+              required: true
+            },
+            {
+              id: "step-therapy-empire",
+              label: "Step therapy completed",
+              description: "Required step therapy agents tried or contraindicated",
+              required: false
+            }
+          ],
+          imaging: [
+            {
+              id: "clinical-indication-empire",
+              label: "Clinical indication documented",
+              description: "Specific clinical indication with supporting history and findings",
+              required: true
+            },
+            {
+              id: "empire-imaging-guidelines",
+              label: "Empire imaging guidelines",
+              description: "Request aligns with Empire's imaging appropriateness criteria",
+              required: true
+            },
+            {
+              id: "no-recent-imaging",
+              label: "No recent duplicate imaging",
+              description: "No equivalent imaging performed within appropriate interval",
+              required: false
+            }
+          ]
+        }
+      },
+      nyship: {
+        name: "NYSHIP (NY State Health Plan)",
+        criteria: {
+          medication: [
+            {
+              id: "nyship-formulary",
+              label: "NYSHIP formulary compliance",
+              description: "Drug is on NYSHIP formulary or PA submitted for non-formulary request",
+              required: true
+            },
+            {
+              id: "medical-necessity-nyship",
+              label: "Medical necessity for state employee",
+              description: "Clear clinical justification appropriate for state employee health plan",
+              required: true
+            },
+            {
+              id: "cost-effectiveness",
+              label: "Cost-effective justification",
+              description: "Explain why this medication over more cost-effective alternatives",
+              required: true
+            },
+            {
+              id: "prior-therapy-documented",
+              label: "Prior therapy documented",
+              description: "Document prior treatment failures or contraindications",
+              required: false
+            }
+          ],
+          imaging: [
+            {
+              id: "medical-necessity-imaging-nyship",
+              label: "Medical necessity established",
+              description: "Clinically necessary imaging to diagnose or manage documented condition",
+              required: true
+            },
+            {
+              id: "evidence-based-imaging",
+              label: "Evidence-based imaging request",
+              description: "Request supported by clinical evidence and guidelines",
+              required: true
+            },
+            {
+              id: "prior-conservative-measures",
+              label: "Conservative measures documented",
+              description: "Document prior non-imaging diagnostic or treatment attempts",
               required: false
             }
           ]
