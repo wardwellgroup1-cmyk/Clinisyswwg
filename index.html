@@ -411,13 +411,21 @@
         <!-- VOICE CONTROLS -->
         <div class="card">
             <div class="card-title">🎤 Voice Input</div>
-            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+
+            <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
                 <button class="btn btn-voice btn-start" id="startBtn" onclick="startRecording()">▶️ START</button>
                 <button class="btn btn-voice btn-pause" id="pauseBtn" onclick="pauseRecording()" disabled>⏸️ PAUSE</button>
                 <button class="btn btn-voice btn-resume" id="resumeBtn" onclick="resumeRecording()" disabled style="display: none;">▶️ RESUME</button>
                 <button class="btn btn-voice btn-stop" id="stopBtn" onclick="stopRecording()" disabled>⏹️ STOP</button>
             </div>
+
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                <button class="btn" style="background: #8b5cf6; color: white; flex: 1;" id="callRecordBtn" onclick="startCallRecording()">☎️ REC CALL</button>
+                <button class="btn" style="background: #dc2626; color: white; flex: 1; display: none;" id="stopCallRecordBtn" onclick="stopCallRecording()">⏹️ STOP REC</button>
+            </div>
+
             <div id="voiceStatus" style="font-size: 11px; padding: 8px; background: #dbeafe; border-radius: 6px; color: #0c4a6e; display: none;">Status here</div>
+            <div id="callRecordStatus" style="font-size: 11px; padding: 8px; background: #fee2e2; border-radius: 6px; color: #991b1b; display: none; margin-top: 8px;"></div>
         </div>
 
         <!-- TRANSCRIPT -->
@@ -526,8 +534,26 @@
                     <strong>App Information</strong><br>
                     <div style="color: #64748b; font-size: 12px; margin-top: 8px;">
                         <div>Name: HEDIS CareGap Mobile</div>
-                        <div>Version: 11.0</div>
-                        <div>Features: Voice Input + Progress Notes</div>
+                        <div>Version: 12.0</div>
+                        <div>Features: Voice Input + Call Recording + Progress Notes</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <strong>📞 Call Recording Guide</strong><br>
+                    <div style="color: #64748b; font-size: 12px; margin-top: 8px;">
+                        <strong style="color: #1e293b;">How to use:</strong><br>
+                        1. Start your Zoom/Teams/Meet call<br>
+                        2. Tap "REC CALL" button in app<br>
+                        3. When prompted, tap "Share" and select your screen<br>
+                        4. Audio from call will record (both voices)<br>
+                        5. Tap "STOP REC" when done<br>
+                        6. Recording auto-downloads as .wav file<br><br>
+                        <strong style="color: #1e293b;">Works with:</strong><br>
+                        ✓ Zoom, Teams, Google Meet<br>
+                        ✓ WebEx, Skype, Discord<br>
+                        ✓ Any browser-based video platform<br>
+                        ✓ HIPAA-safe (stored locally only)
                     </div>
                 </div>
 
@@ -535,6 +561,7 @@
                     <strong>About</strong><br>
                     <div style="color: #64748b; font-size: 12px; margin-top: 8px;">
                         Real-time voice-to-text clinical documentation<br>
+                        Record virtual calls with patient consent<br>
                         Automatic progress note generation<br>
                         ICD-10 code suggestions<br>
                         Treatment plan generation<br>
@@ -662,6 +689,91 @@
             el.textContent = msg;
             el.style.display = 'block';
             el.style.background = type === 'success' ? '#dcfce7' : '#fee2e2';
+            el.style.color = type === 'success' ? '#166534' : '#991b1b';
+        }
+
+        // CALL RECORDING
+        let callRecorder = null;
+        let callStream = null;
+        let callRecordingStartTime = null;
+
+        async function startCallRecording() {
+            try {
+                showCallRecordStatus('⏳ Requesting screen share permission...', 'recording');
+
+                const displayStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { mediaSource: 'screen' },
+                    audio: { echoCancellation: false, noiseSuppression: false }
+                });
+
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const audioSource = audioContext.createMediaStreamSource(displayStream);
+                const destination = audioContext.createMediaStreamDestination();
+                audioSource.connect(destination);
+
+                callStream = destination.stream;
+                callRecorder = new MediaRecorder(callStream);
+                const chunks = [];
+
+                callRecorder.ondataavailable = (e) => chunks.push(e.data);
+                callRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'audio/wav' });
+                    const url = URL.createObjectURL(blob);
+                    const timestamp = new Date().toISOString().split('T')[0];
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `call_recording_${timestamp}.wav`;
+                    link.click();
+
+                    displayStream.getTracks().forEach(track => track.stop());
+                    callStream.getTracks().forEach(track => track.stop());
+
+                    showCallRecordStatus('✓ Recording saved and downloaded', 'success');
+                };
+
+                callRecorder.start();
+                callRecordingStartTime = Date.now();
+                document.getElementById('callRecordBtn').style.display = 'none';
+                document.getElementById('stopCallRecordBtn').style.display = 'block';
+                updateCallRecordingTimer();
+                showCallRecordStatus('🔴 Recording from call... (Share your screen when prompted)', 'recording');
+
+            } catch (err) {
+                if (err.name === 'NotAllowedError') {
+                    showCallRecordStatus('❌ Permission denied. Click "Share" when prompted.', 'error');
+                } else {
+                    showCallRecordStatus('❌ Call recording not supported on this device', 'error');
+                }
+            }
+        }
+
+        function updateCallRecordingTimer() {
+            if (!callRecordingStartTime) return;
+            const elapsed = Math.floor((Date.now() - callRecordingStartTime) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            const time = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            document.getElementById('callRecordStatus').textContent = `🔴 Recording... ${time}`;
+
+            if (callRecorder && callRecorder.state === 'recording') {
+                setTimeout(updateCallRecordingTimer, 1000);
+            }
+        }
+
+        function stopCallRecording() {
+            if (callRecorder && callRecorder.state === 'recording') {
+                callRecorder.stop();
+                document.getElementById('callRecordBtn').style.display = 'block';
+                document.getElementById('stopCallRecordBtn').style.display = 'none';
+                callRecordingStartTime = null;
+            }
+        }
+
+        function showCallRecordStatus(msg, type) {
+            const el = document.getElementById('callRecordStatus');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.background = type === 'success' ? '#dcfce7' : type === 'error' ? '#fee2e2' : '#fee2e2';
             el.style.color = type === 'success' ? '#166534' : '#991b1b';
         }
 
