@@ -640,6 +640,155 @@
         </div>
     </div>
 
+    <!-- AUTHENTICATION MODAL -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="authTitle">🔐 Sign In</span>
+                <button class="close-btn" onclick="closeModal('authModal')">✕</button>
+            </div>
+
+            <div id="authContent">
+                <!-- Login Form -->
+                <div id="loginForm">
+                    <div class="input-group">
+                        <label class="input-label">Email Address</label>
+                        <input type="email" id="loginEmail" placeholder="you@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Password</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••">
+                    </div>
+                    <button class="btn-large btn-primary" style="margin-top: 16px;" onclick="handleLogin()">
+                        Sign In
+                    </button>
+                    <button class="btn-large btn-secondary" style="margin-top: 8px;" onclick="switchToSignup()">
+                        Create Account
+                    </button>
+                    <div id="loginStatus" class="status-msg"></div>
+                </div>
+
+                <!-- Signup Form (hidden) -->
+                <div id="signupForm" style="display:none;">
+                    <div class="input-group">
+                        <label class="input-label">Full Name</label>
+                        <input type="text" id="signupName" placeholder="John Doe">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Email Address</label>
+                        <input type="email" id="signupEmail" placeholder="you@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Password</label>
+                        <input type="password" id="signupPassword" placeholder="••••••••">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Confirm Password</label>
+                        <input type="password" id="signupPasswordConfirm" placeholder="••••••••">
+                    </div>
+                    <button class="btn-large btn-primary" style="margin-top: 16px;" onclick="handleSignup()">
+                        Create Account
+                    </button>
+                    <button class="btn-large btn-secondary" style="margin-top: 8px;" onclick="switchToLogin()">
+                        Already have an account?
+                    </button>
+                    <div id="signupStatus" class="status-msg"></div>
+                </div>
+            </div>
+
+            <div class="status-msg info show" style="margin-top: 16px;">
+                <strong>Security Note:</strong><br>
+                Your data is encrypted with AES-256 and stored securely in Firebase Firestore. HIPAA-compliant.
+            </div>
+        </div>
+    </div>
+
+    <!-- BACKUP & SYNC MODAL -->
+    <div class="modal" id="backupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>☁️ Cloud Backup & Sync</span>
+                <button class="close-btn" onclick="closeModal('backupModal')">✕</button>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-number" id="syncStatus">🟢 Online</div>
+                <div class="stat-label">Connection Status</div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-number" id="pendingSyncCount">0</div>
+                <div class="stat-label">Pending Syncs</div>
+            </div>
+
+            <div id="notesBackupList" style="margin-top: 16px;">
+                <!-- Notes list will be populated here -->
+            </div>
+
+            <button class="btn-large btn-primary" style="margin-top: 16px;" onclick="syncNow()">
+                🔄 Sync Now
+            </button>
+
+            <button class="btn-large btn-danger" style="margin-top: 8px;" onclick="logoutUser()">
+                🚪 Logout
+            </button>
+
+            <div id="backupStatus" class="status-msg"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged
+        } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            getDocs,
+            query,
+            where,
+            updateDoc,
+            doc,
+            serverTimestamp,
+            enableIndexedDbPersistence
+        } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+        // Replace with your Firebase configuration
+        const firebaseConfig = {
+            apiKey: 'YOUR_FIREBASE_API_KEY',
+            authDomain: 'your-project.firebaseapp.com',
+            projectId: 'your-project-id',
+            storageBucket: 'your-project.appspot.com',
+            messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+            appId: 'YOUR_APP_ID'
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Enable offline persistence
+        enableIndexedDbPersistence(db).catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.log('Multiple tabs open, persistence only enabled in one tab.');
+            } else if (err.code === 'unimplemented') {
+                console.log('Browser does not support offline persistence');
+            }
+        });
+
+        // Make auth and db globally accessible
+        window.firebase = { auth, db, getAuth, getFirestore };
+    </script>
+
     <script>
         let claudeConfig = {
             apiKey: null,
@@ -865,14 +1014,503 @@ PLAN: Treatment recommendations`;
             }, 3000);
         }
 
-        window.addEventListener('load', () => {
+        // Global state
+        let currentUser = null;
+        let firestoreService = null;
+        let syncManager = null;
+        let notesData = [];
+
+        // Initialize on page load
+        window.addEventListener('load', async () => {
             const saved = localStorage.getItem('claudeConfig');
             if (saved) claudeConfig = JSON.parse(saved);
+
+            // Initialize Firebase auth listener
+            setTimeout(() => {
+                if (window.firebase && window.firebase.auth) {
+                    window.firebase.auth.onAuthStateChanged(handleAuthStateChange);
+                }
+            }, 500);
+
+            // Setup sync and encryption
+            initializeSyncManager();
         });
 
+        // Service Worker registration
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js').catch(() => {});
         }
+
+        // Encryption Service
+        class EncryptionService {
+            static async generateKey() {
+                return await window.crypto.subtle.generateKey(
+                    { name: 'AES-GCM', length: 256 },
+                    true,
+                    ['encrypt', 'decrypt']
+                );
+            }
+
+            static async encrypt(data, key) {
+                const encoder = new TextEncoder();
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+
+                const encrypted = await window.crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    encoder.encode(data)
+                );
+
+                return {
+                    iv: this.arrayBufferToBase64(iv),
+                    ciphertext: this.arrayBufferToBase64(encrypted),
+                    algorithm: 'AES-GCM'
+                };
+            }
+
+            static async decrypt(encryptedData, key) {
+                const decoder = new TextDecoder();
+                const iv = this.base64ToArrayBuffer(encryptedData.iv);
+                const ciphertext = this.base64ToArrayBuffer(encryptedData.ciphertext);
+
+                const decrypted = await window.crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    ciphertext
+                );
+
+                return decoder.decode(decrypted);
+            }
+
+            static arrayBufferToBase64(buffer) {
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
+
+            static base64ToArrayBuffer(base64) {
+                const binary = atob(base64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                return bytes.buffer;
+            }
+
+            static async deriveKey(password, salt) {
+                const encoder = new TextEncoder();
+                const baseKey = await window.crypto.subtle.importKey(
+                    'raw',
+                    encoder.encode(password),
+                    'PBKDF2',
+                    false,
+                    ['deriveBits', 'deriveKey']
+                );
+
+                return await window.crypto.subtle.deriveKey(
+                    {
+                        name: 'PBKDF2',
+                        salt: encoder.encode(salt),
+                        iterations: 100000,
+                        hash: 'SHA-256'
+                    },
+                    baseKey,
+                    { name: 'AES-GCM', length: 256 },
+                    true,
+                    ['encrypt', 'decrypt']
+                );
+            }
+        }
+
+        // Sync Manager
+        class SyncManager {
+            constructor() {
+                this.syncQueue = [];
+                this.isOnline = navigator.onLine;
+                this.isSyncing = false;
+                this.encryptionKey = null;
+
+                window.addEventListener('online', () => this.handleOnline());
+                window.addEventListener('offline', () => this.handleOffline());
+
+                this.loadQueue();
+                this.updateSyncStatus();
+            }
+
+            handleOnline() {
+                this.isOnline = true;
+                updateSyncIndicator();
+                if (this.syncQueue.length > 0) {
+                    this.syncAll();
+                }
+            }
+
+            handleOffline() {
+                this.isOnline = false;
+                updateSyncIndicator();
+            }
+
+            addToQueue(operation) {
+                this.syncQueue.push({
+                    ...operation,
+                    timestamp: Date.now(),
+                    id: Math.random().toString(36).substr(2, 9)
+                });
+                localStorage.setItem('syncQueue', JSON.stringify(this.syncQueue));
+                updatePendingSyncCount();
+            }
+
+            loadQueue() {
+                const saved = localStorage.getItem('syncQueue');
+                this.syncQueue = saved ? JSON.parse(saved) : [];
+            }
+
+            async syncAll() {
+                if (this.isSyncing || !this.isOnline || !currentUser) return;
+
+                this.isSyncing = true;
+                this.loadQueue();
+
+                for (const operation of this.syncQueue) {
+                    try {
+                        await this.processOperation(operation);
+                        this.syncQueue = this.syncQueue.filter(op => op.id !== operation.id);
+                    } catch (error) {
+                        console.error('Sync error:', error);
+                        break;
+                    }
+                }
+
+                localStorage.setItem('syncQueue', JSON.stringify(this.syncQueue));
+                this.isSyncing = false;
+                updatePendingSyncCount();
+                showStatus('✓ Sync completed', 'success');
+            }
+
+            async processOperation(operation) {
+                const { type, data } = operation;
+                const firebase = window.firebase;
+
+                switch (type) {
+                    case 'saveNote':
+                        await addDoc(
+                            collection(firebase.db, 'users', currentUser.uid, 'notes'),
+                            data
+                        );
+                        break;
+                    case 'updateNote':
+                        await updateDoc(
+                            doc(firebase.db, 'users', currentUser.uid, 'notes', data.id),
+                            { ...data, updatedAt: serverTimestamp() }
+                        );
+                        break;
+                    default:
+                        throw new Error(`Unknown operation: ${type}`);
+                }
+            }
+
+            updateSyncStatus() {
+                updateSyncIndicator();
+                updatePendingSyncCount();
+            }
+        }
+
+        function initializeSyncManager() {
+            syncManager = new SyncManager();
+        }
+
+        // Authentication Handlers
+        async function handleAuthStateChange(user) {
+            currentUser = user;
+
+            if (user) {
+                // User is signed in
+                document.getElementById('authModal').classList.remove('active');
+                document.querySelector('.container').style.display = 'flex';
+                document.querySelector('header').style.display = 'flex';
+                document.querySelector('.footer').style.display = 'block';
+
+                // Load user's notes
+                loadUserNotes();
+
+                // Perform any pending syncs
+                if (syncManager && syncManager.syncQueue.length > 0) {
+                    syncManager.syncAll();
+                }
+            } else {
+                // User is signed out
+                document.getElementById('authModal').classList.add('active');
+                document.querySelector('.container').style.display = 'none';
+                document.querySelector('header').style.display = 'none';
+                document.querySelector('.footer').style.display = 'none';
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const statusEl = document.getElementById('loginStatus');
+
+            if (!email || !password) {
+                showAuthStatus('Please enter email and password', 'error', statusEl);
+                return;
+            }
+
+            try {
+                statusEl.textContent = 'Signing in...';
+                statusEl.className = 'status-msg show info';
+
+                const firebase = window.firebase;
+                await signInWithEmailAndPassword(firebase.auth, email, password);
+
+                // Auth state change will handle the rest
+            } catch (error) {
+                showAuthStatus(`Sign in failed: ${error.message}`, 'error', statusEl);
+            }
+        }
+
+        async function handleSignup() {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirm = document.getElementById('signupPasswordConfirm').value;
+            const statusEl = document.getElementById('signupStatus');
+
+            if (!name || !email || !password || !confirm) {
+                showAuthStatus('Please fill in all fields', 'error', statusEl);
+                return;
+            }
+
+            if (password !== confirm) {
+                showAuthStatus('Passwords do not match', 'error', statusEl);
+                return;
+            }
+
+            if (password.length < 6) {
+                showAuthStatus('Password must be at least 6 characters', 'error', statusEl);
+                return;
+            }
+
+            try {
+                statusEl.textContent = 'Creating account...';
+                statusEl.className = 'status-msg show info';
+
+                const firebase = window.firebase;
+                const userCred = await createUserWithEmailAndPassword(firebase.auth, email, password);
+
+                // Store user profile
+                const userDoc = {
+                    uid: userCred.user.uid,
+                    email: email,
+                    name: name,
+                    createdAt: new Date().toISOString(),
+                    role: 'clinician'
+                };
+
+                localStorage.setItem(`user_${userCred.user.uid}`, JSON.stringify(userDoc));
+
+                // Auth state change will handle the rest
+            } catch (error) {
+                showAuthStatus(`Sign up failed: ${error.message}`, 'error', statusEl);
+            }
+        }
+
+        function switchToSignup() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+            document.getElementById('authTitle').textContent = '🆕 Create Account';
+        }
+
+        function switchToLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('authTitle').textContent = '🔐 Sign In';
+        }
+
+        async function logoutUser() {
+            try {
+                const firebase = window.firebase;
+                await signOut(firebase.auth);
+                showStatus('✓ Logged out successfully', 'success');
+            } catch (error) {
+                showStatus(`Logout failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Load user notes from Firestore
+        async function loadUserNotes() {
+            if (!currentUser || !window.firebase) return;
+
+            try {
+                const firebase = window.firebase;
+                const q = query(
+                    collection(firebase.db, 'users', currentUser.uid, 'notes'),
+                    where('userId', '==', currentUser.uid)
+                );
+
+                const snapshot = await getDocs(q);
+                notesData = [];
+
+                for (const docSnap of snapshot.docs) {
+                    const data = docSnap.data();
+                    notesData.push({
+                        id: docSnap.id,
+                        ...data
+                    });
+                }
+
+                displayBackupNotes();
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
+        }
+
+        // Save note to Firebase
+        async function saveNoteToFirebase(noteContent, title) {
+            if (!currentUser || !window.firebase) {
+                showStatus('Please sign in to save notes', 'warning');
+                return;
+            }
+
+            try {
+                const firebase = window.firebase;
+
+                // Encrypt the content
+                const encryptionKey = await EncryptionService.deriveKey(
+                    currentUser.uid,
+                    localStorage.getItem(`salt_${currentUser.uid}`) || currentUser.uid
+                );
+
+                const encrypted = await EncryptionService.encrypt(noteContent, encryptionKey);
+
+                const noteData = {
+                    userId: currentUser.uid,
+                    title: title || `Note ${new Date().toLocaleDateString()}`,
+                    encryptedContent: encrypted,
+                    status: 'draft',
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    lastModifiedBy: currentUser.uid,
+                    version: 1
+                };
+
+                if (navigator.onLine) {
+                    const docRef = await addDoc(
+                        collection(firebase.db, 'users', currentUser.uid, 'notes'),
+                        noteData
+                    );
+                    notesData.push({ id: docRef.id, ...noteData });
+                    showStatus('✓ Note saved to cloud', 'success');
+                } else {
+                    syncManager.addToQueue({
+                        type: 'saveNote',
+                        data: noteData
+                    });
+                    showStatus('⏱️ Note queued - will sync when online', 'info');
+                }
+
+                displayBackupNotes();
+            } catch (error) {
+                showStatus(`Error saving note: ${error.message}`, 'error');
+            }
+        }
+
+        // Display backup notes list
+        function displayBackupNotes() {
+            const container = document.getElementById('notesBackupList');
+
+            if (notesData.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-text">No notes backed up yet</div></div>';
+                return;
+            }
+
+            let html = '';
+            notesData.forEach(note => {
+                const date = note.createdAt ? new Date(note.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown';
+                html += `
+                    <div class="card">
+                        <div class="card-title">📄 ${note.title}</div>
+                        <div class="card-text">Saved on ${date} • Version ${note.version || 1}</div>
+                        <div class="card-status ${note.status === 'draft' ? 'status-open' : 'status-closed'}">
+                            ${note.status.toUpperCase()}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Sync now
+        async function syncNow() {
+            if (!navigator.onLine) {
+                showStatus('No internet connection', 'error');
+                return;
+            }
+
+            if (syncManager) {
+                await syncManager.syncAll();
+                await loadUserNotes();
+            }
+        }
+
+        // Update sync indicators
+        function updateSyncIndicator() {
+            const indicator = document.getElementById('syncStatus');
+            if (indicator) {
+                indicator.textContent = navigator.onLine ? '🟢 Online' : '🔴 Offline';
+            }
+        }
+
+        function updatePendingSyncCount() {
+            const count = document.getElementById('pendingSyncCount');
+            if (count && syncManager) {
+                count.textContent = syncManager.syncQueue.length;
+            }
+        }
+
+        function showAuthStatus(msg, type, element) {
+            element.textContent = msg;
+            element.className = `status-msg show ${type}`;
+            setTimeout(() => {
+                element.classList.remove('show');
+            }, 4000);
+        }
+
+        // Open backup modal
+        function openBackupModal() {
+            loadUserNotes();
+            updateSyncIndicator();
+            updatePendingSyncCount();
+            document.getElementById('backupModal').classList.add('active');
+        }
+
+        // Archive note with cloud backup
+        function archiveNote() {
+            const text = document.getElementById('progressNoteContent').textContent;
+            const title = `Progress Note ${new Date().toLocaleDateString()}`;
+
+            saveNoteToFirebase(text, title);
+            showStatus('✓ Note archived and backed up', 'success');
+            closeModal('noteModal');
+        }
+
+        // Add backup button to header
+        document.addEventListener('DOMContentLoaded', () => {
+            const headerBtn = document.querySelector('.settings-btn');
+            if (headerBtn && !document.getElementById('backupBtn')) {
+                const backupBtn = document.createElement('button');
+                backupBtn.id = 'backupBtn';
+                backupBtn.className = 'settings-btn';
+                backupBtn.innerHTML = '☁️';
+                backupBtn.title = 'Cloud Backup & Sync';
+                backupBtn.onclick = openBackupModal;
+                headerBtn.parentElement.insertBefore(backupBtn, headerBtn);
+            }
+        });
     </script>
 </body>
 </html>

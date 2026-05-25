@@ -1,0 +1,39 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.env.local
+.env.*.local
+.DS_Store
+.vscode
+.idea
+dist
+coverage
+.next
+.nuxt
+build
+.cache
+.parcel-cache
+.tern-port
+*.tsbuildinfo
+.yarn/install-state.gz
+
+# Local development files
+ios/
+android/
+.firebase/
+.firebaserc
+
+# Test files
+__tests__
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+
+# Build artifacts
+*.whl
+*.egg-info
+.mypy_cache
+.pytest_cache
