@@ -2,203 +2,205 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinical Peptide Protocol Builder - Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Peptide Protocol">
+    <meta name="theme-color" content="#0f172a">
+    <title>Clinical Peptide Protocol Builder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
         * {
             font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
             min-height: 100vh;
-        }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
-        ::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.7); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 1); }
-
-        .version-badge {
-            position: fixed; bottom: 20px; right: 20px;
-            background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.5);
-            color: #86efac; padding: 8px 12px; border-radius: 6px; font-size: 12px; z-index: 10;
-        }
-
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-
-        header { text-align: center; color: white; margin-bottom: 30px; padding: 20px 0 10px; }
-        header h1 { font-size: 28px; font-weight: 800; margin: 0 0 8px; }
-        header p { font-size: 13px; color: #cbd5e1; margin: 0; }
-
-        .demo-badge {
-            display: inline-block;
-            background: rgba(34, 197, 94, 0.2);
-            border: 1px solid #22c55e;
-            color: #86efac;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-top: 8px;
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 24px;
-        }
-
-        .form-panel {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(71, 85, 105, 0.5);
-            border-radius: 8px;
-            padding: 20px;
-            height: fit-content;
-            position: sticky;
-            top: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .results-panel {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(71, 85, 105, 0.5);
-            border-radius: 8px;
-            padding: 24px;
-            backdrop-filter: blur(10px);
+            overflow-x: hidden;
             color: #e2e8f0;
         }
 
-        /* Voice Recorder Section */
-        .voice-recorder {
-            background: rgba(15, 23, 42, 0.6);
-            border: 2px solid rgba(34, 197, 94, 0.5);
+        input, button, select {
+            font-size: 16px;
+            -webkit-appearance: none;
+            appearance: none;
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: center;
         }
 
-        .record-button {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 3px solid #22c55e;
-            background: rgba(34, 197, 94, 0.2);
-            color: #22c55e;
-            font-size: 32px;
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
             cursor: pointer;
+            accent-color: #22c55e;
+        }
+
+        button, label {
+            min-height: 44px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-            transition: all 0.3s;
         }
 
-        .record-button:hover { background: rgba(34, 197, 94, 0.3); }
-        .record-button.recording { background: #ef4444; border-color: #dc2626; color: white; animation: pulse 1s infinite; }
-
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-
-        .recording-time {
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 8px;
-            min-height: 16px;
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(0px, env(safe-area-inset-left));
+                padding-right: max(0px, env(safe-area-inset-right));
+                padding-top: max(0px, env(safe-area-inset-top));
+                padding-bottom: max(0px, env(safe-area-inset-bottom));
+            }
         }
 
-        .recording-time.active {
-            color: #22c55e;
-            font-weight: 600;
-        }
-
-        .recorder-controls {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 11px;
-            border-radius: 4px;
-            border: 1px solid;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: rgba(34, 197, 94, 0.1);
+        .version-badge {
+            position: fixed;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.4);
             color: #86efac;
-            border-color: #22c55e;
-        }
-
-        .btn-small:hover { background: rgba(34, 197, 94, 0.2); }
-        .btn-small:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .demo-buttons {
-            display: flex;
-            gap: 6px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-
-        .demo-btn {
-            flex: 1;
-            min-width: 100px;
-            padding: 6px 8px;
-            font-size: 10px;
-            border-radius: 4px;
-            border: 1px solid rgba(34, 197, 94, 0.5);
-            background: rgba(34, 197, 94, 0.1);
-            color: #86efac;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .demo-btn:hover { background: rgba(34, 197, 94, 0.2); }
-
-        .transcript-section {
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid rgba(71, 85, 105, 0.3);
+            padding: 6px 10px;
             border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 16px;
-            max-height: 140px;
-            overflow-y: auto;
+            font-size: 11px;
+            z-index: 10;
+            line-height: 1.3;
         }
 
-        .transcript-label {
+        .mode-toggle {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 6px;
+            padding: 6px 8px;
+            z-index: 11;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .mode-btn {
+            padding: 6px 10px;
             font-size: 11px;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            background: rgba(15, 23, 42, 0.6);
+            color: #94a3b8;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: #22c55e;
+            color: #0f172a;
+            border-color: #22c55e;
             font-weight: 600;
-            text-transform: uppercase;
-            color: #64748b;
-            margin-bottom: 6px;
         }
 
-        .transcript-text {
+        /* Mobile View */
+        .mobile-view {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .mobile-header {
+            padding: 16px 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+            flex-shrink: 0;
+        }
+
+        .mobile-header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .mobile-header p {
             font-size: 12px;
+            color: #94a3b8;
+            margin: 2px 0 0;
+        }
+
+        .mobile-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .mobile-footer {
+            padding: 12px;
+            border-top: 1px solid rgba(71, 85, 105, 0.3);
+            flex-shrink: 0;
+        }
+
+        /* Desktop View */
+        .desktop-view {
+            display: none;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .desktop-view.active {
+            display: block;
+        }
+
+        .desktop-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .desktop-header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-top: 32px;
+        }
+
+        .desktop-header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin: 0 0 8px;
+        }
+
+        .desktop-header p {
+            font-size: 14px;
             color: #cbd5e1;
-            line-height: 1.4;
+            margin: 0;
         }
 
-        .transcript-text.placeholder {
-            color: #64748b;
-            font-style: italic;
+        .desktop-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 24px;
         }
 
-        .form-section {
-            margin-bottom: 18px;
+        /* Shared Styles */
+        .panel {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 8px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
         }
 
-        .form-section:last-child {
-            margin-bottom: 0;
+        .mobile-view .panel {
+            margin-bottom: 12px;
+            padding: 14px;
         }
 
-        .form-title {
-            font-size: 11px;
+        .section-title {
+            font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -219,12 +221,12 @@
             margin-bottom: 4px;
         }
 
-        input, select {
+        input[type="text"], input[type="number"], select {
             width: 100%;
             border: 1px solid rgba(71, 85, 105, 0.5);
             border-radius: 4px;
             padding: 8px 10px;
-            font-size: 12px;
+            font-size: 13px;
             color: #e2e8f0;
             background: rgba(15, 23, 42, 0.6);
         }
@@ -235,32 +237,97 @@
             box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
         }
 
-        .checkbox-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            max-height: 150px;
-            overflow-y: auto;
+        .voice-recorder {
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid rgba(34, 197, 94, 0.5);
+            border-radius: 6px;
+            padding: 14px;
+            text-align: center;
+            margin-bottom: 12px;
         }
 
-        .checkbox-item {
+        .record-button {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2px solid #22c55e;
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            font-size: 28px;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 4px 0;
+            justify-content: center;
+            margin: 0 auto 8px;
+            transition: all 0.3s;
         }
 
-        .checkbox-item input {
-            width: 14px;
-            height: 14px;
-            cursor: pointer;
+        .record-button:active {
+            transform: scale(0.95);
         }
 
-        .checkbox-item label {
-            margin: 0;
-            cursor: pointer;
+        .record-button.recording {
+            background: #ef4444;
+            border-color: #dc2626;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .recording-time {
             font-size: 11px;
+            color: #64748b;
+            min-height: 14px;
+            margin-bottom: 8px;
+        }
+
+        .recording-time.active {
+            color: #22c55e;
+            font-weight: 600;
+        }
+
+        .transcript-section {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 11px;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+
+        .transcript-section.placeholder {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .demo-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .demo-btn {
+            padding: 6px 8px;
+            font-size: 10px;
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            background: rgba(34, 197, 94, 0.1);
+            color: #86efac;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .demo-btn:active {
+            background: rgba(34, 197, 94, 0.2);
         }
 
         .btn {
@@ -275,7 +342,9 @@
             margin-top: 8px;
         }
 
-        .btn:first-of-type { margin-top: 0; }
+        .btn:first-of-type {
+            margin-top: 0;
+        }
 
         .btn-primary {
             background: #22c55e;
@@ -283,8 +352,9 @@
             border-color: #22c55e;
         }
 
-        .btn-primary:hover:not(:disabled) { background: #16a34a; }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary:active {
+            background: #16a34a;
+        }
 
         .btn-secondary {
             background: transparent;
@@ -292,118 +362,100 @@
             border-color: #22c55e;
         }
 
-        .btn-secondary:hover { background: rgba(34, 197, 94, 0.1); }
+        .btn-secondary:active {
+            background: rgba(34, 197, 94, 0.1);
+        }
 
-        /* Warning Banner */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 4px 0;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
         .warning-banner {
             background: rgba(180, 83, 9, 0.2);
             border: 1px solid rgba(217, 119, 6, 0.5);
             border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 16px;
+            padding: 10px;
+            margin-bottom: 12px;
             color: #fcd34d;
-            font-size: 12px;
+            font-size: 11px;
             line-height: 1.4;
         }
 
         .warning-title {
             font-weight: 600;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .warning-item {
-            margin-bottom: 4px;
-            padding-left: 12px;
+            margin-bottom: 2px;
+            padding-left: 10px;
         }
 
-        /* Protocol Output */
         .protocol-section {
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(71, 85, 105, 0.5);
             border-radius: 6px;
-            padding: 14px;
-            margin-bottom: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
         }
 
         .protocol-section-title {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: #86efac;
-            margin: 0 0 10px;
-            padding-bottom: 8px;
+            margin: 0 0 8px;
+            padding-bottom: 6px;
             border-bottom: 1px solid rgba(71, 85, 105, 0.3);
         }
 
         .peptide-item, .lab-item, .supplement-item, .followup-item {
             background: rgba(15, 23, 42, 0.4);
             border-left: 3px solid #22c55e;
-            padding: 10px;
-            margin-bottom: 8px;
+            padding: 8px;
+            margin-bottom: 6px;
             border-radius: 4px;
+            font-size: 11px;
         }
 
         .peptide-item .name {
             font-weight: 600;
             color: #86efac;
-            font-size: 12px;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .peptide-item .mechanism {
-            font-size: 11px;
             color: #cbd5e1;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             line-height: 1.3;
         }
 
         .peptide-item .dosing {
-            font-size: 10px;
             color: #94a3b8;
-            padding-top: 6px;
-            border-top: 1px solid rgba(71, 85, 105, 0.3);
-        }
-
-        .lab-item {
-            border-left-color: #10b981;
-        }
-
-        .lab-item .name {
-            font-weight: 600;
-            color: #86efac;
-            font-size: 12px;
-            margin-bottom: 2px;
-        }
-
-        .lab-item .frequency {
+            padding-top: 4px;
+            border-top: 1px solid rgba(71, 85, 105, 0.2);
             font-size: 10px;
-            color: #94a3b8;
         }
 
-        .supplement-item {
-            border-left-color: #a78bfa;
-        }
-
-        .supplement-item .name {
-            font-weight: 600;
-            color: #d8b4fe;
-            font-size: 12px;
-            margin-bottom: 2px;
-        }
-
-        .followup-item {
-            border-left-color: #f59e0b;
-        }
-
-        .followup-item .timing {
-            font-weight: 600;
-            color: #fcd34d;
-            font-size: 12px;
-            margin-bottom: 2px;
-        }
-
-        .followup-item .details {
-            font-size: 10px;
-            color: #94a3b8;
+        .lab-item, .supplement-item, .followup-item {
+            color: #cbd5e1;
         }
 
         .empty-state {
@@ -413,129 +465,140 @@
         }
 
         .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.6;
+            font-size: 40px;
+            margin-bottom: 10px;
         }
 
         .empty-state-text {
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        @media (max-width: 768px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-panel {
-                position: static;
-            }
-
-            header h1 {
-                font-size: 22px;
-            }
-
-            .container {
-                padding: 12px;
-            }
-
-            .form-panel, .results-panel {
-                padding: 16px;
-            }
-
-            .record-button {
-                width: 72px;
-                height: 72px;
-                font-size: 28px;
-            }
+            font-size: 12px;
+            line-height: 1.4;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Clinical Peptide Protocol Builder</h1>
-            <p>Voice-guided protocol generation with contraindication warnings</p>
-            <div class="demo-badge">✓ DEMO MODE - No API Key Required</div>
-        </header>
+    <!-- Mode Toggle -->
+    <div class="mode-toggle">
+        <button class="mode-btn active" id="mobile-mode-btn" onclick="app.switchMode('mobile')">📱 Mobile</button>
+        <button class="mode-btn" id="desktop-mode-btn" onclick="app.switchMode('desktop')">🖥️ Desktop</button>
+    </div>
 
-        <div class="main-grid">
-            <!-- LEFT PANEL: VOICE & FORM -->
-            <div class="form-panel">
-                <!-- Voice Recorder -->
-                <div class="voice-recorder">
-                    <div class="form-title" style="margin-bottom: 12px;">Dictate Consultation</div>
-                    <button type="button" class="record-button" id="record-btn" title="Click to record">🎙️</button>
-                    <div class="recording-time" id="recording-time"></div>
-                    <div class="recorder-controls">
-                        <button type="button" class="btn-small" id="play-btn" disabled>Play</button>
-                        <button type="button" class="btn-small" id="clear-btn" disabled>Clear</button>
-                    </div>
+    <!-- MOBILE VIEW -->
+    <div class="mobile-view" id="mobile-view">
+        <div class="mobile-header">
+            <h1>Peptide Protocol</h1>
+            <p>Voice-guided protocol builder</p>
+        </div>
 
-                    <div style="font-size: 10px; color: #64748b; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(71, 85, 105, 0.3);">
-                        💡 Try demo cases:
-                    </div>
-                    <div class="demo-buttons">
-                        <button type="button" class="demo-btn" id="demo-wl">Weight Loss</button>
-                        <button type="button" class="demo-btn" id="demo-gh">Growth</button>
-                        <button type="button" class="demo-btn" id="demo-neuro">Cognition</button>
-                    </div>
-
-                    <div class="transcript-section">
-                        <div class="transcript-label">Transcript</div>
-                        <div class="transcript-text placeholder" id="transcript-text">Click record to begin, or try a demo case</div>
-                    </div>
+        <div class="mobile-content">
+            <!-- Voice Recorder -->
+            <div class="panel voice-recorder">
+                <div class="section-title">Dictate</div>
+                <button type="button" class="record-button" id="mobile-record-btn" title="Click to record">🎙️</button>
+                <div class="recording-time" id="mobile-recording-time"></div>
+                <div class="transcript-section placeholder" id="mobile-transcript-text">Click to record</div>
+                <div class="demo-buttons">
+                    <button type="button" class="demo-btn" id="demo-wl-mobile">Weight Loss</button>
+                    <button type="button" class="demo-btn" id="demo-gh-mobile">Growth</button>
+                    <button type="button" class="demo-btn" id="demo-neuro-mobile">Cognition</button>
                 </div>
-
-                <!-- Patient Form -->
-                <div class="form-section">
-                    <label class="form-title">Patient Info</label>
-                    <div class="field">
-                        <label>Age (years)</label>
-                        <input type="number" id="patient-age" placeholder="Age" min="0" max="150">
-                    </div>
-                </div>
-
-                <!-- Symptoms -->
-                <div class="form-section">
-                    <label class="form-title">Symptoms/Conditions</label>
-                    <div class="checkbox-group" id="symptoms-list"></div>
-                </div>
-
-                <!-- Actions -->
-                <button type="button" class="btn btn-primary" id="create-protocol-btn">Create Protocol</button>
-                <button type="button" class="btn btn-secondary" id="reset-btn">Reset All</button>
             </div>
 
-            <!-- RIGHT PANEL: RESULTS -->
-            <div class="results-panel">
-                <div id="empty-state" class="empty-state">
-                    <div class="empty-state-icon">💊</div>
-                    <p class="empty-state-text">
-                        <strong>Dictate your consultation notes</strong> using the microphone, or click a demo case to see how it works. The system will automatically detect medical conditions and generate a complete protocol.
-                    </p>
+            <!-- Patient Info -->
+            <div class="panel">
+                <label class="section-title">Patient Age</label>
+                <input type="number" id="mobile-patient-age" placeholder="Age" min="0" max="150">
+            </div>
+
+            <!-- Symptoms -->
+            <div class="panel">
+                <label class="section-title">Symptoms</label>
+                <div class="checkbox-group" id="mobile-symptoms-list"></div>
+            </div>
+
+            <!-- Results -->
+            <div id="mobile-empty-state" class="panel empty-state">
+                <div class="empty-state-icon">💊</div>
+                <p class="empty-state-text">Dictate to generate protocol</p>
+            </div>
+
+            <div id="mobile-results-content" style="display: none;">
+                <div id="mobile-warnings-container"></div>
+                <div id="mobile-protocol-content"></div>
+            </div>
+        </div>
+
+        <div class="mobile-footer">
+            <button type="button" class="btn btn-primary" id="mobile-create-btn">Create Protocol</button>
+            <button type="button" class="btn btn-secondary" id="mobile-reset-btn">Reset</button>
+        </div>
+    </div>
+
+    <!-- DESKTOP VIEW -->
+    <div class="desktop-view" id="desktop-view">
+        <div class="desktop-container">
+            <div class="desktop-header">
+                <h1>Clinical Peptide Protocol Builder</h1>
+                <p>Voice-guided protocol generation with contraindication warnings</p>
+            </div>
+
+            <div class="desktop-grid">
+                <!-- Left Panel -->
+                <div>
+                    <!-- Voice Recorder -->
+                    <div class="panel voice-recorder">
+                        <div class="section-title">Dictate Consultation</div>
+                        <button type="button" class="record-button" id="desktop-record-btn" title="Click to record">🎙️</button>
+                        <div class="recording-time" id="desktop-recording-time"></div>
+                        <div class="transcript-section placeholder" id="desktop-transcript-text">Click to record</div>
+                        <div class="demo-buttons">
+                            <button type="button" class="demo-btn" id="demo-wl-desktop">Weight Loss</button>
+                            <button type="button" class="demo-btn" id="demo-gh-desktop">Growth</button>
+                            <button type="button" class="demo-btn" id="demo-neuro-desktop">Cognition</button>
+                        </div>
+                    </div>
+
+                    <!-- Patient Info -->
+                    <div class="panel">
+                        <label class="section-title">Patient Info</label>
+                        <div class="field">
+                            <input type="number" id="desktop-patient-age" placeholder="Patient Age" min="0" max="150">
+                        </div>
+                    </div>
+
+                    <!-- Symptoms -->
+                    <div class="panel">
+                        <label class="section-title">Symptoms</label>
+                        <div class="checkbox-group" id="desktop-symptoms-list"></div>
+                    </div>
+
+                    <!-- Actions -->
+                    <button type="button" class="btn btn-primary" id="desktop-create-btn">Create Protocol</button>
+                    <button type="button" class="btn btn-secondary" id="desktop-reset-btn">Reset</button>
                 </div>
 
-                <div id="results-content" style="display: none;">
-                    <!-- Warning Banner -->
-                    <div id="warnings-container"></div>
+                <!-- Right Panel -->
+                <div class="panel">
+                    <div id="desktop-empty-state" class="empty-state">
+                        <div class="empty-state-icon">💊</div>
+                        <p class="empty-state-text">Dictate consultation to generate personalized protocol</p>
+                    </div>
 
-                    <!-- Protocol Sections -->
-                    <div id="protocol-content"></div>
+                    <div id="desktop-results-content" style="display: none;">
+                        <div id="desktop-warnings-container"></div>
+                        <div id="desktop-protocol-content"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="version-badge">
-        <span class="font-semibold">v2.0 DEMO</span>
-        <br>
-        <span class="text-xs opacity-75">No API Key</span>
+        <div class="font-semibold text-xs">v2.2 HYBRID</div>
+        <div class="text-xs opacity-75">Mobile + Desktop</div>
     </div>
 
     <script>
-        // ========== MEDICAL KNOWLEDGE BASES ==========
+        // ========== DATA ==========
         const CONTRAINDICATIONS = {
             "prostate cancer": ["testosterone peptides", "IGF-1 LR3", "Sermorelin", "Tesamorelin", "AOD-9604"],
             "breast cancer": ["testosterone peptides", "growth hormone", "IGF-1 LR3", "Sermorelin"],
@@ -555,144 +618,36 @@
         };
 
         const LAB_RECOMMENDATIONS = {
-            "Sermorelin": {
-                tests: ["IGF-1", "Growth Hormone (fasting)", "IGFBP-3"],
-                frequency: "Baseline, 4 weeks, 8 weeks",
-                notes: "Monitor for diabetes risk and carpal tunnel"
-            },
-            "Tesamorelin": {
-                tests: ["IGF-1", "Growth Hormone", "Visceral fat imaging (optional)", "Lipid panel"],
-                frequency: "Baseline, 4 weeks, 8 weeks, 12 weeks",
-                notes: "Primarily for visceral fat reduction"
-            },
-            "IGF-1 LR3": {
-                tests: ["IGF-1", "IGFBP-3", "Glucose (fasting)", "Lipid panel"],
-                frequency: "Baseline, 2 weeks, 6 weeks, 12 weeks",
-                notes: "Monitor for hypoglycemia and joint stress"
-            },
-            "Retatrutide": {
-                tests: ["Fasting glucose", "HbA1c", "Lipid panel", "Liver enzymes", "Amylase"],
-                frequency: "Baseline, 4 weeks, 8 weeks, 12 weeks",
-                notes: "Monitor GI side effects and pancreatic markers"
-            },
-            "Semaglutide": {
-                tests: ["Fasting glucose", "HbA1c", "Lipid panel", "Amylase"],
-                frequency: "Baseline, 4 weeks, 8 weeks",
-                notes: "Monitor for GI symptoms and appetite changes"
-            },
-            "Tirzepatide": {
-                tests: ["Fasting glucose", "HbA1c", "Lipid panel", "Liver enzymes"],
-                frequency: "Baseline, 4 weeks, 8 weeks, 12 weeks",
-                notes: "Superior metabolic benefits vs semaglutide"
-            },
-            "NAD+": {
-                tests: ["NAD+ levels (if available)", "Metabolic panel", "Mitochondrial function (optional)"],
-                frequency: "Baseline, 8 weeks",
-                notes: "Primarily functional medicine assessment"
-            },
-            "NMN": {
-                tests: ["NAD+ levels", "Metabolic panel"],
-                frequency: "Baseline, 8 weeks",
-                notes: "Oral NAD+ precursor"
-            },
-            "MOTS-C": {
-                tests: ["Fasting glucose", "Insulin", "HOMA-IR", "Lipid panel"],
-                frequency: "Baseline, 4 weeks, 8 weeks",
-                notes: "Mitochondrial AMPK activation marker"
-            },
-            "Rapamycin": {
-                tests: ["Complete metabolic panel", "Lipid panel", "WBC count", "Sirolimus levels"],
-                frequency: "Baseline, 2 weeks, 4 weeks, then monthly",
-                notes: "Requires therapeutic drug monitoring"
-            },
-            "Metformin": {
-                tests: ["Fasting glucose", "HbA1c", "Vitamin B12", "Creatinine"],
-                frequency: "Baseline, 8 weeks",
-                notes: "Monitor for B12 deficiency and renal function"
-            },
-            "TB-500": {
-                tests: ["Baseline structural assessment (imaging)", "Follow-up imaging"],
-                frequency: "Baseline, 4 weeks, 8 weeks",
-                notes: "Primarily clinical assessment of healing"
-            },
-            "Epitalon": {
-                tests: ["Telomere length (optional)", "Melatonin", "Circadian markers"],
-                frequency: "Baseline, post-treatment (annual)",
-                notes: "Short annual protocol; mostly functional markers"
-            },
-            "Semax": {
-                tests: ["Cognitive assessment", "EEG (optional)", "Mood scales"],
-                frequency: "Baseline, 4 weeks",
-                notes: "Functional assessment of cognition"
-            },
-            "Selank": {
-                tests: ["Cortisol", "ACTH", "Mood and anxiety scales"],
-                frequency: "Baseline, 4 weeks",
-                notes: "Anxiolytic effects assessment"
-            },
-            "PT-141": {
-                tests: ["Blood pressure", "Heart rate", "Cardiovascular function"],
-                frequency: "Baseline, ongoing PRN",
-                notes: "As-needed medication; minimal labs required"
-            }
+            "Sermorelin": { tests: ["IGF-1", "Growth Hormone (fasting)", "IGFBP-3"], frequency: "Baseline, 4 weeks, 8 weeks", notes: "Monitor for diabetes risk" },
+            "Tesamorelin": { tests: ["IGF-1", "Growth Hormone", "Visceral fat imaging", "Lipid panel"], frequency: "Baseline, 4 weeks, 8 weeks, 12 weeks", notes: "Visceral fat reduction" },
+            "IGF-1 LR3": { tests: ["IGF-1", "IGFBP-3", "Glucose (fasting)", "Lipid panel"], frequency: "Baseline, 2 weeks, 6 weeks, 12 weeks", notes: "Monitor for hypoglycemia" },
+            "Retatrutide": { tests: ["Fasting glucose", "HbA1c", "Lipid panel", "Liver enzymes", "Amylase"], frequency: "Baseline, 4 weeks, 8 weeks, 12 weeks", notes: "Monitor GI side effects" },
+            "Semaglutide": { tests: ["Fasting glucose", "HbA1c", "Lipid panel", "Amylase"], frequency: "Baseline, 4 weeks, 8 weeks", notes: "Monitor GI symptoms" },
+            "Tirzepatide": { tests: ["Fasting glucose", "HbA1c", "Lipid panel", "Liver enzymes"], frequency: "Baseline, 4 weeks, 8 weeks, 12 weeks", notes: "Superior metabolic benefits" },
+            "NAD+": { tests: ["NAD+ levels", "Metabolic panel"], frequency: "Baseline, 8 weeks", notes: "Mitochondrial function" },
+            "NMN": { tests: ["NAD+ levels", "Metabolic panel"], frequency: "Baseline, 8 weeks", notes: "Oral NAD+ precursor" },
+            "MOTS-C": { tests: ["Fasting glucose", "Insulin", "HOMA-IR", "Lipid panel"], frequency: "Baseline, 4 weeks, 8 weeks", notes: "Energy metabolism" },
+            "Rapamycin": { tests: ["Complete metabolic panel", "Lipid panel", "WBC count"], frequency: "Baseline, 2 weeks, 4 weeks, monthly", notes: "Requires monitoring" },
+            "Metformin": { tests: ["Fasting glucose", "HbA1c", "Vitamin B12", "Creatinine"], frequency: "Baseline, 8 weeks", notes: "Monitor B12 levels" },
+            "TB-500": { tests: ["Baseline imaging", "Follow-up imaging"], frequency: "Baseline, 4 weeks, 8 weeks", notes: "Tissue repair assessment" },
+            "Epitalon": { tests: ["Telomere length", "Melatonin", "Circadian markers"], frequency: "Baseline, post-treatment", notes: "Annual protocol" },
+            "Semax": { tests: ["Cognitive assessment", "Mood scales"], frequency: "Baseline, 4 weeks", notes: "Cognition enhancement" },
+            "Selank": { tests: ["Cortisol", "ACTH", "Mood scales"], frequency: "Baseline, 4 weeks", notes: "Anxiolytic effects" },
+            "PT-141": { tests: ["Blood pressure", "Heart rate"], frequency: "Baseline, ongoing PRN", notes: "As-needed medication" }
         };
 
         const SUPPLEMENT_SYNERGY = {
-            "NAD+": {
-                synergistic: ["NMN", "Resveratrol", "Pterostilbene", "TMG", "Alpha-Lipoic Acid"],
-                avoid: ["High-dose antioxidants (may blunt NAD+ signaling)"],
-                notes: "Combine with NMN for enhanced bioavailability"
-            },
-            "NMN": {
-                synergistic: ["NAD+", "Resveratrol", "Pterostilbene", "Fasting/caloric restriction"],
-                avoid: ["Excess antioxidants"],
-                notes: "Oral bioavailable NAD+ precursor"
-            },
-            "Sermorelin": {
-                synergistic: ["Arginine", "Glutamine", "Deep sleep support", "Ginseng"],
-                avoid: ["Somatostatin analogs", "High-intensity cardio (may suppress GH)"],
-                notes: "Sleep quality crucial for GH secretion"
-            },
-            "Tesamorelin": {
-                synergistic: ["Resistance training", "Protein", "Resveratrol"],
-                avoid: ["Competing GH stimulators"],
-                notes: "Most effective with exercise"
-            },
-            "IGF-1 LR3": {
-                synergistic: ["High protein diet", "Resistance training", "Creatine"],
-                avoid: ["Insulin secretagogues", "High carbs without exercise"],
-                notes: "Requires careful nutrition planning"
-            },
-            "Retatrutide": {
-                synergistic: ["GLP-1 supportive diet", "Probiotics", "Ginger (nausea)"],
-                avoid: ["Competing GLP-1 agonists"],
-                notes: "Strongest weight loss peptide; diet crucial"
-            },
-            "Semaglutide": {
-                synergistic: ["Low-carb diet", "Probiotics", "Ginger"],
-                avoid: ["Competing GLP-1 agonists"],
-                notes: "GLP-1 agonist foundation"
-            },
-            "Metformin": {
-                synergistic: ["Vitamin B12", "Berberine", "Cinnamon"],
-                avoid: ["Alcohol (lactic acidosis risk)"],
-                notes: "Monitor B12 levels"
-            },
-            "Rapamycin": {
-                synergistic: ["Fasting", "NAD+ optimization", "Antioxidants"],
-                avoid: ["Live vaccines", "Immunosuppressants"],
-                notes: "Requires medical supervision"
-            },
-            "Semax": {
-                synergistic: ["Alpha-GPC", "L-Theanine", "Bacopa monnieri"],
-                avoid: ["Stimulants (caffeine may be additive)"],
-                notes: "Cognitive enhancement stack"
-            },
-            "TB-500": {
-                synergistic: ["BPC-157", "Collagen peptides", "Vitamin C"],
-                avoid: ["NSAIDs (may interfere with healing)"],
-                notes: "Accelerated tissue repair protocol"
-            }
+            "NAD+": { synergistic: ["NMN", "Resveratrol", "Pterostilbene", "TMG"], avoid: ["High-dose antioxidants"], notes: "Combine with NMN" },
+            "NMN": { synergistic: ["NAD+", "Resveratrol", "Pterostilbene"], avoid: ["Excess antioxidants"], notes: "Oral bioavailable" },
+            "Sermorelin": { synergistic: ["Arginine", "Glutamine", "Deep sleep", "Ginseng"], avoid: ["Somatostatin analogs"], notes: "Sleep quality crucial" },
+            "Tesamorelin": { synergistic: ["Resistance training", "Protein", "Resveratrol"], avoid: ["Competing GH stimulators"], notes: "Most effective with exercise" },
+            "IGF-1 LR3": { synergistic: ["High protein", "Resistance training", "Creatine"], avoid: ["Insulin secretagogues"], notes: "Requires careful nutrition" },
+            "Retatrutide": { synergistic: ["GLP-1 diet", "Probiotics", "Ginger"], avoid: ["Competing GLP-1"], notes: "Strongest weight loss" },
+            "Semaglutide": { synergistic: ["Low-carb diet", "Probiotics", "Ginger"], avoid: ["Competing GLP-1"], notes: "GLP-1 foundation" },
+            "Metformin": { synergistic: ["Vitamin B12", "Berberine", "Cinnamon"], avoid: ["Alcohol"], notes: "Monitor B12" },
+            "Rapamycin": { synergistic: ["Fasting", "NAD+", "Antioxidants"], avoid: ["Live vaccines"], notes: "Requires supervision" },
+            "Semax": { synergistic: ["Alpha-GPC", "L-Theanine", "Bacopa"], avoid: ["Stimulants"], notes: "Cognitive stack" },
+            "TB-500": { synergistic: ["BPC-157", "Collagen peptides", "Vitamin C"], avoid: ["NSAIDs"], notes: "Tissue repair" }
         };
 
         const FOLLOW_UP_SCHEDULES = {
@@ -763,7 +718,6 @@
             ]
         };
 
-        // Demo cases
         const DEMO_CASES = {
             "wl": {
                 transcript: "45-year-old male with BMI 32, sedentary lifestyle. Metabolic syndrome with fasting glucose 118. Interested in weight loss protocol. Recommend Retatrutide for superior GLP-1 effect and metabolic improvement. Add Tirzepatide as alternative if retatrutide unavailable. Consider NAD+ and NMN for mitochondrial support. Patient motivated for lifestyle change.",
@@ -782,7 +736,7 @@
             }
         };
 
-        // ========== VOICE RECORDER WITH WEB SPEECH API ==========
+        // ========== VOICE RECORDER ==========
         class VoiceRecorder {
             constructor() {
                 this.recognition = null;
@@ -791,7 +745,6 @@
                 this.recordingStartTime = null;
                 this.recordingInterval = null;
 
-                // Check for browser support
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (SpeechRecognition) {
                     this.recognition = new SpeechRecognition();
@@ -801,7 +754,6 @@
 
             setupRecognition() {
                 if (!this.recognition) return;
-
                 this.recognition.continuous = true;
                 this.recognition.interimResults = true;
                 this.recognition.lang = 'en-US';
@@ -810,7 +762,6 @@
                     this.isListening = true;
                     this.recordingStartTime = Date.now();
                     this.startTimer();
-                    this.updateUI();
                 };
 
                 this.recognition.onresult = (event) => {
@@ -818,18 +769,12 @@
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         this.transcript += event.results[i][0].transcript;
                     }
-                    document.getElementById('transcript-text').textContent = this.transcript;
-                    document.getElementById('transcript-text').classList.remove('placeholder');
+                    app.updateTranscript(this.transcript);
                 };
 
                 this.recognition.onend = () => {
                     this.isListening = false;
                     clearInterval(this.recordingInterval);
-                    this.updateUI();
-                };
-
-                this.recognition.onerror = (event) => {
-                    console.error('Speech recognition error:', event.error);
                 };
             }
 
@@ -851,170 +796,27 @@
                     const elapsed = Math.floor((Date.now() - this.recordingStartTime) / 1000);
                     const mins = Math.floor(elapsed / 60);
                     const secs = elapsed % 60;
-                    document.getElementById('recording-time').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-                    document.getElementById('recording-time').classList.add('active');
+                    const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    document.getElementById('mobile-recording-time').textContent = timeStr;
+                    document.getElementById('desktop-recording-time').textContent = timeStr;
+                    document.getElementById('mobile-recording-time').classList.add('active');
+                    document.getElementById('desktop-recording-time').classList.add('active');
                 }, 100);
             }
 
             clear() {
                 this.transcript = '';
                 this.isListening = false;
-                document.getElementById('recording-time').textContent = '';
-                document.getElementById('recording-time').classList.remove('active');
-                this.updateUI();
-            }
-
-            updateUI() {
-                const recordBtn = document.getElementById('record-btn');
-                recordBtn.classList.toggle('recording', this.isListening);
-                recordBtn.textContent = this.isListening ? '⏹️' : '🎙️';
-                recordBtn.title = this.isListening ? 'Click to stop recording' : 'Click to record';
+                document.getElementById('mobile-recording-time').textContent = '';
+                document.getElementById('desktop-recording-time').textContent = '';
+                document.getElementById('mobile-recording-time').classList.remove('active');
+                document.getElementById('desktop-recording-time').classList.remove('active');
+                app.updateTranscript('');
             }
 
             isSupported() {
                 return this.recognition !== null;
             }
-        }
-
-        // ========== MEDICAL EXTRACTOR ==========
-        function extractMedicalInfo(transcript) {
-            const detectedConditions = [];
-            const transcriptLower = transcript.toLowerCase();
-
-            for (const condition of Object.keys(CONTRAINDICATIONS)) {
-                const patterns = [
-                    new RegExp(`\\b${condition}\\b`, 'gi'),
-                    new RegExp(`\\bhas ${condition}\\b`, 'gi'),
-                    new RegExp(`\\bhistory of ${condition}\\b`, 'gi'),
-                    new RegExp(`\\bdiagnosed with ${condition}\\b`, 'gi')
-                ];
-
-                if (patterns.some(pattern => pattern.test(transcript))) {
-                    detectedConditions.push(condition);
-                }
-            }
-
-            return detectedConditions;
-        }
-
-        // ========== PROTOCOL BUILDER ==========
-        function getAllPeptides() {
-            const all = [];
-            Object.values(PEPTIDE_DATABASE).forEach(category => all.push(...category));
-            return all;
-        }
-
-        function generateProtocol(selectedPeptideNames, detectedConditions, patientAge) {
-            const allPeptides = getAllPeptides();
-            const selectedPeptides = allPeptides.filter(p => selectedPeptideNames.includes(p.name));
-
-            const warnings = [];
-            detectedConditions.forEach(condition => {
-                const contraindictedPeptides = CONTRAINDICATIONS[condition.toLowerCase()];
-                selectedPeptides.forEach(peptide => {
-                    if (contraindictedPeptides.some(cp => peptide.name.toLowerCase().includes(cp.toLowerCase()) || cp.toLowerCase().includes(peptide.name.toLowerCase()))) {
-                        warnings.push({
-                            condition,
-                            peptide: peptide.name,
-                            severity: 'high'
-                        });
-                    }
-                });
-            });
-
-            const labs = new Set();
-            selectedPeptides.forEach(peptide => {
-                const labData = LAB_RECOMMENDATIONS[peptide.name];
-                if (labData) {
-                    labData.tests.forEach(test => labs.add(test));
-                }
-            });
-
-            const supplements = new Set();
-            selectedPeptides.forEach(peptide => {
-                const syncData = SUPPLEMENT_SYNERGY[peptide.name];
-                if (syncData) {
-                    syncData.synergistic.forEach(supp => supplements.add(supp));
-                }
-            });
-
-            return {
-                peptides: selectedPeptides,
-                detectedConditions,
-                warnings,
-                labs: Array.from(labs),
-                supplements: Array.from(supplements),
-                followUpSchedule: FOLLOW_UP_SCHEDULES.standard,
-                patientAge,
-                generatedAt: new Date().toLocaleDateString()
-            };
-        }
-
-        // ========== UI RENDERING ==========
-        function renderWarnings(warnings) {
-            if (warnings.length === 0) return '';
-
-            let html = '<div class="warning-banner"><div class="warning-title">⚠️ CONTRAINDICATION WARNINGS</div>';
-            warnings.forEach(warning => {
-                html += `<div class="warning-item"><strong>${warning.condition}</strong> may contraindicate <strong>${warning.peptide}</strong> — specialist review recommended</div>`;
-            });
-            html += '</div>';
-            return html;
-        }
-
-        function renderProtocolContent(protocol) {
-            let html = '';
-
-            html += '<div class="protocol-section">';
-            html += '<div class="protocol-section-title">Recommended Peptides</div>';
-            protocol.peptides.forEach(peptide => {
-                html += `
-                    <div class="peptide-item">
-                        <div class="name">${peptide.name}</div>
-                        <div class="mechanism">${peptide.mechanism}</div>
-                        <div class="dosing"><strong>Dosing:</strong> ${peptide.dosing}</div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-
-            if (protocol.labs.length > 0) {
-                html += '<div class="protocol-section">';
-                html += '<div class="protocol-section-title">Lab Recommendations</div>';
-                protocol.labs.forEach(lab => {
-                    html += `<div class="lab-item"><div class="name">${lab}</div></div>`;
-                });
-                html += '</div>';
-            }
-
-            if (protocol.supplements.length > 0) {
-                html += '<div class="protocol-section">';
-                html += '<div class="protocol-section-title">Synergistic Supplements</div>';
-                protocol.supplements.forEach(supp => {
-                    html += `<div class="supplement-item"><div class="name">${supp}</div></div>`;
-                });
-                html += '</div>';
-            }
-
-            html += '<div class="protocol-section">';
-            html += '<div class="protocol-section-title">Follow-up Schedule</div>';
-            protocol.followUpSchedule.forEach(item => {
-                html += `
-                    <div class="followup-item">
-                        <div class="timing">${item.timing}</div>
-                        <div class="details">${item.details}</div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-
-            html += '<div class="protocol-section" style="background: rgba(15, 23, 42, 0.4); border-left: 3px solid #64748b;">';
-            html += '<div class="protocol-section-title">Protocol Summary</div>';
-            html += `<p style="font-size: 11px; color: #cbd5e1; margin: 0;"><strong>Generated:</strong> ${protocol.generatedAt}</p>`;
-            if (protocol.patientAge) html += `<p style="font-size: 11px; color: #cbd5e1; margin: 6px 0 0;"><strong>Patient Age:</strong> ${protocol.patientAge}</p>`;
-            html += '</div>';
-
-            return html;
         }
 
         // ========== MAIN APP ==========
@@ -1024,30 +826,48 @@
                 selectedSymptoms: [],
                 transcript: '',
                 detectedConditions: [],
+                currentMode: 'mobile',
                 voiceRecorder: new VoiceRecorder()
             },
 
             init() {
-                // Check voice support
                 if (!this.state.voiceRecorder.isSupported()) {
-                    document.getElementById('record-btn').disabled = true;
-                    alert('Voice recognition not supported in this browser. Please use Chrome, Edge, or Safari.');
+                    alert('Voice recognition not supported. Please use Chrome, Edge, or Safari.');
                 }
 
                 this.renderSymptoms();
                 this.setupEventListeners();
+
+                // Detect mobile
+                if (window.innerWidth > 900) {
+                    this.switchMode('desktop');
+                }
+            },
+
+            switchMode(mode) {
+                this.state.currentMode = mode;
+                document.getElementById('mobile-view').style.display = mode === 'mobile' ? 'flex' : 'none';
+                document.getElementById('desktop-view').classList.toggle('active', mode === 'desktop');
+                document.getElementById('mobile-mode-btn').classList.toggle('active', mode === 'mobile');
+                document.getElementById('desktop-mode-btn').classList.toggle('active', mode === 'desktop');
             },
 
             renderSymptoms() {
-                const symptomsList = document.getElementById('symptoms-list');
-                symptomsList.innerHTML = SYMPTOMS.map((symptom, i) => `
+                const symptomsList = [
+                    document.getElementById('mobile-symptoms-list'),
+                    document.getElementById('desktop-symptoms-list')
+                ];
+
+                const html = SYMPTOMS.map((symptom, i) => `
                     <div class="checkbox-item">
-                        <input type="checkbox" id="symptom-${i}" value="${symptom}">
+                        <input type="checkbox" id="symptom-${i}" value="${symptom}" class="symptom-checkbox">
                         <label for="symptom-${i}">${symptom}</label>
                     </div>
                 `).join('');
 
-                document.querySelectorAll('.checkbox-item input').forEach(checkbox => {
+                symptomsList.forEach(list => list.innerHTML = html);
+
+                document.querySelectorAll('.symptom-checkbox').forEach(checkbox => {
                     checkbox.addEventListener('change', (e) => {
                         if (e.target.checked) {
                             this.state.selectedSymptoms.push(e.target.value);
@@ -1059,63 +879,80 @@
             },
 
             setupEventListeners() {
-                document.getElementById('record-btn').addEventListener('click', () => {
-                    if (this.state.voiceRecorder.isListening) {
-                        this.state.voiceRecorder.stop();
-                    } else {
-                        this.state.voiceRecorder.start();
-                    }
+                // Record buttons
+                ['mobile', 'desktop'].forEach(mode => {
+                    document.getElementById(`${mode}-record-btn`).addEventListener('click', () => {
+                        if (this.state.voiceRecorder.isListening) {
+                            this.state.voiceRecorder.stop();
+                        } else {
+                            this.state.voiceRecorder.start();
+                        }
+                        this.updateRecordButtonUI();
+                    });
                 });
 
-                document.getElementById('clear-btn').addEventListener('click', () => {
-                    this.state.voiceRecorder.clear();
-                    document.getElementById('transcript-text').textContent = 'Click record to begin, or try a demo case';
-                    document.getElementById('transcript-text').classList.add('placeholder');
-                });
+                // Create buttons
+                document.getElementById('mobile-create-btn').addEventListener('click', () => this.createProtocol());
+                document.getElementById('desktop-create-btn').addEventListener('click', () => this.createProtocol());
 
-                document.getElementById('patient-age').addEventListener('change', (e) => {
+                // Reset buttons
+                document.getElementById('mobile-reset-btn').addEventListener('click', () => this.resetAll());
+                document.getElementById('desktop-reset-btn').addEventListener('click', () => this.resetAll());
+
+                // Age inputs
+                document.getElementById('mobile-patient-age').addEventListener('change', (e) => {
                     this.state.patientAge = e.target.value;
+                    document.getElementById('desktop-patient-age').value = e.target.value;
                 });
 
-                document.getElementById('create-protocol-btn').addEventListener('click', () => {
-                    this.createProtocol();
-                });
-
-                document.getElementById('reset-btn').addEventListener('click', () => {
-                    this.resetAll();
+                document.getElementById('desktop-patient-age').addEventListener('change', (e) => {
+                    this.state.patientAge = e.target.value;
+                    document.getElementById('mobile-patient-age').value = e.target.value;
                 });
 
                 // Demo buttons
-                document.getElementById('demo-wl').addEventListener('click', () => {
-                    this.loadDemo('wl');
-                });
-
-                document.getElementById('demo-gh').addEventListener('click', () => {
-                    this.loadDemo('gh');
-                });
-
-                document.getElementById('demo-neuro').addEventListener('click', () => {
-                    this.loadDemo('neuro');
+                ['mobile', 'desktop'].forEach(mode => {
+                    document.getElementById(`demo-wl-${mode}`).addEventListener('click', () => this.loadDemo('wl'));
+                    document.getElementById(`demo-gh-${mode}`).addEventListener('click', () => this.loadDemo('gh'));
+                    document.getElementById(`demo-neuro-${mode}`).addEventListener('click', () => this.loadDemo('neuro'));
                 });
             },
 
+            updateRecordButtonUI() {
+                const isRecording = this.state.voiceRecorder.isListening;
+                ['mobile', 'desktop'].forEach(mode => {
+                    const btn = document.getElementById(`${mode}-record-btn`);
+                    btn.classList.toggle('recording', isRecording);
+                    btn.textContent = isRecording ? '⏹️' : '🎙️';
+                });
+            },
+
+            updateTranscript(text) {
+                this.state.transcript = text;
+                document.getElementById('mobile-transcript-text').textContent = text || 'Click to record';
+                document.getElementById('desktop-transcript-text').textContent = text || 'Click to record';
+                document.getElementById('mobile-transcript-text').classList.toggle('placeholder', !text);
+                document.getElementById('desktop-transcript-text').classList.toggle('placeholder', !text);
+            },
+
             loadDemo(caseKey) {
-                const demoCase = DEMO_CASES[caseKey];
-                if (!demoCase) return;
+                const demo = DEMO_CASES[caseKey];
+                if (!demo) return;
 
-                this.state.voiceRecorder.transcript = demoCase.transcript;
-                this.state.transcript = demoCase.transcript;
-                this.state.patientAge = demoCase.age;
+                this.state.transcript = demo.transcript;
+                this.state.patientAge = demo.age;
+                this.updateTranscript(demo.transcript);
 
-                document.getElementById('patient-age').value = demoCase.age;
-                document.getElementById('transcript-text').textContent = demoCase.transcript;
-                document.getElementById('transcript-text').classList.remove('placeholder');
+                document.getElementById('mobile-patient-age').value = demo.age;
+                document.getElementById('desktop-patient-age').value = demo.age;
 
-                // Select symptoms
-                demoCase.symptoms.forEach(symptom => {
-                    const checkbox = Array.from(document.querySelectorAll('.checkbox-item input')).find(
-                        cb => cb.value === symptom
-                    );
+                ['mobile', 'desktop'].forEach(mode => {
+                    document.querySelectorAll(`#${mode}-symptoms-list .symptom-checkbox`).forEach(cb => cb.checked = false);
+                });
+
+                this.state.selectedSymptoms = [];
+                demo.symptoms.forEach(symptom => {
+                    const checkbox = document.querySelector(`.symptom-checkbox[value="${symptom}"]`);
                     if (checkbox) {
                         checkbox.checked = true;
                         this.state.selectedSymptoms.push(symptom);
@@ -1124,41 +961,22 @@
             },
 
             createProtocol() {
-                if (!this.state.voiceRecorder.transcript && !this.state.transcript) {
-                    alert('Please record a voice note or load a demo case');
+                if (!this.state.transcript) {
+                    alert('Please record a voice note or load a demo');
                     return;
                 }
 
-                const transcript = this.state.voiceRecorder.transcript || this.state.transcript;
-
                 const keywordsToPeptides = {
-                    'dasatinib': 'Dasatinib',
-                    'quercetin': 'Quercetin',
-                    'tb-500': 'TB-500',
-                    'metformin': 'Metformin',
-                    'rapamycin': 'Rapamycin',
-                    'telmisartan': 'Telmisartan',
-                    'nad+': 'NAD+',
-                    'nmn': 'NMN',
-                    'mots-c': 'MOTS-C',
-                    'ss-31': 'SS-31 (Elamipretide)',
-                    'elamipretide': 'SS-31 (Elamipretide)',
-                    'sermorelin': 'Sermorelin',
-                    'tesamorelin': 'Tesamorelin',
-                    'igf-1': 'IGF-1 LR3',
-                    'epitalon': 'Epitalon',
-                    'aod-9604': 'AOD-9604',
-                    'semax': 'Semax',
-                    'selank': 'Selank',
-                    'pt-141': 'PT-141',
-                    'kisspeptin': 'Kisspeptin-10',
-                    'retatrutide': 'Retatrutide',
-                    'semaglutide': 'Semaglutide',
-                    'tirzepatide': 'Tirzepatide',
-                    'tesofensine': 'Tesofensine'
+                    'dasatinib': 'Dasatinib', 'quercetin': 'Quercetin', 'tb-500': 'TB-500',
+                    'metformin': 'Metformin', 'rapamycin': 'Rapamycin', 'telmisartan': 'Telmisartan',
+                    'nad+': 'NAD+', 'nmn': 'NMN', 'mots-c': 'MOTS-C', 'ss-31': 'SS-31 (Elamipretide)',
+                    'elamipretide': 'SS-31 (Elamipretide)', 'sermorelin': 'Sermorelin', 'tesamorelin': 'Tesamorelin',
+                    'igf-1': 'IGF-1 LR3', 'epitalon': 'Epitalon', 'aod-9604': 'AOD-9604',
+                    'semax': 'Semax', 'selank': 'Selank', 'pt-141': 'PT-141', 'kisspeptin': 'Kisspeptin-10',
+                    'retatrutide': 'Retatrutide', 'semaglutide': 'Semaglutide', 'tirzepatide': 'Tirzepatide', 'tesofensine': 'Tesofensine'
                 };
 
-                const transcriptLower = transcript.toLowerCase();
+                const transcriptLower = this.state.transcript.toLowerCase();
                 const detectedPeptides = new Set();
 
                 for (const [keyword, peptideName] of Object.entries(keywordsToPeptides)) {
@@ -1168,27 +986,109 @@
                 }
 
                 if (detectedPeptides.size === 0) {
-                    alert('No peptides detected in transcript. Please mention specific peptides.');
+                    alert('No peptides detected. Please mention specific peptides.');
                     return;
                 }
 
-                this.state.detectedConditions = extractMedicalInfo(transcript);
-                const protocol = generateProtocol(Array.from(detectedPeptides), this.state.detectedConditions, this.state.patientAge);
+                // Extract conditions
+                const transcriptLowerFull = this.state.transcript.toLowerCase();
+                const detectedConditions = [];
+                for (const condition of Object.keys(CONTRAINDICATIONS)) {
+                    if (transcriptLowerFull.includes(condition)) {
+                        detectedConditions.push(condition);
+                    }
+                }
+
+                // Get all peptides
+                const allPeptides = [];
+                Object.values(PEPTIDE_DATABASE).forEach(cat => allPeptides.push(...cat));
+                const selectedPeptides = allPeptides.filter(p => detectedPeptides.has(p.name));
+
+                // Generate warnings
+                const warnings = [];
+                detectedConditions.forEach(condition => {
+                    const contraindicated = CONTRAINDICATIONS[condition.toLowerCase()] || [];
+                    selectedPeptides.forEach(peptide => {
+                        if (contraindicated.some(cp => peptide.name.toLowerCase().includes(cp.toLowerCase()) || cp.toLowerCase().includes(peptide.name.toLowerCase()))) {
+                            warnings.push({ condition, peptide: peptide.name, severity: 'high' });
+                        }
+                    });
+                });
+
+                // Collect labs
+                const labs = new Set();
+                selectedPeptides.forEach(peptide => {
+                    const labData = LAB_RECOMMENDATIONS[peptide.name];
+                    if (labData) labData.tests.forEach(test => labs.add(test));
+                });
+
+                // Collect supplements
+                const supplements = new Set();
+                selectedPeptides.forEach(peptide => {
+                    const syncData = SUPPLEMENT_SYNERGY[peptide.name];
+                    if (syncData) syncData.synergistic.forEach(supp => supplements.add(supp));
+                });
+
+                const protocol = {
+                    peptides: selectedPeptides,
+                    warnings,
+                    labs: Array.from(labs),
+                    supplements: Array.from(supplements),
+                    followUpSchedule: FOLLOW_UP_SCHEDULES.standard,
+                    patientAge: this.state.patientAge,
+                    generatedAt: new Date().toLocaleDateString()
+                };
 
                 this.displayResults(protocol);
             },
 
             displayResults(protocol) {
-                const emptyState = document.getElementById('empty-state');
-                const resultsContent = document.getElementById('results-content');
-                const warningsContainer = document.getElementById('warnings-container');
-                const protocolContent = document.getElementById('protocol-content');
+                const warningHtml = protocol.warnings.length > 0 ?
+                    `<div class="warning-banner">
+                        <div class="warning-title">⚠️ CONTRAINDICATION WARNINGS</div>
+                        ${protocol.warnings.map(w => `<div class="warning-item"><strong>${w.condition}</strong> + ${w.peptide}</div>`).join('')}
+                    </div>` : '';
 
-                emptyState.style.display = 'none';
-                resultsContent.style.display = 'block';
+                let protocolHtml = `
+                    <div class="protocol-section">
+                        <div class="protocol-section-title">Recommended Peptides</div>
+                        ${protocol.peptides.map(p => `
+                            <div class="peptide-item">
+                                <div class="name">${p.name}</div>
+                                <div class="mechanism">${p.mechanism}</div>
+                                <div class="dosing"><strong>Dosing:</strong> ${p.dosing}</div>
+                            </div>
+                        `).join('')}
+                    </div>
 
-                warningsContainer.innerHTML = renderWarnings(protocol.warnings);
-                protocolContent.innerHTML = renderProtocolContent(protocol);
+                    ${protocol.labs.length > 0 ? `
+                    <div class="protocol-section">
+                        <div class="protocol-section-title">Lab Recommendations</div>
+                        ${protocol.labs.map(lab => `<div class="lab-item">${lab}</div>`).join('')}
+                    </div>` : ''}
+
+                    ${protocol.supplements.length > 0 ? `
+                    <div class="protocol-section">
+                        <div class="protocol-section-title">Synergistic Supplements</div>
+                        ${protocol.supplements.map(supp => `<div class="supplement-item">${supp}</div>`).join('')}
+                    </div>` : ''}
+
+                    <div class="protocol-section">
+                        <div class="protocol-section-title">Follow-up Schedule</div>
+                        ${protocol.followUpSchedule.map(item => `
+                            <div class="followup-item">
+                                <div style="font-weight: 600; color: #fcd34d;">${item.timing}</div>
+                                <div style="font-size: 10px; color: #94a3b8;">${item.details}</div>
+                            </div>
+                        `).join('')}
+                    </div>`;
+
+                ['mobile', 'desktop'].forEach(mode => {
+                    document.getElementById(`${mode}-empty-state`).style.display = 'none';
+                    document.getElementById(`${mode}-results-content`).style.display = 'block';
+                    document.getElementById(`${mode}-warnings-container`).innerHTML = warningHtml;
+                    document.getElementById(`${mode}-protocol-content`).innerHTML = protocolHtml;
+                });
             },
 
             resetAll() {
@@ -1197,24 +1097,24 @@
                     selectedSymptoms: [],
                     transcript: '',
                     detectedConditions: [],
+                    currentMode: this.state.currentMode,
                     voiceRecorder: this.state.voiceRecorder
                 };
 
-                document.getElementById('patient-age').value = '';
-                document.querySelectorAll('.checkbox-item input').forEach(cb => cb.checked = false);
-                document.getElementById('transcript-text').textContent = 'Click record to begin, or try a demo case';
-                document.getElementById('transcript-text').classList.add('placeholder');
-
+                document.getElementById('mobile-patient-age').value = '';
+                document.getElementById('desktop-patient-age').value = '';
+                document.querySelectorAll('.symptom-checkbox').forEach(cb => cb.checked = false);
+                this.updateTranscript('');
                 this.state.voiceRecorder.clear();
 
-                document.getElementById('empty-state').style.display = 'block';
-                document.getElementById('results-content').style.display = 'none';
+                ['mobile', 'desktop'].forEach(mode => {
+                    document.getElementById(`${mode}-empty-state`).style.display = 'block';
+                    document.getElementById(`${mode}-results-content`).style.display = 'none';
+                });
             }
         };
 
-        window.addEventListener('DOMContentLoaded', () => {
-            app.init();
-        });
+        window.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
 </html>
