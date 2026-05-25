@@ -1,0 +1,19 @@
+{
+  "name": "clinical-peptide-protocol-builder",
+  "version": "2.0.0",
+  "description": "Voice-guided clinical peptide protocol builder with contraindication warnings",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx http-server",
+    "start": "npx http-server"
+  },
+  "keywords": [
+    "peptide",
+    "clinical",
+    "protocol",
+    "voice",
+    "healthcare"
+  ],
+  "author": "",
+  "license": "MIT"
+}
