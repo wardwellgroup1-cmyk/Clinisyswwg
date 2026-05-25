@@ -1,1148 +1,625 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>PA Fast Assist – Prior Authorization Helper</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --bg-secondary: #f1f5f9;
-      --border: #e2e8f0;
-      --border-dark: #cbd5e1;
-      --accent: #0ea5e9;
-      --accent-light: #e0f2fe;
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
-      --success: #16a34a;
-      --success-light: #dcfce7;
-      --warning: #ea580c;
-      --warning-light: #fed7aa;
-      --error: #dc2626;
-      --error-light: #fee2e2;
-      --neutral: #64748b;
-      --radius: 8px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-      background: var(--bg);
-      color: var(--text-primary);
-      line-height: 1.5;
-    }
-
-    button, input, select, textarea {
-      font-family: inherit;
-      font-size: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-
-    header {
-      background: white;
-      border-bottom: 1px solid var(--border);
-      padding: 16px 0;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-left {
-      flex: 1;
-    }
-
-    .header-title {
-      font-size: 24px;
-      font-weight: 700;
-      margin: 0;
-      color: var(--text-primary);
-    }
-
-    .header-subtitle {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin: 4px 0 0;
-    }
-
-    .header-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--success-light);
-      border: 1px solid var(--success);
-      color: var(--success);
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .header-right {
-      text-align: right;
-    }
-
-    .mode-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-    }
-
-    .toggle-switch {
-      width: 40px;
-      height: 24px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--success);
-      cursor: pointer;
-      position: relative;
-      transition: background 0.2s;
-    }
-
-    .toggle-switch.off {
-      background: var(--neutral);
-    }
-
-    .toggle-switch::after {
-      content: '';
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 10px;
-      background: white;
-      top: 2px;
-      left: 2px;
-      transition: left 0.2s;
-    }
-
-    .toggle-switch.off::after {
-      left: 18px;
-    }
-
-    .main-grid {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 20px;
-    }
-
-    .form-panel {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      height: fit-content;
-      position: sticky;
-      top: 16px;
-    }
-
-    .form-section-title {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--neutral);
-      margin: 0 0 12px;
-      display: block;
-    }
-
-    .form-section {
-      margin-bottom: 18px;
-    }
-
-    .form-section:last-child {
-      margin-bottom: 0;
-    }
-
-    .field {
-      margin-bottom: 12px;
-    }
-
-    .field:last-child {
-      margin-bottom: 0;
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 4px;
-    }
-
-    input[type="text"],
-    input[type="date"],
-    select,
-    textarea {
-      width: 100%;
-      border: 1px solid var(--border-dark);
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 12px;
-      color: var(--text-primary);
-      background: white;
-      transition: border-color 0.2s;
-    }
-
-    input[type="text"]:focus,
-    input[type="date"]:focus,
-    select:focus,
-    textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-light);
-    }
-
-    input::placeholder {
-      color: var(--neutral);
-    }
-
-    .optional-label {
-      font-size: 11px;
-      color: var(--neutral);
-      font-weight: 400;
-    }
-
-    .button-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .btn {
-      padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      border: 1px solid;
-      transition: all 0.2s;
-      text-align: center;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background: #0284c7;
-      border-color: #0284c7;
-    }
-
-    .btn-secondary {
-      background: white;
-      color: var(--text-primary);
-      border-color: var(--border-dark);
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background: var(--bg-secondary);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .results-panel {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-secondary);
-    }
-
-    .empty-state-icon {
-      font-size: 40px;
-      margin-bottom: 12px;
-      opacity: 0.6;
-    }
-
-    .empty-state-text {
-      font-size: 14px;
-    }
-
-    .results-section {
-      margin-bottom: 24px;
-    }
-
-    .results-section:last-child {
-      margin-bottom: 0;
-    }
-
-    .section-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 12px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--border);
-    }
-
-    .criteria-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .criterion {
-      border-left: 3px solid var(--border);
-      padding: 10px 12px;
-      background: var(--bg-secondary);
-      border-radius: 4px;
-      font-size: 12px;
-    }
-
-    .criterion.met {
-      border-left-color: var(--success);
-      background: var(--success-light);
-    }
-
-    .criterion.not-met {
-      border-left-color: var(--error);
-      background: var(--error-light);
-    }
-
-    .criterion.unknown {
-      border-left-color: var(--warning);
-      background: var(--warning-light);
-    }
-
-    .criterion-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    .criterion-label {
-      font-weight: 600;
-      flex: 1;
-      color: var(--text-primary);
-    }
-
-    .criterion-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
-    }
-
-    .criterion-badge.met {
-      background: var(--success);
-      color: white;
-    }
-
-    .criterion-badge.not-met {
-      background: var(--error);
-      color: white;
-    }
-
-    .criterion-badge.unknown {
-      background: var(--warning);
-      color: white;
-    }
-
-    .criterion-text {
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-
-    .approval-likelihood {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
-      text-align: center;
-    }
-
-    .likelihood-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--neutral);
-      margin-bottom: 8px;
-    }
-
-    .likelihood-score {
-      font-size: 32px;
-      font-weight: 700;
-      color: var(--accent);
-      margin: 0;
-    }
-
-    .likelihood-text {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
-
-    .letter-section {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    .letter-content {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--text-primary);
-      font-family: Georgia, serif;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .btn-small {
-      padding: 8px 12px;
-      font-size: 12px;
-    }
-
-    .disclaimer {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: var(--radius);
-      padding: 12px;
-      margin-top: 20px;
-      font-size: 11px;
-      color: #0369a1;
-      line-height: 1.5;
-    }
-
-    .disclaimer strong {
-      font-weight: 600;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .tab-btn {
-      padding: 8px 12px;
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    @media (max-width: 1024px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .form-panel {
-        position: static;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Peptide Protocol Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(71, 85, 105, 0.7);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+
+        .version-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            color: #93c5fd;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 0 20px;
+        }
+
+        header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin: 0 0 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            color: #cbd5e1;
+            margin: 0;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 24px;
+        }
+
+        .form-panel {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 8px;
+            padding: 24px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            margin: 0 0 12px;
+            display: block;
+        }
+
+        .field {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #e2e8f0;
+            background: rgba(15, 23, 42, 0.6);
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 8px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 6px;
+            border: 1px solid rgba(71, 85, 105, 0.3);
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid;
+            transition: all 0.2s;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #93c5fd;
+            border-color: #3b82f6;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .results-panel {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 8px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            color: #e2e8f0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .peptide-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .peptide-card:hover {
+            border-color: #3b82f6;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .peptide-card.selected {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .peptide-category {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .peptide-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 6px;
+        }
+
+        .peptide-mechanism {
+            font-size: 12px;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .peptide-benefits {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        .peptide-dosing {
+            font-size: 11px;
+            color: #64748b;
+            font-style: italic;
+            padding-top: 8px;
+            border-top: 1px solid rgba(71, 85, 105, 0.3);
+        }
+
+        .selected-items {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .selected-item {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            color: #93c5fd;
+            padding: 6px 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #93c5fd;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .remove-btn:hover {
+            color: #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-panel {
+                position: static;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
     <div class="container">
-      <div class="header-content">
-        <div class="header-left">
-          <h1 class="header-title">PA Fast Assist</h1>
-          <p class="header-subtitle">Local-only prior authorization helper · No network calls · No trackers</p>
-        </div>
-        <div class="header-right">
-          <div class="mode-toggle">
-            <span>HIPAA Mode</span>
-            <button class="toggle-switch" id="hipaa-toggle" title="Toggle HIPAA Privacy Mode"></button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
+        <header>
+            <h1>Clinical Peptide Protocol Builder</h1>
+            <p>Comprehensive peptide database and protocol recommendations</p>
+        </header>
 
-  <div class="container">
-    <div class="main-grid">
-      <!-- LEFT PANEL: FORM -->
-      <div class="form-panel">
-        <form id="pa-form">
-          <!-- Request & Payer -->
-          <label class="form-section-title">1 · Request & Payer</label>
+        <div class="main-grid">
+            <!-- LEFT PANEL: FORM -->
+            <div class="form-panel">
+                <form id="peptide-form">
+                    <div class="form-section">
+                        <label class="form-section-title">Patient Age</label>
+                        <input type="number" id="patient-age" placeholder="Age in years" min="0" max="150">
+                    </div>
 
-          <div class="form-section">
-            <div class="field">
-              <label>Payer <span style="color: var(--error);">*</span></label>
-              <select id="payer" required>
-                <option value="">Select payer...</option>
-                <option value="aetna">Aetna</option>
-                <option value="bcbs">Blue Cross Blue Shield</option>
-                <option value="cigna">Cigna</option>
-                <option value="humana">Humana</option>
-                <option value="united">United Healthcare</option>
-                <option value="anthem">Anthem</option>
-              </select>
+                    <div class="form-section">
+                        <label class="form-section-title">Symptoms/Conditions</label>
+                        <div class="checkbox-group" id="symptoms-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-section-title">Selected Peptides</label>
+                        <div class="selected-items" id="selected-peptides">
+                            <p style="color: #64748b; font-size: 12px; margin: 0;">None selected</p>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <button type="submit" class="btn btn-primary">Generate Protocol</button>
+                        <button type="reset" class="btn btn-secondary">Clear All</button>
+                    </div>
+                </form>
             </div>
 
-            <div class="field">
-              <label>Request Type <span style="color: var(--error);">*</span></label>
-              <select id="request-type" required>
-                <option value="">Select type...</option>
-                <option value="medication">Medication (Drug)</option>
-                <option value="imaging">Imaging Study</option>
-                <option value="procedure">Procedure</option>
-                <option value="therapy">Therapy/Rehabilitation</option>
-                <option value="specialist">Specialist Visit</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label>Urgency <span style="color: var(--error);">*</span></label>
-              <select id="urgency" required>
-                <option value="">Select urgency...</option>
-                <option value="routine">Routine (Standard Review)</option>
-                <option value="expedited">Expedited (72 hours)</option>
-                <option value="urgent">Urgent (24 hours)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Patient Info -->
-          <label class="form-section-title">2 · Patient (Optional — Local Only)</label>
-
-          <div class="form-section">
-            <div class="field">
-              <label>Patient Name <span class="optional-label">(Optional)</span></label>
-              <input type="text" id="patient-name" placeholder="Full name" />
-            </div>
-
-            <div class="field">
-              <label>Date of Birth <span class="optional-label">(Optional)</span></label>
-              <input type="date" id="patient-dob" />
-            </div>
-
-            <div class="field">
-              <label>Member ID <span class="optional-label">(Optional)</span></label>
-              <input type="text" id="member-id" placeholder="Payer member ID" />
-            </div>
-
-            <div class="field">
-              <label>Clinical Summary <span class="optional-label">(Optional)</span></label>
-              <textarea id="clinical-summary" placeholder="Diagnoses, prior treatments, relevant lab/imaging findings..." rows="4"></textarea>
-            </div>
-          </div>
-
-          <!-- Buttons -->
-          <div class="button-group">
-            <button type="submit" class="btn btn-primary">Run Analysis</button>
-            <button type="button" class="btn btn-secondary" id="reset-btn">Reset</button>
-          </div>
-        </form>
-
-        <div class="disclaimer">
-          <strong>Disclaimer:</strong> PA Fast Assist is a decision-support tool for administrative reference only. It does not constitute medical advice, legal guidance, or a guarantee of prior authorization approval. All data remains in your browser — nothing is ever transmitted to any server.
-        </div>
-      </div>
-
-      <!-- RIGHT PANEL: RESULTS -->
-      <div class="results-panel">
-        <div id="empty-results" class="empty-state">
-          <div class="empty-state-icon">🔍</div>
-          <p class="empty-state-text">
-            No analysis yet<br />
-            Fill in the form on the left and click <strong>Run Analysis</strong> to see approval likelihood, payer-specific criteria, and generate a PA letter draft.
-          </p>
-        </div>
-
-        <div id="results-content" style="display: none;">
-          <!-- Approval Likelihood -->
-          <div class="approval-likelihood">
-            <div class="likelihood-label">Estimated Approval Likelihood</div>
-            <p class="likelihood-score" id="likelihood-score">85%</p>
-            <p class="likelihood-text" id="likelihood-text">Based on payer criteria match</p>
-          </div>
-
-          <!-- Tabs for Criteria vs Letter -->
-          <div class="tabs">
-            <button class="tab-btn active" data-tab="criteria">Payer Criteria</button>
-            <button class="tab-btn" data-tab="letter">PA Letter</button>
-          </div>
-
-          <!-- Criteria Tab -->
-          <div id="criteria-tab" class="tab-content active">
-            <div class="results-section">
-              <h3 class="section-title">Payer-Specific Criteria</h3>
-              <div class="criteria-list" id="criteria-list">
-                <!-- Criteria will be inserted here -->
-              </div>
-            </div>
-          </div>
-
-          <!-- Letter Tab -->
-          <div id="letter-tab" class="tab-content">
-            <div class="results-section">
-              <h3 class="section-title">PA Justification Letter</h3>
-              <div class="letter-section">
-                <div class="letter-content" id="pa-letter">
-                  <!-- Letter will be inserted here -->
+            <!-- RIGHT PANEL: RESULTS -->
+            <div class="results-panel">
+                <div id="empty-state" class="empty-state">
+                    <div class="empty-state-icon">💊</div>
+                    <p class="empty-state-text">
+                        Select symptoms and peptides to generate a personalized protocol.
+                    </p>
                 </div>
-              </div>
-              <div class="action-buttons">
-                <button class="btn btn-secondary btn-small" id="copy-letter-btn">Copy to Clipboard</button>
-                <button class="btn btn-secondary btn-small" id="download-letter-btn">Download as Text</button>
-              </div>
+
+                <div id="results-content" style="display: none;">
+                    <!-- Results will be inserted here -->
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <script>
-    // ====== PAYER POLICIES DATABASE ======
-    const payerPolicies = {
-      aetna: {
-        name: "Aetna",
-        criteria: {
-          medication: [
-            {
-              id: "fail-first",
-              label: "Fail-first requirement",
-              description: "Patient must have tried and failed at least one generic or lower-cost alternative",
-              required: true
+    <div class="version-badge">
+        <span class="font-semibold">v1.0.0</span>
+        <br>
+        <span class="text-xs opacity-75">Peptide Builder</span>
+    </div>
+
+    <script>
+        const app = {
+            state: {
+                patientAge: '',
+                selectedSymptoms: [],
+                selectedPeptides: []
             },
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear diagnosis and medical necessity for the requested medication",
-              required: true
+
+            symptoms: [
+                'Aging/Anti-aging',
+                'Cognitive decline',
+                'Fatigue/Low energy',
+                'Poor wound healing',
+                'Joint pain',
+                'Weight management',
+                'Sexual dysfunction',
+                'Muscle loss',
+                'Inflammation',
+                'Neurodegeneration'
+            ],
+
+            peptideDatabase: {
+                senolytic: [
+                    { name: 'Dasatinib', mechanism: 'Tyrosine kinase inhibitor → apoptosis of senescent cells', benefits: ['Anti-aging', 'Tissue repair', 'Cellular regeneration'], dosing: '3-5 days monthly or quarterly', category: '🔴 Senolytic Removal' },
+                    { name: 'Quercetin', mechanism: 'PI3K/AKT inhibition + antioxidant', benefits: ['Anti-inflammation', 'Antioxidant', 'Senescence support'], dosing: 'Daily or cycled with Dasatinib', category: '🔴 Senolytic Removal' },
+                    { name: 'TB-500', mechanism: 'Thymosin fragment → angiogenesis & tissue repair', benefits: ['Rapid healing', 'Soft tissue repair', 'Growth factor signaling'], dosing: '2-5mg weekly x 4-8 weeks', category: '🔴 Senolytic Removal' }
+                ],
+                senostatic: [
+                    { name: 'Metformin', mechanism: 'AMPK activation → insulin sensitivity ↑, mTOR ↓', benefits: ['Metabolic health', 'ROS reduction', 'Long-term protection'], dosing: '500-2000mg daily (divided)', category: '🟡 Senostatic Prevention' },
+                    { name: 'Rapamycin', mechanism: 'mTOR inhibition → prevents geroconversion', benefits: ['Cellular quiescence', 'Longevity', 'Senescence prevention'], dosing: '1-5mg weekly (cycled)', category: '🟡 Senostatic Prevention' },
+                    { name: 'Telmisartan', mechanism: 'ARB + PPAR-γ activation (caloric restriction mimetic)', benefits: ['Blood pressure', 'Metabolic benefit', 'Anti-aging'], dosing: '20-80mg daily', category: '🟡 Senostatic Prevention' }
+                ],
+                mitochondrial: [
+                    { name: 'NAD+', mechanism: 'Direct cellular energy currency precursor', benefits: ['Mitochondrial function', 'Sirtuin activation', 'Energy production'], dosing: 'IV infusion 500-1000mg', category: '🟢 Mitochondrial Energy' },
+                    { name: 'NMN', mechanism: 'NAD+ precursor → oral bioavailability', benefits: ['NAD+ replenishment', 'Metabolic health', 'Exercise response'], dosing: '250-500mg daily', category: '🟢 Mitochondrial Energy' },
+                    { name: 'MOTS-C', mechanism: 'AMPK activation + insulin sensitivity → mito OXPHOS', benefits: ['Insulin sensitivity', 'Energy metabolism', 'Fat loss'], dosing: '600mcg SC 2x weekly', category: '🟢 Mitochondrial Energy' },
+                    { name: 'SS-31 (Elamipretide)', mechanism: 'Mitochondrial antioxidant (cardiolipin targeting)', benefits: ['Mito protection', 'Neuro-protection', 'Cardiac benefit'], dosing: '0.5mg IV weekly', category: '🟢 Mitochondrial Energy' }
+                ],
+                growth: [
+                    { name: 'Sermorelin', mechanism: 'GHRH → endogenous GH secretion ↑ (no suppression)', benefits: ['Fat loss', 'Lean mass', 'Recovery', 'Sleep quality'], dosing: '0.3-0.5mg SC nightly or 3-5x weekly', category: '🔵 Growth/Repair' },
+                    { name: 'Tesamorelin', mechanism: 'GHRH analog → visceral fat reduction + GH axis', benefits: ['Visceral fat ↓', 'IGF-1 ↑', 'Body composition'], dosing: '2mg SC daily or 6x weekly', category: '🔵 Growth/Repair' },
+                    { name: 'IGF-1 LR3', mechanism: 'Long-R3 insulin-like growth factor → anabolism', benefits: ['Muscle growth', 'Recovery', 'Joint healing'], dosing: '50-100mcg SC daily', category: '🔵 Growth/Repair' },
+                    { name: 'Epitalon', mechanism: 'Telomerase activation + circadian rhythm reset', benefits: ['Telomere length', 'Sleep-wake cycle', 'Anti-aging'], dosing: '10mg SC daily x 10 days (annual)', category: '🔵 Growth/Repair' },
+                    { name: 'AOD-9604', mechanism: 'GH fragment (C-terminus) → fat loss without IGF-1', benefits: ['Fat loss', 'No systemic GH effects', 'Tissue-specific'], dosing: '300-600mcg SC daily', category: '🔵 Growth/Repair' }
+                ],
+                neuro: [
+                    { name: 'Semax', mechanism: 'ACTH-derived peptide → cognition enhancement', benefits: ['Focus', 'Learning', 'Memory', 'Mental clarity'], dosing: '1-3mg SC daily', category: '🟣 Neuro/Mood' },
+                    { name: 'Selank', mechanism: 'Tuftsin analog → anxiolytic + cognitive', benefits: ['Anxiety reduction', 'Calm', 'Emotional balance'], dosing: '1-3mg SC daily', category: '🟣 Neuro/Mood' }
+                ],
+                sexual: [
+                    { name: 'PT-141', mechanism: 'Melanocortin receptor agonist → sexual arousal', benefits: ['Libido', 'Erectile function', 'Sexual satisfaction'], dosing: '0.5-2mg SC 1-2h before activity', category: '🟠 Sexual/Reproductive' },
+                    { name: 'Kisspeptin-10', mechanism: 'GnRH stimulation → LH/FSH (fertility preservation)', benefits: ['Fertility on TRT', 'Hormone balance', 'Testicular health'], dosing: '600mcg SC daily', category: '🟠 Sexual/Reproductive' }
+                ],
+                weightloss: [
+                    { name: 'Retatrutide', mechanism: 'Triple GIP/GLP-1/Glucagon receptor agonist (most potent)', benefits: ['Superior weight loss', 'Enhanced metabolic improvement', 'Improved glycemic control', 'Strongest appetite suppression'], dosing: '2.4-8mg SC weekly', category: '⚫ Weight Loss' },
+                    { name: 'Semaglutide', mechanism: 'GLP-1 receptor agonist → appetite suppression', benefits: ['Appetite ↓', 'Satiety', 'Weight loss'], dosing: '0.25-2.4mg SC weekly', category: '⚫ Weight Loss' },
+                    { name: 'Tirzepatide', mechanism: 'Dual GLP-1 + GIP agonist (stronger than semaglutide)', benefits: ['Superior satiety', 'Metabolic improvement', 'Weight loss'], dosing: '2.5-15mg SC weekly', category: '⚫ Weight Loss' },
+                    { name: 'Tesofensine', mechanism: 'Monoamine reuptake inhibition → appetite suppression + CNS enhancement', benefits: ['Appetite suppression', 'Energy increase', 'Metabolic boost'], dosing: '0.25-0.5mg daily', category: '⚫ Weight Loss' }
+                ]
             },
-            {
-              id: "contraindications",
-              label: "No absolute contraindications",
-              description: "Requested medication is not contraindicated for patient's conditions",
-              required: true
+
+            getAllPeptides() {
+                const all = [];
+                Object.values(this.peptideDatabase).forEach(category => {
+                    all.push(...category);
+                });
+                return all;
             },
-            {
-              id: "duration",
-              label: "Documented trial duration",
-              description: "Prior medication trial lasted ≥30 days at therapeutic dose",
-              required: false
+
+            init() {
+                this.renderSymptoms();
+                this.renderPeptides();
+                this.setupEventListeners();
+            },
+
+            renderSymptoms() {
+                const symptomsList = document.getElementById('symptoms-list');
+                symptomsList.innerHTML = this.symptoms.map((symptom, i) => `
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="symptom-${i}" value="${symptom}" class="symptom-checkbox">
+                        <label for="symptom-${i}">${symptom}</label>
+                    </div>
+                `).join('');
+
+                document.querySelectorAll('.symptom-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        if (e.target.checked) {
+                            this.state.selectedSymptoms.push(e.target.value);
+                        } else {
+                            this.state.selectedSymptoms = this.state.selectedSymptoms.filter(s => s !== e.target.value);
+                        }
+                    });
+                });
+            },
+
+            renderPeptides() {
+                const resultsContent = document.getElementById('results-content');
+                const categories = Object.keys(this.peptideDatabase);
+
+                let html = '';
+                categories.forEach(categoryKey => {
+                    const peptides = this.peptideDatabase[categoryKey];
+                    const categoryName = peptides[0].category.split(' ').slice(1).join(' ');
+
+                    html += `<h2 style="font-size: 16px; font-weight: 700; color: #93c5fd; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid rgba(71, 85, 105, 0.5); padding-bottom: 8px;">${peptides[0].category}</h2>`;
+
+                    peptides.forEach(peptide => {
+                        html += `
+                            <div class="peptide-card" data-peptide="${peptide.name}">
+                                <div class="peptide-name">${peptide.name}</div>
+                                <div class="peptide-mechanism">${peptide.mechanism}</div>
+                                <div class="peptide-benefits"><strong>Benefits:</strong> ${peptide.benefits.join(', ')}</div>
+                                <div class="peptide-dosing"><strong>Dosing:</strong> ${peptide.dosing}</div>
+                            </div>
+                        `;
+                    });
+                });
+
+                resultsContent.innerHTML = html;
+
+                document.querySelectorAll('.peptide-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const peptideName = card.dataset.peptide;
+                        card.classList.toggle('selected');
+
+                        if (card.classList.contains('selected')) {
+                            this.state.selectedPeptides.push(peptideName);
+                        } else {
+                            this.state.selectedPeptides = this.state.selectedPeptides.filter(p => p !== peptideName);
+                        }
+
+                        this.updateSelectedPeptidesList();
+                    });
+                });
+            },
+
+            updateSelectedPeptidesList() {
+                const selectedDiv = document.getElementById('selected-peptides');
+                if (this.state.selectedPeptides.length === 0) {
+                    selectedDiv.innerHTML = '<p style="color: #64748b; font-size: 12px; margin: 0;">None selected</p>';
+                } else {
+                    selectedDiv.innerHTML = this.state.selectedPeptides.map(peptide => `
+                        <div class="selected-item">
+                            <span>${peptide}</span>
+                            <button type="button" class="remove-btn" onclick="app.removePeptide('${peptide}')">✕</button>
+                        </div>
+                    `).join('');
+                }
+            },
+
+            removePeptide(peptideName) {
+                this.state.selectedPeptides = this.state.selectedPeptides.filter(p => p !== peptideName);
+                document.querySelector(`[data-peptide="${peptideName}"]`).classList.remove('selected');
+                this.updateSelectedPeptidesList();
+            },
+
+            setupEventListeners() {
+                document.getElementById('peptide-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.generateProtocol();
+                });
+
+                document.getElementById('patient-age').addEventListener('change', (e) => {
+                    this.state.patientAge = e.target.value;
+                });
+
+                document.getElementById('peptide-form').addEventListener('reset', () => {
+                    this.state.selectedSymptoms = [];
+                    this.state.selectedPeptides = [];
+                    this.state.patientAge = '';
+                    document.querySelectorAll('.symptom-checkbox').forEach(cb => cb.checked = false);
+                    document.querySelectorAll('.peptide-card').forEach(card => card.classList.remove('selected'));
+                    this.updateSelectedPeptidesList();
+                });
+            },
+
+            generateProtocol() {
+                if (this.state.selectedPeptides.length === 0) {
+                    alert('Please select at least one peptide');
+                    return;
+                }
+
+                const protocol = this.buildProtocol();
+                this.displayProtocol(protocol);
+            },
+
+            buildProtocol() {
+                const allPeptides = this.getAllPeptides();
+                const selectedData = allPeptides.filter(p => this.state.selectedPeptides.includes(p.name));
+
+                return {
+                    age: this.state.patientAge || 'Not specified',
+                    symptoms: this.state.selectedSymptoms,
+                    peptides: selectedData,
+                    generated: new Date().toLocaleDateString()
+                };
+            },
+
+            displayProtocol(protocol) {
+                const resultsContent = document.getElementById('results-content');
+                let html = `
+                    <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(71, 85, 105, 0.5); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <h3 style="font-size: 14px; font-weight: 700; color: #e2e8f0; margin-top: 0;">Protocol Summary</h3>
+                        <p style="font-size: 12px; color: #cbd5e1; margin: 8px 0;"><strong>Generated:</strong> ${protocol.generated}</p>
+                        <p style="font-size: 12px; color: #cbd5e1; margin: 8px 0;"><strong>Patient Age:</strong> ${protocol.age}</p>
+                        <p style="font-size: 12px; color: #cbd5e1; margin: 8px 0;"><strong>Symptoms:</strong> ${protocol.symptoms.length > 0 ? protocol.symptoms.join(', ') : 'Not specified'}</p>
+                    </div>
+
+                    <h3 style="font-size: 14px; font-weight: 700; color: #93c5fd; margin-bottom: 12px; border-bottom: 1px solid rgba(71, 85, 105, 0.5); padding-bottom: 8px;">Recommended Peptides</h3>
+                `;
+
+                protocol.peptides.forEach(peptide => {
+                    html += `
+                        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(71, 85, 105, 0.5); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                            <div style="font-size: 13px; font-weight: 700; color: #93c5fd; margin-bottom: 6px;">${peptide.name}</div>
+                            <div style="font-size: 11px; color: #cbd5e1; margin-bottom: 6px;">${peptide.mechanism}</div>
+                            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;"><strong>Benefits:</strong> ${peptide.benefits.join(', ')}</div>
+                            <div style="font-size: 11px; color: #64748b;"><strong>Dosing:</strong> ${peptide.dosing}</div>
+                        </div>
+                    `;
+                });
+
+                resultsContent.innerHTML = html;
             }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear indication based on patient symptoms, signs, or abnormal findings",
-              required: true
-            },
-            {
-              id: "prior-imaging",
-              label: "Prior imaging ruled out",
-              description: "Patient has not had the same imaging within the past 12 months",
-              required: true
-            },
-            {
-              id: "conservative-measures",
-              label: "Conservative measures attempted",
-              description: "Non-imaging diagnostic approaches have been tried first",
-              required: false
-            }
-          ]
-        }
-      },
-      bcbs: {
-        name: "Blue Cross Blue Shield",
-        criteria: {
-          medication: [
-            {
-              id: "step-therapy",
-              label: "Step therapy compliance",
-              description: "Patient completed required step therapy protocol for this drug class",
-              required: true
-            },
-            {
-              id: "diagnosis-supported",
-              label: "Diagnosis supported",
-              description: "Requested medication is FDA-approved for patient's documented condition",
-              required: true
-            },
-            {
-              id: "dosing-frequency",
-              label: "Dosing within guidelines",
-              description: "Requested dose and frequency align with FDA label and clinical guidelines",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "medical-necessity",
-              label: "Medical necessity documented",
-              description: "Clinical presentation supports imaging as next appropriate step",
-              required: true
-            },
-            {
-              id: "quality-score",
-              label: "Evidence quality score",
-              description: "Request supported by evidence-based guidelines (ACR, USPSTF, etc.)",
-              required: true
-            }
-          ]
-        }
-      },
-      cigna: {
-        name: "Cigna",
-        criteria: {
-          medication: [
-            {
-              id: "prior-auth-required",
-              label: "Prior authorization triggered",
-              description: "Drug requires PA based on Cigna formulary and coverage rules",
-              required: true
-            },
-            {
-              id: "clinical-evidence",
-              label: "Clinical evidence provided",
-              description: "Supporting clinical evidence demonstrates need for this medication",
-              required: true
-            },
-            {
-              id: "labwork-monitoring",
-              label: "Lab monitoring plan documented",
-              description: "Plan for ongoing monitoring and lab work is documented",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-necessity",
-              label: "Clinical necessity established",
-              description: "Findings on exam or other testing warrant advanced imaging",
-              required: true
-            },
-            {
-              id: "recent-imaging",
-              label: "No recent duplicate study",
-              description: "No equivalent imaging performed within past 90 days",
-              required: true
-            }
-          ]
-        }
-      },
-      humana: {
-        name: "Humana",
-        criteria: {
-          medication: [
-            {
-              id: "formulary-exception",
-              label: "Formulary exception request",
-              description: "Non-formulary drug requires medical necessity documentation",
-              required: true
-            },
-            {
-              id: "clinical-rationale",
-              label: "Clinical rationale clear",
-              description: "Why this specific drug vs. formulary alternatives",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Specific clinical question or findings necessitating imaging",
-              required: true
-            },
-            {
-              id: "imaging-guidelines",
-              label: "Imaging guidelines met",
-              description: "Request aligns with ACR, USPSTF, or specialty society guidelines",
-              required: true
-            }
-          ]
-        }
-      },
-      united: {
-        name: "United Healthcare",
-        criteria: {
-          medication: [
-            {
-              id: "clinical-criteria",
-              label: "Clinical criteria met",
-              description: "Patient meets UnitedHealth clinical criteria for this medication",
-              required: true
-            },
-            {
-              id: "prior-treatment",
-              label: "Prior treatment documented",
-              description: "Failure of or intolerance to required prior treatments documented",
-              required: true
-            },
-            {
-              id: "quantity-limit",
-              label: "Within quantity limits",
-              description: "Requested quantity aligns with UnitedHealth limits",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-necessity",
-              label: "Clinical necessity established",
-              description: "Imaging is medically necessary to answer a clinical question",
-              required: true
-            }
-          ]
-        }
-      },
-      anthem: {
-        name: "Anthem",
-        criteria: {
-          medication: [
-            {
-              id: "medical-necessity",
-              label: "Medical necessity documented",
-              description: "Medication is medically necessary for patient's condition",
-              required: true
-            },
-            {
-              id: "fda-indication",
-              label: "FDA-approved indication",
-              description: "Medication is FDA-approved for patient's diagnosis",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear clinical indication supported by history and findings",
-              required: true
-            }
-          ]
-        }
-      }
-    };
-
-    // ====== STATE ======
-    let hipaaMode = true;
-    let lastAnalysis = null;
-
-    // ====== UTILITIES ======
-    function showToast(msg, type = "info") {
-      // Simple console log since no toast UI needed
-      console.log(`[${type.toUpperCase()}] ${msg}`);
-    }
-
-    function getPatientAge() {
-      const dob = document.getElementById("patient-dob").value;
-      if (!dob) return null;
-      const today = new Date();
-      const birth = new Date(dob);
-      let age = today.getFullYear() - birth.getFullYear();
-      const m = today.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-      return age;
-    }
-
-    function calculateApprovalLikelihood(payerId, requestType, clinicalData) {
-      let score = 50; // baseline
-
-      // Has clinical summary
-      if (clinicalData.trim().length > 20) score += 10;
-
-      // Has patient DOB (completeness indicator)
-      if (document.getElementById("patient-dob").value) score += 5;
-
-      // Has member ID
-      if (document.getElementById("member-id").value) score += 5;
-
-      // Urgency (expedited/urgent typically have slightly lower approval % but faster processing)
-      const urgency = document.getElementById("urgency").value;
-      if (urgency === "routine") score += 5;
-
-      // Cap at 95%
-      return Math.min(95, score);
-    }
-
-    function evaluateCriteria(payerId, requestType, clinicalData) {
-      const payer = payerPolicies[payerId];
-      if (!payer) return [];
-
-      const criteria = payer.criteria[requestType] || [];
-      return criteria.map(c => {
-        // Simple heuristic: longer clinical data suggests more criteria met
-        const clinicalLength = clinicalData.length;
-        let status;
-
-        if (clinicalLength < 20) {
-          status = "unknown"; // Not documented
-        } else if (c.required) {
-          // Assume required criteria are met if we have some clinical data
-          status = clinicalLength > 100 ? "met" : "unknown";
-        } else {
-          status = clinicalLength > 150 ? "met" : "unknown";
-        }
-
-        return {
-          ...c,
-          status
         };
-      });
-    }
 
-    function generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData) {
-      const payer = payerPolicies[payerId];
-      const patientName = document.getElementById("patient-name").value || "[Patient Name]";
-      const memberId = document.getElementById("member-id").value || "[Member ID]";
-      const age = getPatientAge();
-      const ageStr = age ? ` (Age ${age})` : "";
-
-      const metCriteria = evaluatedCriteria.filter(c => c.status === "met").map(c => c.label);
-      const unknownCriteria = evaluatedCriteria.filter(c => c.status === "unknown").map(c => c.label);
-
-      let letter = `PRIOR AUTHORIZATION REQUEST JUSTIFICATION
-
-TO: ${payer.name}
-FROM: [Provider Name/Practice]
-DATE: ${new Date().toLocaleDateString()}
-PATIENT: ${patientName}${ageStr}
-MEMBER ID: ${memberId}
-REQUEST TYPE: ${requestType.charAt(0).toUpperCase() + requestType.slice(1)}
-
----
-
-MEDICAL NECESSITY:
-
-${clinicalData || "[Clinical summary not provided]"}
-
----
-
-PAYER CRITERIA ANALYSIS:
-
-Criteria Met:
-`;
-
-      if (metCriteria.length > 0) {
-        metCriteria.forEach((crit, i) => {
-          letter += `${i + 1}. ${crit}\n`;
-        });
-      } else {
-        letter += "• Clinical data provided; specific criteria assessment pending\n";
-      }
-
-      letter += `\nInformation Not Documented:
-`;
-      if (unknownCriteria.length > 0) {
-        unknownCriteria.forEach((crit, i) => {
-          letter += `${i + 1}. ${crit} – not documented in available records\n`;
-        });
-      } else {
-        letter += "• All documented criteria have been addressed\n";
-      }
-
-      letter += `
----
-
-CLINICAL JUSTIFICATION:
-
-The requested ${requestType} is medically necessary for this patient based on:
-• Documented diagnosis and clinical presentation
-• Failure or intolerance of prior treatments (if applicable)
-• Alignment with clinical guidelines
-• Expected improvement in patient outcomes
-
-We respectfully request approval for the proposed treatment to ensure timely and appropriate patient care.
-
----
-
-Please contact the office with any questions or request for additional information.
-
-[Provider Signature]
-[Provider Name & Credentials]
-[Contact Information]`;
-
-      return letter;
-    }
-
-    // ====== EVENT HANDLERS ======
-    document.getElementById("pa-form").addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      const payerId = document.getElementById("payer").value;
-      const requestType = document.getElementById("request-type").value;
-      const clinicalData = document.getElementById("clinical-summary").value;
-
-      if (!payerId || !requestType) {
-        showToast("Please select Payer and Request Type", "error");
-        return;
-      }
-
-      // Calculate approval likelihood
-      const likelihood = calculateApprovalLikelihood(payerId, requestType, clinicalData);
-
-      // Evaluate criteria
-      const evaluatedCriteria = evaluateCriteria(payerId, requestType, clinicalData);
-
-      // Generate PA letter
-      const paLetter = generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData);
-
-      // Store analysis
-      lastAnalysis = {
-        payerId,
-        requestType,
-        likelihood,
-        evaluatedCriteria,
-        paLetter
-      };
-
-      // Update UI
-      displayResults(payerId, likelihood, evaluatedCriteria, paLetter);
-    });
-
-    function displayResults(payerId, likelihood, criteria, letter) {
-      document.getElementById("empty-results").style.display = "none";
-      document.getElementById("results-content").style.display = "block";
-
-      // Update likelihood
-      document.getElementById("likelihood-score").textContent = likelihood + "%";
-      let likelihoodDesc = "Based on payer criteria match";
-      if (likelihood >= 80) {
-        likelihoodDesc = "Strong likelihood of approval";
-      } else if (likelihood >= 60) {
-        likelihoodDesc = "Moderate likelihood of approval";
-      } else {
-        likelihoodDesc = "Additional documentation may be needed";
-      }
-      document.getElementById("likelihood-text").textContent = likelihoodDesc;
-
-      // Update criteria list
-      const criteriaList = document.getElementById("criteria-list");
-      criteriaList.innerHTML = "";
-      criteria.forEach(c => {
-        const div = document.createElement("div");
-        div.className = `criterion ${c.status}`;
-        div.innerHTML = `
-          <div class="criterion-header">
-            <div class="criterion-label">${c.label}</div>
-            <span class="criterion-badge ${c.status}">
-              ${c.status === "met" ? "✓ Met" : c.status === "not-met" ? "✗ Not Met" : "? Not Documented"}
-            </span>
-          </div>
-          <div class="criterion-text">${c.description}${c.required ? " <strong>(Required)</strong>" : " (Optional)"}</div>
-        `;
-        criteriaList.appendChild(div);
-      });
-
-      // Update letter
-      document.getElementById("pa-letter").textContent = letter;
-
-      // Reset tab to criteria
-      switchTab("criteria");
-    }
-
-    function switchTab(tabName) {
-      document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.tab === tabName);
-      });
-      document.querySelectorAll(".tab-content").forEach(content => {
-        content.classList.toggle("active", content.id === tabName + "-tab");
-      });
-    }
-
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        switchTab(btn.dataset.tab);
-      });
-    });
-
-    document.getElementById("reset-btn").addEventListener("click", () => {
-      document.getElementById("pa-form").reset();
-      document.getElementById("empty-results").style.display = "block";
-      document.getElementById("results-content").style.display = "none";
-      lastAnalysis = null;
-    });
-
-    document.getElementById("copy-letter-btn").addEventListener("click", () => {
-      if (!lastAnalysis) return;
-      navigator.clipboard.writeText(lastAnalysis.paLetter).then(() => {
-        showToast("Letter copied to clipboard");
-      });
-    });
-
-    document.getElementById("download-letter-btn").addEventListener("click", () => {
-      if (!lastAnalysis) return;
-      const element = document.createElement("a");
-      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(lastAnalysis.paLetter));
-      element.setAttribute("download", "PA_Justification_" + new Date().toISOString().split("T")[0] + ".txt");
-      element.style.display = "none";
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    });
-
-    // HIPAA Mode Toggle
-    document.getElementById("hipaa-toggle").addEventListener("click", (e) => {
-      hipaaMode = !hipaaMode;
-      e.currentTarget.classList.toggle("off", !hipaaMode);
-    });
-  </script>
+        app.init();
+    </script>
 </body>
 </html>
