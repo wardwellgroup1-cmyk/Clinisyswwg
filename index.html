@@ -419,9 +419,10 @@
                 <button class="btn btn-voice btn-stop" id="stopBtn" onclick="stopRecording()" disabled>⏹️ STOP</button>
             </div>
 
-            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-                <button class="btn" style="background: #8b5cf6; color: white; flex: 1;" id="callRecordBtn" onclick="startCallRecording()">☎️ REC CALL</button>
-                <button class="btn" style="background: #dc2626; color: white; flex: 1; display: none;" id="stopCallRecordBtn" onclick="stopCallRecording()">⏹️ STOP REC</button>
+            <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
+                <button class="btn" style="background: #8b5cf6; color: white; flex: 1;" id="callRecordBtn" onclick="startCallRecording()">📹 VIDEO CALL</button>
+                <button class="btn" style="background: #7c3aed; color: white; flex: 1;" id="audioRecordBtn" onclick="startAudioOnlyRecording()">☎️ AUDIO CALL</button>
+                <button class="btn" style="background: #dc2626; color: white; flex: 1; display: none;" id="stopCallRecordBtn" onclick="stopCallRecording()">⏹️ STOP</button>
             </div>
 
             <div id="voiceStatus" style="font-size: 11px; padding: 8px; background: #dbeafe; border-radius: 6px; color: #0c4a6e; display: none;">Status here</div>
@@ -542,18 +543,27 @@
                 <div style="margin-bottom: 16px;">
                     <strong>📞 Call Recording Guide</strong><br>
                     <div style="color: #64748b; font-size: 12px; margin-top: 8px;">
-                        <strong style="color: #1e293b;">How to use:</strong><br>
-                        1. Start your Zoom/Teams/Meet call<br>
-                        2. Tap "REC CALL" button in app<br>
-                        3. When prompted, tap "Share" and select your screen<br>
-                        4. Audio from call will record (both voices)<br>
-                        5. Tap "STOP REC" when done<br>
-                        6. Recording auto-downloads as .wav file<br><br>
+                        <strong style="color: #1e293b;">📹 VIDEO CALLS (Zoom/Teams/Meet):</strong><br>
+                        1. Start your video call<br>
+                        2. Tap "📹 VIDEO CALL" button<br>
+                        3. Tap "Share" and select your screen<br>
+                        4. Recording captures call audio<br>
+                        5. Tap "⏹️ STOP" when done<br>
+                        6. File auto-downloads as .wav<br><br>
+
+                        <strong style="color: #1e293b;">☎️ AUDIO CALLS (Phone/Voice-only):</strong><br>
+                        1. Start your phone/audio call<br>
+                        2. Tap "☎️ AUDIO CALL" button<br>
+                        3. Allow microphone access<br>
+                        4. Recording captures your voice<br>
+                        5. Tap "⏹️ STOP" when done<br>
+                        6. File auto-downloads as .webm<br><br>
+
                         <strong style="color: #1e293b;">Works with:</strong><br>
-                        ✓ Zoom, Teams, Google Meet<br>
-                        ✓ WebEx, Skype, Discord<br>
-                        ✓ Any browser-based video platform<br>
-                        ✓ HIPAA-safe (stored locally only)
+                        ✓ Video: Zoom, Teams, Google Meet<br>
+                        ✓ Audio: Phone calls, Discord voice<br>
+                        ✓ Any browser-based platform<br>
+                        ✓ HIPAA-safe (local storage only)
                     </div>
                 </div>
 
@@ -763,10 +773,15 @@
         function stopCallRecording() {
             if (callRecorder && callRecorder.state === 'recording') {
                 callRecorder.stop();
-                document.getElementById('callRecordBtn').style.display = 'block';
-                document.getElementById('stopCallRecordBtn').style.display = 'none';
                 callRecordingStartTime = null;
             }
+            if (audioOnlyRecorder && audioOnlyRecorder.state === 'recording') {
+                audioOnlyRecorder.stop();
+                audioOnlyStartTime = null;
+            }
+            document.getElementById('callRecordBtn').style.display = 'block';
+            document.getElementById('audioRecordBtn').style.display = 'block';
+            document.getElementById('stopCallRecordBtn').style.display = 'none';
         }
 
         function showCallRecordStatus(msg, type) {
@@ -775,6 +790,79 @@
             el.style.display = 'block';
             el.style.background = type === 'success' ? '#dcfce7' : type === 'error' ? '#fee2e2' : '#fee2e2';
             el.style.color = type === 'success' ? '#166534' : '#991b1b';
+        }
+
+        // AUDIO-ONLY CALL RECORDING
+        let audioOnlyRecorder = null;
+        let audioOnlyStream = null;
+        let audioOnlyStartTime = null;
+
+        async function startAudioOnlyRecording() {
+            try {
+                showCallRecordStatus('⏳ Requesting microphone access...', 'recording');
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                });
+
+                audioOnlyStream = stream;
+                audioOnlyRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus'
+                });
+
+                const chunks = [];
+
+                audioOnlyRecorder.ondataavailable = (e) => chunks.push(e.data);
+                audioOnlyRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const timestamp = new Date().toISOString().split('T')[0];
+                    const time = new Date().toLocaleTimeString().replace(/:/g, '-');
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `audio_call_${timestamp}_${time}.webm`;
+                    link.click();
+
+                    stream.getTracks().forEach(track => track.stop());
+
+                    showCallRecordStatus('✓ Audio recording saved and downloaded', 'success');
+                };
+
+                audioOnlyRecorder.start();
+                audioOnlyStartTime = Date.now();
+                document.getElementById('callRecordBtn').style.display = 'none';
+                document.getElementById('audioRecordBtn').style.display = 'none';
+                document.getElementById('stopCallRecordBtn').style.display = 'block';
+                updateAudioRecordingTimer();
+                showCallRecordStatus('🔴 Recording audio from call... (Keep app open)', 'recording');
+
+            } catch (err) {
+                if (err.name === 'NotAllowedError') {
+                    showCallRecordStatus('❌ Microphone permission denied', 'error');
+                } else if (err.name === 'NotFoundError') {
+                    showCallRecordStatus('❌ No microphone found', 'error');
+                } else {
+                    showCallRecordStatus('❌ Audio recording not supported', 'error');
+                }
+            }
+        }
+
+        function updateAudioRecordingTimer() {
+            if (!audioOnlyStartTime) return;
+            const elapsed = Math.floor((Date.now() - audioOnlyStartTime) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            const time = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            document.getElementById('callRecordStatus').textContent = `🔴 Recording... ${time}`;
+
+            if ((audioOnlyRecorder && audioOnlyRecorder.state === 'recording') ||
+                (callRecorder && callRecorder.state === 'recording')) {
+                setTimeout(updateAudioRecordingTimer, 1000);
+            }
         }
 
         // EXTRACT DEMOGRAPHICS
