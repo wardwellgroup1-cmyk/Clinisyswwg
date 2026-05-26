@@ -478,6 +478,91 @@
       margin-top: 6px;
       color: var(--muted);
     }
+    .toc-discharge-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: rgba(15,23,42,0.7);
+      display: grid;
+      grid-template-columns: 1fr 100px;
+      gap: 12px;
+      align-items: center;
+    }
+    .toc-discharge-card.urgent {
+      border-color: var(--danger);
+      background: rgba(249, 115, 115, 0.1);
+    }
+    .toc-discharge-card.warning {
+      border-color: var(--warn);
+      background: rgba(251, 191, 36, 0.1);
+    }
+    .toc-discharge-card.completed {
+      border-color: var(--success);
+      background: rgba(34, 197, 94, 0.1);
+    }
+    .toc-discharge-info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .toc-program-line {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    .toc-patient-id {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .toc-discharge-date {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .toc-countdown {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(15,23,42,0.9);
+      text-align: center;
+    }
+    .toc-countdown.urgent {
+      background: rgba(249, 115, 115, 0.2);
+      border: 1px solid var(--danger);
+    }
+    .toc-countdown.warning {
+      background: rgba(251, 191, 36, 0.2);
+      border: 1px solid var(--warn);
+    }
+    .toc-countdown.completed {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid var(--success);
+    }
+    .toc-countdown-days {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .toc-countdown.urgent .toc-countdown-days {
+      color: var(--danger);
+    }
+    .toc-countdown.warning .toc-countdown-days {
+      color: var(--warn);
+    }
+    .toc-countdown.completed .toc-countdown-days {
+      color: var(--success);
+    }
+    .toc-countdown-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
     @media (max-width: 900px) {
       .app-shell { grid-template-columns: 1fr; }
       .sidebar { display: none; }
@@ -514,6 +599,9 @@
       </button>
       <button class="nav-btn" data-page="aco">
         <span class="icon">📊</span> ACO/Payors
+      </button>
+      <button class="nav-btn" data-page="toc">
+        <span class="icon">⏱️</span> TOC (7-Day)
       </button>
     </div>
 
@@ -582,6 +670,7 @@
         <button class="tab-btn" data-page="fax">Fax Triage</button>
         <button class="tab-btn" data-page="calls">Calls</button>
         <button class="tab-btn" data-page="aco">ACO/Payors</button>
+        <button class="tab-btn" data-page="toc">TOC (7-Day)</button>
       </div>
       <input id="search" class="search-input" placeholder="Search patients..." />
     </div>
@@ -893,6 +982,66 @@
         <div style="margin-top:16px;border-radius:10px;border:1px solid var(--border);padding:12px;background:rgba(15,23,42,0.9);">
           <div class="panel-section-title">Recent Uploads</div>
           <div id="aco-upload-history" style="color:var(--muted);font-size:12px;">No uploads yet</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOC (7-DAY) PAGE -->
+    <section id="page-toc" class="panel panel-full" style="display:none;">
+      <div>
+        <div class="panel-section-title">Transitions of Care - 7 Day Follow-up</div>
+
+        <!-- Discharge Upload Section -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+            <div class="dropzone" id="toc-dropzone" style="flex:1;min-width:250px;">
+              <strong>Upload Discharge Records</strong><br />
+              CSV or Excel – Import discharge data
+            </div>
+            <input type="file" id="toc-file-input" style="display:none;" accept=".csv,.xlsx,.xls" />
+          </div>
+        </div>
+
+        <!-- Filter/Status Section -->
+        <div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:11px;color:var(--muted);">Filter:</span>
+          <button class="pill active" data-toc-filter="all">All</button>
+          <button class="pill" data-toc-filter="urgent">0-2 Days Left</button>
+          <button class="pill" data-toc-filter="warning">3-5 Days Left</button>
+          <button class="pill" data-toc-filter="completed">Completed</button>
+        </div>
+
+        <!-- Discharge List -->
+        <div style="border-radius:10px;border:1px solid var(--border);overflow:auto;background:rgba(15,23,42,0.9);">
+          <div id="toc-discharge-list" style="min-height:300px;">
+            <div style="padding:40px;text-align:center;color:var(--muted);">
+              No discharges. Upload discharge records to get started.
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:16px;">
+          <div class="card">
+            <div class="card-label">Total Discharges</div>
+            <div class="card-value" id="toc-total">0</div>
+            <div class="card-sub">Current tracking</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Urgent (0-2 Days)</div>
+            <div class="card-value" id="toc-urgent">0</div>
+            <div class="card-sub">Immediate action</div>
+          </div>
+          <div class="card">
+            <div class="card-label">At Risk (3-5 Days)</div>
+            <div class="card-value" id="toc-warning">0</div>
+            <div class="card-sub">Follow-up needed</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Completed</div>
+            <div class="card-value" id="toc-completed">0</div>
+            <div class="card-sub">Follow-ups done</div>
+          </div>
         </div>
       </div>
     </section>
@@ -1249,7 +1398,7 @@
 
   // ====== PAGE NAV ======
   function setPage(page) {
-    ["dashboard", "patients", "fax", "calls", "aco"].forEach(p => {
+    ["dashboard", "patients", "fax", "calls", "aco", "toc"].forEach(p => {
       document.getElementById("page-" + p).style.display = p === page ? (p === "fax" ? "grid" : "block") : "none";
     });
     document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -1659,6 +1808,141 @@
     });
   }
 
+  // ====== TOC (7-DAY) MANAGEMENT ======
+  let tocDischarges = [];
+  let tocFilter = "all";
+
+  function initTocUpload() {
+    const dz = document.getElementById("toc-dropzone");
+    const fileInput = document.getElementById("toc-file-input");
+
+    dz.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) handleTocUpload(file);
+    });
+
+    dz.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dz.style.borderColor = "var(--accent)";
+    });
+
+    dz.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      dz.style.borderColor = "var(--border)";
+    });
+
+    dz.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dz.style.borderColor = "var(--border)";
+      const file = e.dataTransfer.files[0];
+      if (file) handleTocUpload(file);
+    });
+  }
+
+  function calculateDaysRemaining(dischargeDate) {
+    const discharge = new Date(dischargeDate);
+    const today = new Date();
+    const daysRemaining = 7 - Math.floor((today - discharge) / (1000 * 60 * 60 * 24));
+    return Math.max(0, daysRemaining);
+  }
+
+  function getTocStatus(daysRemaining, completed) {
+    if (completed) return "completed";
+    if (daysRemaining <= 2) return "urgent";
+    if (daysRemaining <= 5) return "warning";
+    return "normal";
+  }
+
+  function handleTocUpload(file) {
+    showToast(`Uploading discharge records from ${file.name}...`);
+    setTimeout(() => {
+      // Simulate parsing discharge data
+      const samplePrograms = ["Diabetes Management", "Heart Failure", "COPD", "Hypertension", "Post-Surgical Care"];
+      const numRecords = Math.floor(Math.random() * 8) + 3;
+
+      for (let i = 0; i < numRecords; i++) {
+        const discharge = {
+          id: "toc_" + Date.now() + "_" + i,
+          programLine: samplePrograms[Math.floor(Math.random() * samplePrograms.length)],
+          patientName: `Patient ${String.fromCharCode(65 + i)}`,
+          patientId: `PT-${String(10000 + i).padStart(5, "0")}`,
+          mrn: `MRN-${String(Math.random()).slice(2, 8)}`,
+          dischargeDate: new Date(Date.now() - Math.random() * 4 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          facility: ["Hospital A", "Hospital B", "Clinic C"][Math.floor(Math.random() * 3)],
+          completed: Math.random() > 0.7
+        };
+        tocDischarges.unshift(discharge);
+      }
+
+      renderTocDischarges();
+      showToast(`${numRecords} discharge records imported successfully!`);
+    }, 1200);
+  }
+
+  function renderTocDischarges() {
+    const list = document.getElementById("toc-discharge-list");
+    list.innerHTML = "";
+
+    const filtered = tocDischarges.filter(d => {
+      const status = getTocStatus(calculateDaysRemaining(d.dischargeDate), d.completed);
+      if (tocFilter === "all") return true;
+      return status === tocFilter;
+    });
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div style="padding:40px;text-align:center;color:var(--muted);">No discharges match this filter.</div>`;
+      updateTocStats();
+      return;
+    }
+
+    filtered.forEach(d => {
+      const daysLeft = calculateDaysRemaining(d.dischargeDate);
+      const status = getTocStatus(daysLeft, d.completed);
+
+      const card = document.createElement("div");
+      card.className = `toc-discharge-card ${status}`;
+      card.innerHTML = `
+        <div class="toc-discharge-info">
+          <div class="toc-program-line">${d.programLine}</div>
+          <div class="toc-patient-id">${d.patientName} • ${d.patientId}</div>
+          <div class="toc-discharge-date">MRN: ${d.mrn} • ${d.facility} • Discharged: ${d.dischargeDate}</div>
+        </div>
+        <div class="toc-countdown ${status}">
+          <div class="toc-countdown-days">${daysLeft}</div>
+          <div class="toc-countdown-label">Days Left</div>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+
+    updateTocStats();
+  }
+
+  function updateTocStats() {
+    const total = tocDischarges.length;
+    const urgent = tocDischarges.filter(d => !d.completed && calculateDaysRemaining(d.dischargeDate) <= 2).length;
+    const warning = tocDischarges.filter(d => !d.completed && calculateDaysRemaining(d.dischargeDate) > 2 && calculateDaysRemaining(d.dischargeDate) <= 5).length;
+    const completed = tocDischarges.filter(d => d.completed).length;
+
+    document.getElementById("toc-total").textContent = total;
+    document.getElementById("toc-urgent").textContent = urgent;
+    document.getElementById("toc-warning").textContent = warning;
+    document.getElementById("toc-completed").textContent = completed;
+  }
+
+  function initTocFilters() {
+    document.querySelectorAll("[data-toc-filter]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-toc-filter]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        tocFilter = btn.dataset.tocFilter;
+        renderTocDischarges();
+      });
+    });
+  }
+
   // ====== ACO/PAYORS MANAGEMENT ======
   let currentPayor = "privia";
   let currentPayorType = "medicare";
@@ -1766,6 +2050,8 @@
   initCallButtons();
   initAcoUpload();
   initAcoTabs();
+  initTocUpload();
+  initTocFilters();
 </script>
 </body>
 </html>
