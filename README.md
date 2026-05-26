@@ -57,7 +57,7 @@ Or connect your GitHub repo to Vercel for automatic deployments on push.
 
 ## Build Status
 
-Latest build: Production-ready
+Latest build: Production-ready (Next.js deployment)
 
 ## License
 
