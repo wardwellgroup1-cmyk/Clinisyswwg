@@ -208,7 +208,7 @@ function generateSuggestions(form: ClinicalFormData, payer: PayerProfile | null)
     suggestions.push('Strengthen clinical rationale by explaining why this specific service is needed now.');
   }
 
-  if (!form.riskIfNotApproval) {
+  if (!form.riskIfNotApproved) {
     suggestions.push('Articulate the clinical and functional risk if this request is not approved.');
   }
 
