@@ -1164,26 +1164,35 @@
     }
 
     function displayDiagnosisSuggestions(diagnoses) {
-      const container = document.getElementById("diagnosis-suggestions");
+      let container = document.getElementById("diagnosis-suggestions");
       if (!container) {
         const field = document.getElementById("icd10-codes");
         const suggestDiv = document.createElement("div");
         suggestDiv.id = "diagnosis-suggestions";
         suggestDiv.style.cssText = "margin-top: 8px; padding: 8px; background: var(--success-light); border-radius: 4px; border-left: 3px solid var(--success);";
         field.parentNode.insertBefore(suggestDiv, field.nextSibling);
+        container = suggestDiv;
       }
 
       const suggestionHTML = `
         <div style="font-size: 11px; font-weight: 600; color: var(--success); margin-bottom: 6px;">💡 Suggested Diagnoses</div>
-        ${diagnoses.map(d => `
+        ${diagnoses.map((d, i) => `
           <div style="display: flex; gap: 8px; margin-bottom: 4px; align-items: center;">
-            <button type="button" style="background: white; border: 1px solid var(--success); color: var(--success); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; flex: 1; text-align: left;" onclick="addDiagnosisCode('${d.code}')">
+            <button type="button" style="background: white; border: 1px solid var(--success); color: var(--success); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; flex: 1; text-align: left;" data-code="${d.code}">
               <strong>${d.code}</strong> - ${d.desc}
             </button>
           </div>
         `).join("")}
       `;
-      document.getElementById("diagnosis-suggestions").innerHTML = suggestionHTML;
+      container.innerHTML = suggestionHTML;
+
+      // Add click handlers to all suggestion buttons
+      container.querySelectorAll('button[data-code]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          addDiagnosisCode(this.getAttribute('data-code'));
+        });
+      });
     }
 
     function addDiagnosisCode(code) {
