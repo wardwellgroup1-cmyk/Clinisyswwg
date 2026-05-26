@@ -512,6 +512,9 @@
       <button class="nav-btn" data-page="calls">
         <span class="icon">📞</span> Calls
       </button>
+      <button class="nav-btn" data-page="aco">
+        <span class="icon">📊</span> ACO/Payors
+      </button>
     </div>
 
     <div class="nav-section-label">Integrations</div>
@@ -578,6 +581,7 @@
         <button class="tab-btn" data-page="patients">Patients</button>
         <button class="tab-btn" data-page="fax">Fax Triage</button>
         <button class="tab-btn" data-page="calls">Calls</button>
+        <button class="tab-btn" data-page="aco">ACO/Payors</button>
       </div>
       <input id="search" class="search-input" placeholder="Search patients..." />
     </div>
@@ -725,6 +729,170 @@
             </thead>
             <tbody id="tbl-calls"></tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACO/PAYORS PAGE -->
+    <section id="page-aco" class="panel panel-full" style="display:none;">
+      <div>
+        <div class="panel-section-title">ACO/Payor Upload & Management</div>
+
+        <!-- Upload Section -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+            <div class="dropzone" id="aco-dropzone" style="flex:1;min-width:250px;">
+              <strong>Upload Spreadsheet</strong><br />
+              CSV or Excel – Import payor data
+            </div>
+            <input type="file" id="aco-file-input" style="display:none;" accept=".csv,.xlsx,.xls" />
+          </div>
+        </div>
+
+        <!-- Payor Tabs -->
+        <div style="margin-bottom:12px;">
+          <div class="tabs" style="display:flex;flex-wrap:wrap;gap:4px;">
+            <button class="pill active" data-payor="privia">Privia</button>
+            <button class="pill" data-payor="mvp">MVP</button>
+            <button class="pill" data-payor="fidelis">Fidelis</button>
+            <button class="pill" data-payor="empire">Empire</button>
+            <button class="pill" data-payor="nysip">NYSIP</button>
+            <button class="pill" data-payor="uhc">UHC</button>
+          </div>
+        </div>
+
+        <!-- Payor Detail Tabs -->
+        <div style="margin-bottom:12px;">
+          <div class="tabs" style="display:flex;flex-wrap:wrap;gap:4px;">
+            <button class="pill active" data-payor-type="medicare">Medicare</button>
+            <button class="pill" data-payor-type="medicaid">Medicaid</button>
+            <button class="pill" data-payor-type="commercial">Commercial</button>
+          </div>
+        </div>
+
+        <!-- Content Area -->
+        <div style="border-radius:10px;border:1px solid var(--border);padding:16px;background:rgba(15,23,42,0.9);min-height:400px;">
+          <!-- Privia Content -->
+          <div id="payor-privia" class="payor-content">
+            <!-- Medicare -->
+            <div id="payor-type-medicare" class="payor-type-content">
+              <div class="panel-section-title">Privia - Medicare</div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div class="detail-card">
+                  <div class="detail-label">AWV Due</div>
+                  <div class="detail-value" id="privia-medicare-awv">0</div>
+                  <div style="margin-top:8px;">
+                    <button class="btn btn-ghost" id="btn-privia-medicare-awv">View Details</button>
+                  </div>
+                </div>
+                <div class="detail-card">
+                  <div class="detail-label">HCC Confirm/Deny</div>
+                  <div class="detail-value" id="privia-medicare-hcc">0</div>
+                  <div style="margin-top:8px;">
+                    <button class="btn btn-ghost" id="btn-privia-medicare-hcc">View Opportunities</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <div class="detail-label">Care Management Opportunities</div>
+                <div style="margin-top:8px;">
+                  <div id="privia-medicare-cm-list" style="color:var(--muted);font-size:12px;">No care management opportunities</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Medicaid -->
+            <div id="payor-type-medicaid" class="payor-type-content" style="display:none;">
+              <div class="panel-section-title">Privia - Medicaid</div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div class="detail-card">
+                  <div class="detail-label">AWV Due</div>
+                  <div class="detail-value" id="privia-medicaid-awv">0</div>
+                  <div style="margin-top:8px;">
+                    <button class="btn btn-ghost">View Details</button>
+                  </div>
+                </div>
+                <div class="detail-card">
+                  <div class="detail-label">HCC Confirm/Deny</div>
+                  <div class="detail-value" id="privia-medicaid-hcc">0</div>
+                  <div style="margin-top:8px;">
+                    <button class="btn btn-ghost">View Opportunities</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <div class="detail-label">Care Management Opportunities</div>
+                <div style="margin-top:8px;">
+                  <div id="privia-medicaid-cm-list" style="color:var(--muted);font-size:12px;">No care management opportunities</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Commercial -->
+            <div id="payor-type-commercial" class="payor-type-content" style="display:none;">
+              <div class="panel-section-title">Privia - Commercial</div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                <div class="detail-card">
+                  <div class="detail-label">AWV Due</div>
+                  <div class="detail-value" id="privia-commercial-awv">0</div>
+                  <div style="margin-top:8px;">
+                    <button class="btn btn-ghost">View Details</button>
+                  </div>
+                </div>
+                <div class="detail-card">
+                  <div class="detail-label">HCC Confirm/Deny</div>
+                  <div class="detail-value" id="privia-commercial-hcc">0</div>
+                  <div style="margin-top:8px;">
+                    <button class="btn btn-ghost">View Opportunities</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-card">
+                <div class="detail-label">Care Management Opportunities</div>
+                <div style="margin-top:8px;">
+                  <div id="privia-commercial-cm-list" style="color:var(--muted);font-size:12px;">No care management opportunities</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Other Payors (MVP, Fidelis, Empire, NYSIP, UHC) -->
+          <div id="payor-mvp" class="payor-content" style="display:none;">
+            <div class="panel-section-title">MVP - Data Management</div>
+            <div style="color:var(--muted);padding:20px;text-align:center;">Upload MVP spreadsheet to view data</div>
+          </div>
+
+          <div id="payor-fidelis" class="payor-content" style="display:none;">
+            <div class="panel-section-title">Fidelis - Data Management</div>
+            <div style="color:var(--muted);padding:20px;text-align:center;">Upload Fidelis spreadsheet to view data</div>
+          </div>
+
+          <div id="payor-empire" class="payor-content" style="display:none;">
+            <div class="panel-section-title">Empire - Data Management</div>
+            <div style="color:var(--muted);padding:20px;text-align:center;">Upload Empire spreadsheet to view data</div>
+          </div>
+
+          <div id="payor-nysip" class="payor-content" style="display:none;">
+            <div class="panel-section-title">NYSIP - Data Management</div>
+            <div style="color:var(--muted);padding:20px;text-align:center;">Upload NYSIP spreadsheet to view data</div>
+          </div>
+
+          <div id="payor-uhc" class="payor-content" style="display:none;">
+            <div class="panel-section-title">UHC - Data Management</div>
+            <div style="color:var(--muted);padding:20px;text-align:center;">Upload UHC spreadsheet to view data</div>
+          </div>
+        </div>
+
+        <!-- Upload Summary -->
+        <div style="margin-top:16px;border-radius:10px;border:1px solid var(--border);padding:12px;background:rgba(15,23,42,0.9);">
+          <div class="panel-section-title">Recent Uploads</div>
+          <div id="aco-upload-history" style="color:var(--muted);font-size:12px;">No uploads yet</div>
         </div>
       </div>
     </section>
@@ -1081,7 +1249,7 @@
 
   // ====== PAGE NAV ======
   function setPage(page) {
-    ["dashboard", "patients", "fax", "calls"].forEach(p => {
+    ["dashboard", "patients", "fax", "calls", "aco"].forEach(p => {
       document.getElementById("page-" + p).style.display = p === page ? (p === "fax" ? "grid" : "block") : "none";
     });
     document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -1491,6 +1659,100 @@
     });
   }
 
+  // ====== ACO/PAYORS MANAGEMENT ======
+  let currentPayor = "privia";
+  let currentPayorType = "medicare";
+  let acoUploadHistory = [];
+
+  function initAcoUpload() {
+    const dz = document.getElementById("aco-dropzone");
+    const fileInput = document.getElementById("aco-file-input");
+
+    dz.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) handleAcoUpload(file);
+    });
+
+    dz.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dz.style.borderColor = "var(--accent)";
+    });
+
+    dz.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      dz.style.borderColor = "var(--border)";
+    });
+
+    dz.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dz.style.borderColor = "var(--border)";
+      const file = e.dataTransfer.files[0];
+      if (file) handleAcoUpload(file);
+    });
+  }
+
+  function handleAcoUpload(file) {
+    showToast(`Uploading ${file.name}...`);
+    setTimeout(() => {
+      const upload = {
+        id: "upload_" + Date.now(),
+        filename: file.name,
+        payor: currentPayor,
+        date: new Date().toLocaleDateString(),
+        records: Math.floor(Math.random() * 500) + 50
+      };
+      acoUploadHistory.unshift(upload);
+      updateAcoUploadHistory();
+
+      // Simulate data population
+      document.getElementById(`${currentPayor}-${currentPayorType}-awv`).textContent = Math.floor(Math.random() * 150) + 10;
+      document.getElementById(`${currentPayor}-${currentPayorType}-hcc`).textContent = Math.floor(Math.random() * 200) + 20;
+
+      showToast(`${file.name} uploaded successfully! ${upload.records} records processed.`);
+    }, 1000);
+  }
+
+  function updateAcoUploadHistory() {
+    const historyDiv = document.getElementById("aco-upload-history");
+    if (acoUploadHistory.length === 0) {
+      historyDiv.innerHTML = '<span style="color:var(--muted);">No uploads yet</span>';
+      return;
+    }
+    historyDiv.innerHTML = acoUploadHistory.map(u => `
+      <div style="padding:8px;border-bottom:1px solid rgba(15,23,42,0.5);font-size:11px;">
+        <strong>${u.filename}</strong> • ${u.payor.toUpperCase()} • ${u.date} • ${u.records} records
+      </div>
+    `).join("");
+  }
+
+  function initAcoTabs() {
+    // Payor tabs
+    document.querySelectorAll("[data-payor]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-payor]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentPayor = btn.dataset.payor;
+
+        document.querySelectorAll(".payor-content").forEach(p => p.style.display = "none");
+        document.getElementById("payor-" + currentPayor).style.display = "block";
+      });
+    });
+
+    // Payor type tabs
+    document.querySelectorAll("[data-payor-type]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-payor-type]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentPayorType = btn.dataset.payorType;
+
+        document.querySelectorAll(".payor-type-content").forEach(p => p.style.display = "none");
+        document.getElementById("payor-type-" + currentPayorType).style.display = "block";
+      });
+    });
+  }
+
   // ====== INIT ======
   renderPatients();
   renderFaxes();
@@ -1502,6 +1764,8 @@
   initVoiceModal();
   initAddPatientModal();
   initCallButtons();
+  initAcoUpload();
+  initAcoTabs();
 </script>
 </body>
 </html>
