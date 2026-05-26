@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'CliniSys Prior Auth Justification',
-  description: 'Generate payer-ready medical necessity in under 3 minutes',
+  description: 'Generate payer-ready medical necessity documentation in under 3 minutes',
 };
 
 export default function RootLayout({
