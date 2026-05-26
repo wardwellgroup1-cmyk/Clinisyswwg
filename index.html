@@ -2,25 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>PA Fast Assist – Prior Authorization Helper</title>
+  <title>ClinisysWWG PRIOR AUTH PRO – Multi-Step Prior Authorization Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg: #f8fafc;
-      --bg-secondary: #f1f5f9;
-      --border: #e2e8f0;
-      --border-dark: #cbd5e1;
-      --accent: #0ea5e9;
-      --accent-light: #e0f2fe;
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
+      --primary: #0ea5e9;
+      --primary-light: #e0f2fe;
       --success: #16a34a;
       --success-light: #dcfce7;
       --warning: #ea580c;
       --warning-light: #fed7aa;
-      --error: #dc2626;
-      --error-light: #fee2e2;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
       --neutral: #64748b;
+      --bg: #f8fafc;
+      --bg-secondary: #f1f5f9;
+      --border: #e2e8f0;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
       --radius: 8px;
     }
 
@@ -51,12 +50,13 @@
       padding: 16px;
     }
 
+    /* HEADER */
     header {
       background: white;
       border-bottom: 1px solid var(--border);
       padding: 16px 0;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     .header-content {
@@ -64,10 +64,6 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-    }
-
-    .header-left {
-      flex: 1;
     }
 
     .header-title {
@@ -78,7 +74,7 @@
     }
 
     .header-subtitle {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-secondary);
       margin: 4px 0 0;
     }
@@ -90,96 +86,137 @@
       background: var(--success-light);
       border: 1px solid var(--success);
       color: var(--success);
-      padding: 4px 10px;
+      padding: 6px 12px;
       border-radius: 999px;
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
     }
 
-    .header-right {
-      text-align: right;
-    }
-
-    .mode-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-    }
-
-    .toggle-switch {
-      width: 40px;
-      height: 24px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--success);
-      cursor: pointer;
-      position: relative;
-      transition: background 0.2s;
-    }
-
-    .toggle-switch.off {
-      background: var(--neutral);
-    }
-
-    .toggle-switch::after {
-      content: '';
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 10px;
-      background: white;
-      top: 2px;
-      left: 2px;
-      transition: left 0.2s;
-    }
-
-    .toggle-switch.off::after {
-      left: 18px;
-    }
-
-    .main-grid {
+    /* MAIN GRID */
+    .main-layout {
       display: grid;
-      grid-template-columns: 320px 1fr;
+      grid-template-columns: 1fr 320px;
       gap: 20px;
     }
 
-    .form-panel {
+    /* PROGRESS STEPS */
+    .progress-container {
       background: white;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 20px;
-      height: fit-content;
-      position: sticky;
-      top: 16px;
+      margin-bottom: 20px;
     }
 
-    .form-section-title {
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .progress-steps::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--border);
+      z-index: 0;
+    }
+
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+
+    .step.active .step-number {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .step.completed .step-number {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    .step-label {
       font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--neutral);
-      margin: 0 0 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .step.active .step-label {
+      color: var(--primary);
+    }
+
+    /* FORM PANELS */
+    .form-panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: none;
+    }
+
+    .form-panel.active {
       display: block;
+      animation: fadeIn 0.3s;
     }
 
-    .form-section {
-      margin-bottom: 18px;
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
-    .form-section:last-child {
-      margin-bottom: 0;
+    .panel-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 16px;
+      color: var(--text-primary);
+    }
+
+    .panel-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 0 0 20px;
+    }
+
+    /* FORM ELEMENTS */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-row.full {
+      grid-template-columns: 1fr;
     }
 
     .field {
-      margin-bottom: 12px;
-    }
-
-    .field:last-child {
-      margin-bottom: 0;
+      margin-bottom: 16px;
     }
 
     label {
@@ -187,7 +224,11 @@
       font-size: 12px;
       font-weight: 600;
       color: var(--text-primary);
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+    }
+
+    .required {
+      color: var(--danger);
     }
 
     input[type="text"],
@@ -195,84 +236,63 @@
     select,
     textarea {
       width: 100%;
-      border: 1px solid var(--border-dark);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 10px;
-      font-size: 12px;
+      font-size: 13px;
       color: var(--text-primary);
       background: white;
       transition: border-color 0.2s;
-      min-height: 40px;
     }
 
-    @supports (-webkit-touch-callout: none) {
-      input[type="text"],
-      input[type="date"],
-      select,
-      textarea {
-        font-size: 16px;
-      }
-    }
-
-    input[type="text"]:focus,
-    input[type="date"]:focus,
+    input:focus,
     select:focus,
     textarea:focus {
       outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-light);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
     }
 
-    input::placeholder {
-      color: var(--neutral);
+    textarea {
+      resize: vertical;
+      min-height: 80px;
     }
 
-    .optional-label {
-      font-size: 11px;
-      color: var(--neutral);
-      font-weight: 400;
-    }
-
+    /* BUTTONS */
     .button-group {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
+      gap: 12px;
+      margin-top: 24px;
+      justify-content: space-between;
     }
 
     .btn {
-      padding: 10px 14px;
+      padding: 10px 16px;
       border-radius: 6px;
       font-size: 13px;
       font-weight: 600;
-      border: 1px solid;
+      border: none;
       transition: all 0.2s;
-      text-align: center;
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      cursor: pointer;
     }
 
     .btn-primary {
-      background: var(--accent);
+      background: var(--primary);
       color: white;
-      border-color: var(--accent);
     }
 
-    .btn-primary:hover:not(:disabled) {
+    .btn-primary:hover {
       background: #0284c7;
-      border-color: #0284c7;
     }
 
     .btn-secondary {
-      background: white;
+      background: var(--bg-secondary);
       color: var(--text-primary);
-      border-color: var(--border-dark);
+      border: 1px solid var(--border);
     }
 
-    .btn-secondary:hover:not(:disabled) {
-      background: var(--bg-secondary);
+    .btn-secondary:hover {
+      background: var(--border);
     }
 
     .btn:disabled {
@@ -280,1963 +300,604 @@
       cursor: not-allowed;
     }
 
-    .results-panel {
+    /* APPROVAL SCORE WIDGET */
+    .score-widget {
       background: white;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 20px;
+      position: sticky;
+      top: 20px;
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-secondary);
-    }
-
-    .empty-state-icon {
-      font-size: 40px;
-      margin-bottom: 12px;
-      opacity: 0.6;
-    }
-
-    .empty-state-text {
-      font-size: 14px;
-    }
-
-    .results-section {
-      margin-bottom: 24px;
-    }
-
-    .results-section:last-child {
-      margin-bottom: 0;
-    }
-
-    .section-title {
-      font-size: 14px;
+    .score-header {
+      font-size: 11px;
       font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 12px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--border);
-    }
-
-    .criteria-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .criterion {
-      border-left: 3px solid var(--border);
-      padding: 10px 12px;
-      background: var(--bg-secondary);
-      border-radius: 4px;
-      font-size: 12px;
-    }
-
-    .criterion.met {
-      border-left-color: var(--success);
-      background: var(--success-light);
-    }
-
-    .criterion.not-met {
-      border-left-color: var(--error);
-      background: var(--error-light);
-    }
-
-    .criterion.unknown {
-      border-left-color: var(--warning);
-      background: var(--warning-light);
-    }
-
-    .criterion-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    .criterion-label {
-      font-weight: 600;
-      flex: 1;
-      color: var(--text-primary);
-    }
-
-    .criterion-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
       text-transform: uppercase;
+      color: var(--text-secondary);
       letter-spacing: 0.05em;
-      white-space: nowrap;
+      margin-bottom: 12px;
     }
 
-    .criterion-badge.met {
-      background: var(--success);
-      color: white;
-    }
-
-    .criterion-badge.not-met {
-      background: var(--error);
-      color: white;
-    }
-
-    .criterion-badge.unknown {
-      background: var(--warning);
-      color: white;
-    }
-
-    .criterion-text {
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-
-    .approval-likelihood {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
+    .score-display {
       text-align: center;
+      margin-bottom: 20px;
     }
 
-    .likelihood-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--neutral);
-      margin-bottom: 8px;
-    }
-
-    .likelihood-score {
-      font-size: 32px;
+    .score-percentage {
+      font-size: 48px;
       font-weight: 700;
-      color: var(--accent);
+      color: var(--primary);
       margin: 0;
     }
 
-    .likelihood-text {
+    .score-label {
       font-size: 12px;
       color: var(--text-secondary);
       margin-top: 4px;
     }
 
-    .letter-section {
+    .score-bar {
+      width: 100%;
+      height: 8px;
       background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
+      border-radius: 4px;
+      overflow: hidden;
       margin-bottom: 16px;
     }
 
-    .letter-content {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--text-primary);
-      font-family: Georgia, serif;
-      white-space: pre-wrap;
-      word-wrap: break-word;
+    .score-fill {
+      height: 100%;
+      background: var(--primary);
+      transition: width 0.3s;
     }
 
-    .action-buttons {
-      display: flex;
-      gap: 8px;
+    .score-breakdown {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
       margin-top: 16px;
     }
 
-    .btn-small {
-      padding: 8px 12px;
+    .breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--bg-secondary);
+    }
+
+    .breakdown-label {
+      color: var(--text-secondary);
+    }
+
+    .breakdown-value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* RISK FLAGS */
+    .risk-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .risk-header {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--danger);
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .risk-flag {
+      font-size: 11px;
+      padding: 6px 8px;
+      background: var(--danger-light);
+      border-left: 3px solid var(--danger);
+      border-radius: 4px;
+      margin-bottom: 6px;
+      color: var(--danger);
+    }
+
+    /* PAYER TIPS */
+    .tips-section {
+      margin-top: 16px;
+      padding: 12px;
+      background: var(--primary-light);
+      border-radius: 6px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .tips-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .tips-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* CHECKLIST */
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .checklist-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+
+    .checklist-text {
+      flex: 1;
       font-size: 12px;
     }
 
-    .disclaimer {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: var(--radius);
-      padding: 12px;
-      margin-top: 20px;
-      font-size: 11px;
-      color: #0369a1;
-      line-height: 1.5;
+    .checklist-item.checked {
+      background: var(--success-light);
+      border-left: 3px solid var(--success);
     }
 
-    .disclaimer strong {
-      font-weight: 600;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .tab-btn {
-      padding: 8px 12px;
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
+    /* RESPONSIVE */
     @media (max-width: 1024px) {
-      .main-grid {
+      .main-layout {
         grid-template-columns: 1fr;
       }
 
-      .form-panel {
+      .score-widget {
         position: static;
       }
     }
 
     @media (max-width: 768px) {
-      .container {
-        padding: 12px;
-      }
-
-      header {
-        padding: 12px 0;
-        margin-bottom: 16px;
-      }
-
-      .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-      }
-
-      .header-right {
-        width: 100%;
-        text-align: right;
-      }
-
-      .header-title {
-        font-size: 20px;
-      }
-
-      .header-subtitle {
-        font-size: 11px;
-      }
-
-      .main-grid {
+      .form-row {
         grid-template-columns: 1fr;
-        gap: 12px;
       }
 
-      .form-panel {
-        padding: 16px;
-        border-radius: 8px;
+      .progress-steps {
+        flex-wrap: wrap;
       }
 
-      .form-section-title {
-        font-size: 11px;
-        margin-bottom: 10px;
-      }
-
-      .field {
-        margin-bottom: 10px;
-      }
-
-      label {
-        font-size: 11px;
-        margin-bottom: 3px;
-      }
-
-      input[type="text"],
-      input[type="date"],
-      select,
-      textarea {
-        padding: 10px;
-        font-size: 14px;
-        border-radius: 6px;
-      }
-
-      .button-group {
-        margin-top: 14px;
-        gap: 6px;
-      }
-
-      .btn {
-        padding: 12px 14px;
-        font-size: 13px;
-        width: 100%;
-      }
-
-      .disclaimer {
-        padding: 10px;
-        font-size: 10px;
-        margin-top: 14px;
-      }
-
-      #diagnosis-list {
-        max-height: 120px;
-      }
-
-      .selected-diagnoses {
-        gap: 4px;
-      }
-
-      .chip {
-        font-size: 10px;
-        padding: 3px 6px;
-      }
-
-      .results-panel {
-        padding: 16px;
-        border-radius: 8px;
-      }
-
-      .approval-likelihood {
-        padding: 12px;
-      }
-
-      .likelihood-score {
-        font-size: 28px;
-      }
-
-      .likelihood-label,
-      .likelihood-text {
-        font-size: 11px;
-      }
-
-      .section-title {
-        font-size: 13px;
-        padding-bottom: 8px;
-        margin-bottom: 10px;
-      }
-
-      .tabs {
-        gap: 4px;
-        margin-bottom: 12px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .tab-btn {
-        padding: 6px 8px;
-        font-size: 11px;
-      }
-
-      .criterion {
-        padding: 8px 10px;
-        font-size: 11px;
-        border-radius: 4px;
-      }
-
-      .criterion-header {
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .criterion-label {
-        font-size: 11px;
-      }
-
-      .criterion-badge {
-        font-size: 9px;
-        padding: 2px 6px;
-      }
-
-      .criterion-text {
-        font-size: 10px;
-      }
-
-      .letter-section {
-        padding: 12px;
-      }
-
-      .letter-content {
-        font-size: 11px;
-        line-height: 1.5;
-      }
-
-      .action-buttons {
-        gap: 6px;
-        flex-direction: column;
-      }
-
-      .btn-small {
-        width: 100%;
-        padding: 10px 12px;
-        font-size: 12px;
-      }
-
-      .empty-state {
-        padding: 30px 16px;
-      }
-
-      .empty-state-icon {
-        font-size: 32px;
-      }
-
-      .empty-state-text {
-        font-size: 13px;
-      }
-
-      .criteria-list {
-        gap: 8px;
-      }
-
-      .tabs-row {
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .search-input {
-        min-width: 100%;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .container {
-        padding: 10px;
+      .step {
+        flex: 0 1 calc(50% - 8px);
       }
 
       .header-title {
         font-size: 18px;
       }
-
-      .form-panel,
-      .results-panel {
-        padding: 12px;
-      }
-
-      .btn {
-        padding: 11px 12px;
-        font-size: 12px;
-      }
-
-      .likelihood-score {
-        font-size: 24px;
-      }
-
-      .letter-content {
-        font-size: 10px;
-      }
-
-      .tab-btn {
-        padding: 5px 6px;
-        font-size: 10px;
-      }
-
-      input[type="text"],
-      input[type="date"],
-      select,
-      textarea {
-        padding: 10px;
-        font-size: 14px;
-      }
-
-      label {
-        font-size: 10px;
-      }
     }
   </style>
 </head>
 <body>
+  <!-- HEADER -->
   <header>
     <div class="container">
       <div class="header-content">
-        <div class="header-left">
-          <h1 class="header-title">PA Fast Assist</h1>
-          <p class="header-subtitle">Local-only prior authorization helper · No network calls · No trackers</p>
+        <div>
+          <h1 class="header-title">ClinisysWWG PRIOR AUTH PRO</h1>
+          <p class="header-subtitle">Multi-step prior authorization assistant • Local data • HIPAA-friendly</p>
         </div>
-        <div class="header-right">
-          <div class="mode-toggle">
-            <span>HIPAA Mode</span>
-            <button class="toggle-switch" id="hipaa-toggle" title="Toggle HIPAA Privacy Mode"></button>
-          </div>
-        </div>
+        <div class="header-badge">🔒 HIPAA Mode</div>
       </div>
     </div>
   </header>
 
   <div class="container">
-    <div class="main-grid">
-      <!-- LEFT PANEL: FORM -->
-      <div class="form-panel">
-        <form id="pa-form">
-          <!-- Request & Payer -->
-          <label class="form-section-title">1 · Request & Payer</label>
-
-          <div class="form-section">
-            <div class="field">
-              <label>Payer <span style="color: var(--error);">*</span></label>
-              <select id="payer" required>
-                <option value="">Select payer...</option>
-                <option value="aetna">Aetna</option>
-                <option value="bcbs">Blue Cross Blue Shield</option>
-                <option value="cigna">Cigna</option>
-                <option value="empire">Empire BlueCross BlueShield</option>
-                <option value="fidelis">Fidelis Care</option>
-                <option value="humana">Humana</option>
-                <option value="nyship">NYSHIP (NY State Health Plan)</option>
-                <option value="united">United Healthcare</option>
-                <option value="anthem">Anthem</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label>Request Type <span style="color: var(--error);">*</span></label>
-              <select id="request-type" required>
-                <option value="">Select type...</option>
-                <option value="medication">Medication (Drug)</option>
-                <option value="imaging">Imaging Study</option>
-                <option value="procedure">Procedure</option>
-                <option value="therapy">Therapy/Rehabilitation</option>
-                <option value="specialist">Specialist Visit</option>
-              </select>
-            </div>
-
-            <div class="field" id="specific-request-field" style="display: none;">
-              <label id="specific-request-label">Specific Medication <span style="color: var(--error);">*</span></label>
-              <select id="specific-request" required>
-                <option value="">Select specific...</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label>Urgency <span style="color: var(--error);">*</span></label>
-              <select id="urgency" required>
-                <option value="">Select urgency...</option>
-                <option value="routine">Routine (Standard Review)</option>
-                <option value="expedited">Expedited (72 hours)</option>
-                <option value="urgent">Urgent (24 hours)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Patient Info -->
-          <label class="form-section-title">2 · Patient (Optional — Local Only)</label>
-
-          <div class="form-section">
-            <div class="field">
-              <label>Patient Name <span class="optional-label">(Optional)</span></label>
-              <input type="text" id="patient-name" placeholder="Full name" />
-            </div>
-
-            <div class="field">
-              <label>Date of Birth <span class="optional-label">(Optional)</span></label>
-              <input type="date" id="patient-dob" />
-            </div>
-
-            <div class="field">
-              <label>Member ID <span class="optional-label">(Optional)</span></label>
-              <input type="text" id="member-id" placeholder="Payer member ID" />
-            </div>
-
-            <div class="field" id="diagnosis-field" style="display: none;">
-              <label>Relevant ICD-10 Diagnoses <span class="optional-label">(Click to select)</span></label>
-              <div id="diagnosis-checkboxes" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-dark); border-radius: 6px; padding: 8px; background: #fafafa;"></div>
-              <div id="selected-diagnoses" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
-            </div>
-
-            <div class="field">
-              <label>Clinical Summary <span class="optional-label">(Optional)</span></label>
-              <textarea id="clinical-summary" placeholder="Prior treatments, relevant lab/imaging findings..." rows="3"></textarea>
-            </div>
-
-            <div class="field">
-              <label>Additional Clinical Notes <span class="optional-label">(Optional)</span></label>
-              <textarea id="additional-notes" placeholder="E.g., completed 6 months Weight Watchers + activity regime; imaging found abnormal lesion, rule out malignancy..." rows="3"></textarea>
-            </div>
-          </div>
-
-          <!-- Buttons -->
-          <div class="button-group">
-            <button type="submit" class="btn btn-primary">Run Analysis</button>
-            <button type="button" class="btn btn-secondary" id="reset-btn">Reset</button>
-          </div>
-        </form>
-
-        <div class="disclaimer">
-          <strong>Disclaimer:</strong> PA Fast Assist is a decision-support tool for administrative reference only. It does not constitute medical advice, legal guidance, or a guarantee of prior authorization approval. All data remains in your browser — nothing is ever transmitted to any server.
+    <!-- PROGRESS INDICATOR -->
+    <div class="progress-container">
+      <div class="progress-steps">
+        <div class="step active" data-step="1">
+          <div class="step-number">1</div>
+          <div class="step-label">Request Setup</div>
+        </div>
+        <div class="step" data-step="2">
+          <div class="step-number">2</div>
+          <div class="step-label">Patient & Clinical Info</div>
+        </div>
+        <div class="step" data-step="3">
+          <div class="step-number">3</div>
+          <div class="step-label">Prior Treatment</div>
+        </div>
+        <div class="step" data-step="4">
+          <div class="step-number">4</div>
+          <div class="step-label">Documentation</div>
+        </div>
+        <div class="step" data-step="5">
+          <div class="step-number">5</div>
+          <div class="step-label">Review & Submit</div>
         </div>
       </div>
+    </div>
 
-      <!-- RIGHT PANEL: RESULTS -->
-      <div class="results-panel">
-        <div id="empty-results" class="empty-state">
-          <div class="empty-state-icon">🔍</div>
-          <p class="empty-state-text">
-            No analysis yet<br />
-            Fill in the form on the left and click <strong>Run Analysis</strong> to see approval likelihood, payer-specific criteria, and generate a PA letter draft.
-          </p>
+    <div class="main-layout">
+      <!-- MAIN FORM -->
+      <div>
+        <form id="pa-form">
+          <!-- STEP 1: REQUEST SETUP -->
+          <div class="form-panel active" data-step="1">
+            <h2 class="panel-title">📋 Request Setup</h2>
+            <p class="panel-subtitle">Select your payer and service type</p>
+
+            <div class="form-row">
+              <div class="field">
+                <label>Insurance / Payer <span class="required">*</span></label>
+                <select id="payer" required>
+                  <option value="">— Select Payer —</option>
+                  <option value="aetna">Aetna</option>
+                  <option value="anthem">Anthem</option>
+                  <option value="bcbs">Blue Cross Blue Shield</option>
+                  <option value="cigna">Cigna</option>
+                  <option value="empire">Empire BlueCross BlueShield</option>
+                  <option value="fidelis">Fidelis Care</option>
+                  <option value="humana">Humana</option>
+                  <option value="medicaid">Medicaid (State)</option>
+                  <option value="medicare">Medicare</option>
+                  <option value="molina">Molina Healthcare</option>
+                  <option value="nyship">NYSHIP (NY State)</option>
+                  <option value="united">United Healthcare</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Request Type <span class="required">*</span></label>
+                <select id="request-type" required>
+                  <option value="">— Select —</option>
+                  <option value="medication">Medication / Rx</option>
+                  <option value="imaging">Imaging (MRI, CT, PET)</option>
+                  <option value="procedure">Procedure / Surgery</option>
+                  <option value="dme">DME / Equipment</option>
+                  <option value="specialist">Specialist Referral</option>
+                  <option value="behavioral">Behavioral Health</option>
+                  <option value="homehealth">Home Health Services</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <label>Urgency Level</label>
+                <select id="urgency">
+                  <option value="routine">Routine</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="emergent">Emergent</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Service / Procedure Code</label>
+                <input type="text" id="service-code" placeholder="CPT, ICD-10, HCPCS, or description" />
+              </div>
+            </div>
+
+            <div class="form-row full">
+              <div class="field">
+                <label>Requested Service / Drug Name <span class="required">*</span></label>
+                <input type="text" id="service-name" placeholder="e.g., Ozempic, MRI Brain, Trelegy" required />
+              </div>
+            </div>
+
+            <div class="button-group">
+              <button type="button" class="btn btn-secondary" disabled>← Back</button>
+              <button type="button" class="btn btn-primary" onclick="goToStep(2)">Next: Patient Info →</button>
+            </div>
+          </div>
+
+          <!-- STEP 2: PATIENT & CLINICAL INFO -->
+          <div class="form-panel" data-step="2">
+            <h2 class="panel-title">👤 Patient & Clinical Information</h2>
+            <p class="panel-subtitle">Patient demographics and clinical details (optional but recommended)</p>
+
+            <div class="form-row">
+              <div class="field">
+                <label>Patient Name</label>
+                <input type="text" id="patient-name" placeholder="Full name" />
+              </div>
+              <div class="field">
+                <label>Date of Birth</label>
+                <input type="date" id="patient-dob" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <label>Member ID</label>
+                <input type="text" id="member-id" placeholder="Insurance member ID" />
+              </div>
+              <div class="field">
+                <label>Age</label>
+                <input type="number" id="patient-age" placeholder="Auto-calculated from DOB" disabled />
+              </div>
+            </div>
+
+            <div class="form-row full">
+              <div class="field">
+                <label>Primary ICD-10 Diagnosis Code(s) <span class="required">*</span></label>
+                <input type="text" id="icd10-codes" placeholder="e.g., E11.9, Z68.40, J44.1" required />
+              </div>
+            </div>
+
+            <div class="form-row full">
+              <div class="field">
+                <label>Clinical Summary / Indication</label>
+                <textarea id="clinical-summary" placeholder="Brief clinical presentation, symptoms, exam findings, why this service is needed..."></textarea>
+              </div>
+            </div>
+
+            <div class="button-group">
+              <button type="button" class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+              <button type="button" class="btn btn-primary" onclick="goToStep(3)">Next: Prior Treatment →</button>
+            </div>
+          </div>
+
+          <!-- STEP 3: PRIOR TREATMENT -->
+          <div class="form-panel" data-step="3">
+            <h2 class="panel-title">💊 Prior Treatment & Interventions</h2>
+            <p class="panel-subtitle">Document what has been tried before this request</p>
+
+            <div class="form-row full">
+              <div class="field">
+                <label>Prior Treatments / Medications Tried</label>
+                <textarea id="prior-treatments" placeholder="List medications tried, dates, why discontinued, side effects, dosages..."></textarea>
+              </div>
+            </div>
+
+            <div class="form-row full">
+              <div class="field">
+                <label>Conservative Measures / Interventions Attempted</label>
+                <textarea id="conservative-measures" placeholder="E.g., physical therapy, lifestyle modifications, other non-medication treatments..."></textarea>
+              </div>
+            </div>
+
+            <div class="form-row full">
+              <div class="field">
+                <label>Recent Labs / Test Results (if applicable)</label>
+                <textarea id="lab-results" placeholder="E.g., A1c 8.5%, BMI 42, recent imaging findings..."></textarea>
+              </div>
+            </div>
+
+            <div class="button-group">
+              <button type="button" class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+              <button type="button" class="btn btn-primary" onclick="goToStep(4)">Next: Documentation →</button>
+            </div>
+          </div>
+
+          <!-- STEP 4: DOCUMENTATION CHECKLIST -->
+          <div class="form-panel" data-step="4">
+            <h2 class="panel-title">📋 Documentation Checklist</h2>
+            <p class="panel-subtitle">Verify you have required documentation for this payer</p>
+
+            <div id="checklist-container" class="checklist">
+              <div class="checklist-item">
+                <input type="checkbox" id="check-1" />
+                <label class="checklist-text">Specific diagnosis code (not just symptom code)</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="check-2" />
+                <label class="checklist-text">Documentation of prior treatment failures or intolerance</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="check-3" />
+                <label class="checklist-text">Current medications and allergies listed</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="check-4" />
+                <label class="checklist-text">Recent lab results or test findings (if applicable)</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="check-5" />
+                <label class="checklist-text">Relevant clinical exam findings documented</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="check-6" />
+                <label class="checklist-text">Step therapy protocol completed (if applicable)</label>
+              </div>
+              <div class="checklist-item">
+                <input type="checkbox" id="check-7" />
+                <label class="checklist-text">Medical necessity clearly justified</label>
+              </div>
+            </div>
+
+            <div class="button-group">
+              <button type="button" class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+              <button type="button" class="btn btn-primary" onclick="goToStep(5)">Next: Review & Submit →</button>
+            </div>
+          </div>
+
+          <!-- STEP 5: REVIEW & SUBMIT -->
+          <div class="form-panel" data-step="5">
+            <h2 class="panel-title">✅ Review & Submit</h2>
+            <p class="panel-subtitle">Review your information and generate PA documents</p>
+
+            <div id="review-summary" style="background: var(--bg-secondary); padding: 16px; border-radius: 6px; margin-bottom: 16px;">
+              <p style="color: var(--text-secondary); font-size: 12px;">Your information will be reviewed below...</p>
+            </div>
+
+            <div class="button-group">
+              <button type="button" class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
+              <button type="button" class="btn btn-primary" onclick="generatePA()">Generate PA Letter</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- SIDEBAR: APPROVAL SCORE -->
+      <div class="score-widget">
+        <div class="score-header">📊 Approval Score</div>
+
+        <div class="score-display">
+          <p class="score-percentage" id="approval-score">0%</p>
+          <p class="score-label" id="approval-label">Complete the form</p>
         </div>
 
-        <div id="results-content" style="display: none;">
-          <!-- Approval Likelihood -->
-          <div class="approval-likelihood">
-            <div class="likelihood-label">Estimated Approval Likelihood</div>
-            <p class="likelihood-score" id="likelihood-score">85%</p>
-            <p class="likelihood-text" id="likelihood-text">Based on payer criteria match</p>
-          </div>
+        <div class="score-bar">
+          <div class="score-fill" id="score-fill" style="width: 0%;"></div>
+        </div>
 
-          <!-- Tabs for Criteria vs Letters -->
-          <div class="tabs">
-            <button class="tab-btn active" data-tab="criteria">Payer Criteria</button>
-            <button class="tab-btn" data-tab="letter">PA Letter</button>
-            <button class="tab-btn" data-tab="medical-necessity">Medical Necessity</button>
+        <div class="score-breakdown">
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px;">SCORE BREAKDOWN</div>
+          <div id="score-breakdown-items">
+            <p style="font-size: 12px; color: var(--text-secondary); margin: 0;">Complete the form to see breakdown</p>
           </div>
+        </div>
 
-          <!-- Criteria Tab -->
-          <div id="criteria-tab" class="tab-content active">
-            <div class="results-section">
-              <h3 class="section-title">Payer-Specific Criteria</h3>
-              <div class="criteria-list" id="criteria-list">
-                <!-- Criteria will be inserted here -->
-              </div>
-            </div>
-          </div>
+        <div class="risk-section" id="risk-section" style="display: none;">
+          <div class="risk-header">🚩 Denial Risk Flags</div>
+          <div id="risk-flags"></div>
+        </div>
 
-          <!-- Letter Tab -->
-          <div id="letter-tab" class="tab-content">
-            <div class="results-section">
-              <h3 class="section-title">PA Justification Letter</h3>
-              <div class="letter-section">
-                <div class="letter-content" id="pa-letter">
-                  <!-- Letter will be inserted here -->
-                </div>
-              </div>
-              <div class="action-buttons">
-                <button class="btn btn-secondary btn-small" id="copy-letter-btn">Copy to Clipboard</button>
-                <button class="btn btn-secondary btn-small" id="download-letter-btn">Download as Text</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Medical Necessity Tab -->
-          <div id="medical-necessity-tab" class="tab-content">
-            <div class="results-section">
-              <h3 class="section-title">Comprehensive Medical Necessity Statement</h3>
-              <div class="letter-section">
-                <div class="letter-content" id="medical-necessity-letter">
-                  <!-- Letter will be inserted here -->
-                </div>
-              </div>
-              <div class="action-buttons">
-                <button class="btn btn-secondary btn-small" id="copy-medical-btn">Copy to Clipboard</button>
-                <button class="btn btn-secondary btn-small" id="download-medical-btn">Download as Text</button>
-              </div>
-            </div>
-          </div>
+        <div class="tips-section" id="tips-section" style="display: none;">
+          <div class="tips-label">💡 Payer Tips</div>
+          <div id="payer-tips" class="tips-text"></div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // ====== IMAGING PA RULES DATABASE (High-Yield Studies) ======
-    const imagingPARules = {
-      "MRI Brain (CPT 70553, 70551)": {
-        cpt: ["70553", "70551"],
-        icd10: ["G40.909", "R56.9", "G43.119", "I63.9", "G45.9", "R29.818", "R51.9", "R42"],
-        paLogic: [
-          "Use specific neurologic diagnoses (seizure, stroke, TIA, focal deficits) when clinically accurate",
-          "Avoid only using nonspecific 'headache' if more precise codes are supported by documentation",
-          "Document red flag symptoms (focal deficits, seizure, altered mental status, trauma)"
-        ]
-      },
-      "MRI Lumbar Spine (CPT 72148)": {
-        cpt: ["72148"],
-        icd10: ["M54.16", "M51.16", "M48.061", "M54.50", "G89.29"],
-        paLogic: [
-          "Prefer radiculopathy/stenosis/disc codes over generic low back pain when exam supports it",
-          "Document duration, failed conservative therapy (PT, NSAIDs), and red flags if present",
-          "Avoid imaging for acute, uncomplicated low back pain without red flags"
-        ]
-      },
-      "MRI Knee (CPT 73721)": {
-        cpt: ["73721"],
-        icd10: ["S83.241A", "S83.511A", "M23.221", "M25.561", "M17.11"],
-        paLogic: [
-          "Use injury/tear codes when there is clear traumatic or mechanical history",
-          "Document mechanical symptoms (locking, giving way) and failed conservative management",
-          "Generic 'knee pain' alone is weaker than structural or injury codes"
-        ]
-      },
-      "CT Chest (CPT 71260, 71275)": {
-        cpt: ["71260", "71275"],
-        icd10: ["R91.1", "R91.8", "J18.9", "C34.90", "R06.02", "R07.9", "R79.1", "I26.99"],
-        paLogic: [
-          "For CTA chest, pair chest pain or dyspnea with elevated D-dimer when appropriate",
-          "For CT chest, use nodule/mass/pneumonia codes instead of only 'cough' when supported",
-          "Include smoking history and risk factors in documentation for nodules"
-        ]
-      },
-      "CT Abdomen/Pelvis (CPT 74177, 74178)": {
-        cpt: ["74177", "74178"],
-        icd10: ["R10.31", "R10.32", "K35.80", "K57.32", "N20.0", "R10.9", "R19.00"],
-        paLogic: [
-          "Use quadrant-specific pain codes when exam localizes pain",
-          "Document fever, leukocytosis, hematuria, or other supporting findings",
-          "Use specific pathology codes (appendicitis, diverticulitis, nephrolithiasis) when confirmed or strongly suspected"
-        ]
-      }
+    // Data
+    const payers = {
+      aetna: { name: "Aetna", tips: "Aetna requires specific diagnosis codes and documented prior treatment failures." },
+      anthem: { name: "Anthem", tips: "Anthem focuses on FDA-approved indications and medical necessity." },
+      bcbs: { name: "Blue Cross Blue Shield", tips: "BCBS requires step therapy compliance and guideline adherence." },
+      cigna: { name: "Cigna", tips: "Cigna emphasizes formulary compliance and clinical criteria alignment." },
+      empire: { name: "Empire BlueCross", tips: "Empire requires evidence-based clinical criteria and documentation." },
+      fidelis: { name: "Fidelis Care", tips: "Fidelis prioritizes Medicaid formulary and step therapy protocol completion." },
+      humana: { name: "Humana", tips: "Humana requires specific diagnosis codes and documented clinical necessity." },
+      medicaid: { name: "Medicaid (State)", tips: "State Medicaid varies; check formulary and step therapy requirements." },
+      medicare: { name: "Medicare", tips: "Medicare requires medical necessity and coverage rules per benefit category." },
+      molina: { name: "Molina Healthcare", tips: "Molina emphasizes cost-effectiveness and guideline adherence." },
+      nyship: { name: "NYSHIP", tips: "NYSHIP requires cost-effectiveness justification and formulary compliance." },
+      united: { name: "United Healthcare", tips: "United requires clinical criteria documentation and prior treatment attempts." }
     };
 
-    // ====== MEDICATION & IMAGING REQUEST MAPPINGS ======
-    const requestMappings = {
-      medication: {
-        // ADHD Stimulants
-        "Adderall (amphetamine)": ["F90.0", "F90.1", "F90.2", "F90.9"],
-        "Vyvanse (lisdexamfetamine)": ["F90.0", "F90.1", "F90.2", "F90.9"],
-        "Concerta (methylphenidate)": ["F90.0", "F90.1", "F90.2", "F90.9"],
-        "Focalin (dexmethylphenidate)": ["F90.0", "F90.1", "F90.2", "F90.9"],
+    // Step navigation
+    function goToStep(stepNum) {
+      const panels = document.querySelectorAll(".form-panel");
+      const steps = document.querySelectorAll(".step");
 
-        // GLP-1 Weight Loss
-        "Wegovy (semaglutide)": ["E66.01", "E66.9", "Z68.30", "Z68.35", "Z68.40", "Z68.45"],
-        "Zepbound (tirzepatide)": ["E66.01", "E66.9", "Z68.30", "Z68.35", "Z68.40", "Z68.45"],
-        "Saxenda (liraglutide)": ["E66.01", "E66.9", "Z68.30", "Z68.35", "Z68.40"],
+      panels.forEach(p => p.classList.remove("active"));
+      steps.forEach(s => s.classList.remove("active", "completed"));
 
-        // GLP-1 Diabetes
-        "Ozempic (semaglutide)": ["E11.65", "E11.9", "E11.69"],
-        "Mounjaro (tirzepatide)": ["E11.65", "E11.9", "E11.69"],
-        "Trulicity (dulaglutide)": ["E11.65", "E11.9", "E11.69"],
+      document.querySelector(`[data-step="${stepNum}"]`).classList.add("active");
+      document.querySelector(`.step[data-step="${stepNum}"]`).classList.add("active");
 
-        // COPD/Asthma
-        "Trelegy (fluticasone/umeclidinium/vilanterol)": ["J44.1", "J44.9", "J45.40"],
-        "Breztri (beclomethasone/formoterol/glycopyrrolate)": ["J44.1", "J44.9", "J45.40"],
-        "Symbicort (budesonide/formoterol)": ["J44.1", "J44.9", "J45.40", "J45.50"],
-        "Advair (fluticasone/salmeterol)": ["J44.1", "J44.9", "J45.40", "J45.50"],
-
-        // Other High-Frequency
-        "Statin (High-intensity)": ["E78.0", "E78.1", "E78.5", "I25.10", "I21.9"],
-        "ACE Inhibitor/ARB": ["I10", "I11", "I50.9", "N18.3", "N18.4"],
-        "SGLT2 Inhibitor": ["E11", "E11.9", "I50.9", "I50.1", "N18.3"],
-        "Biologic (TNF inhibitor)": ["M05.9", "M06.9", "M07", "M32.9"],
-        "Antidepressant": ["F32.9", "F33.9", "F41.1"],
-        "Anticoagulant": ["I21.9", "I63.9", "I64"],
-        "Biologics for IBD": ["K50.9", "K51.9"],
-        "Bariatric Surgery": ["E66.2", "E66.209", "Z68.41", "Z68.45", "I10", "E11.9"]
-      },
-      imaging: {
-        // MRI studies with CPT codes and validated ICD-10s
-        "MRI Brain (CPT 70553, 70551)": ["G40.909", "R56.9", "G43.119", "I63.9", "G45.9", "R29.818", "R51.9", "R42"],
-        "MRI Lumbar Spine (CPT 72148)": ["M54.16", "M51.16", "M48.061", "M54.50", "G89.29"],
-        "MRI Knee (CPT 73721)": ["S83.241A", "S83.511A", "M23.221", "M25.561", "M17.11"],
-
-        // CT studies with CPT codes and validated ICD-10s
-        "CT Chest (CPT 71260, 71275)": ["R91.1", "R91.8", "J18.9", "C34.90", "R06.02", "R07.9", "R79.1", "I26.99"],
-        "CT Abdomen/Pelvis (CPT 74177, 74178)": ["R10.31", "R10.32", "K35.80", "K57.32", "N20.0", "R10.9", "R19.00"],
-
-        // Other imaging (legacy support)
-        "Ultrasound Abdomen": ["K80.9", "K81.9", "K70.9", "N18.5"],
-        "X-Ray Chest": ["J44.9", "J40", "J45.9", "I50.1"],
-        "Echocardiogram": ["I50.9", "I50.1", "I50.2", "I25.10", "I11"],
-        "Stress Test": ["I25.10", "I21.9", "I10"],
-        "Carotid Ultrasound": ["I63.9", "I64", "I25.10"],
-        "Colonoscopy": ["K50.9", "K51.9", "K92.2"],
-        "Endoscopy": ["K21.9", "K92.2"],
-        "Mammogram": ["C50.9"],
-        "Bone Scan": ["M80", "M81", "C61", "C80.1"],
-        "Renal Ultrasound": ["N18.3", "N18.4", "N18.5", "N17.9"],
-        "Liver Ultrasound": ["K70.9", "K74.6"]
+      // Mark previous steps as completed
+      for (let i = 1; i < stepNum; i++) {
+        document.querySelector(`.step[data-step="${i}"]`).classList.add("completed");
       }
-    };
 
-    // ====== ICD-10 DIAGNOSIS DATABASE ======
-    const icd10Diagnoses = {
-      // Endocrine/Metabolic
-      "E11": "Type 2 Diabetes Mellitus",
-      "E11.9": "Type 2 Diabetes - without complications",
-      "E11.22": "Type 2 Diabetes - with hyperosmolarity",
-      "E11.65": "Type 2 Diabetes with hypoglycemia with coma",
-      "E11.69": "Type 2 Diabetes with hypoglycemia with other complication",
-      "E13": "Other Specified Diabetes Mellitus",
-      "E10": "Type 1 Diabetes Mellitus",
-      "E78.5": "Hyperlipidemia, unspecified",
-      "E78.0": "Pure hypercholesterolemia",
-      "E78.1": "Pure hypertriglyceridemia",
-      "E66.9": "Obesity, unspecified",
-      "E66.01": "Drug-induced obesity",
-      "E66.2": "Morbid (severe) obesity",
-      "E66.209": "Morbid obesity with hypoventilation",
-      "E66.3": "Overweight",
-      "E66.8": "Other obesity",
-
-      // BMI Classifications (Z68 codes)
-      "Z68.30": "BMI 30.0-30.9 (Obese, class I)",
-      "Z68.31": "BMI 31.0-31.9 (Obese, class I)",
-      "Z68.32": "BMI 32.0-32.9 (Obese, class I)",
-      "Z68.33": "BMI 33.0-33.9 (Obese, class I)",
-      "Z68.34": "BMI 34.0-34.9 (Obese, class I)",
-      "Z68.35": "BMI 35.0-35.9 (Obese, class II)",
-      "Z68.36": "BMI 36.0-36.9 (Obese, class II)",
-      "Z68.37": "BMI 37.0-37.9 (Obese, class II)",
-      "Z68.38": "BMI 38.0-38.9 (Obese, class II)",
-      "Z68.39": "BMI 39.0-39.9 (Obese, class II)",
-      "Z68.40": "BMI 40.0-40.9 (Obese, class III - morbid)",
-      "Z68.41": "BMI 41.0-41.9 (Obese, class III - morbid)",
-      "Z68.42": "BMI 42.0-42.9 (Obese, class III - morbid)",
-      "Z68.43": "BMI 43.0-43.9 (Obese, class III - morbid)",
-      "Z68.44": "BMI 44.0-44.9 (Obese, class III - morbid)",
-      "Z68.45": "BMI ≥45.0 (Severe/morbid obesity)",
-
-      // Cardiovascular
-      "I10": "Essential (primary) hypertension",
-      "I15": "Secondary hypertension",
-      "I11": "Hypertensive heart disease",
-      "I50.9": "Heart failure, unspecified",
-      "I50.1": "Left ventricular failure",
-      "I50.2": "Systolic heart failure",
-      "I21.9": "Acute myocardial infarction, unspecified",
-      "I25.10": "Atherosclerotic heart disease",
-      "I63.9": "Cerebral infarction, unspecified",
-      "I64": "Stroke, not specified as hemorrhage or infarction",
-
-      // Pulmonary
-      "J44.9": "Chronic obstructive pulmonary disease (COPD), unspecified",
-      "J44.0": "COPD with acute lower respiratory infection",
-      "J44.1": "COPD with acute exacerbation",
-      "J45.9": "Asthma, unspecified",
-      "J45.40": "Moderate persistent asthma with (acute) exacerbation",
-      "J45.50": "Severe persistent asthma with (acute) exacerbation",
-      "J45.901": "Unspecified asthma with (acute) exacerbation",
-      "J43.9": "Emphysema, unspecified",
-      "J40": "Bronchitis, not specified as acute or chronic",
-      "J47.9": "Bronchiectasis, unspecified",
-
-      // Rheumatologic
-      "M05.9": "Rheumatoid arthritis, unspecified",
-      "M06.9": "Unspecified rheumatoid arthritis",
-      "M07": "Psoriatic and enteropathic arthropathies",
-      "M08.9": "Juvenile arthritis, unspecified",
-      "M32.9": "Systemic lupus erythematosus (SLE), unspecified",
-      "M05.0": "RA with rheumatoid factor",
-
-      // GI/Hepatic
-      "K80.9": "Cholelithiasis without cholecystitis",
-      "K80.00": "Cholelithiasis with acute cholecystitis",
-      "K81.9": "Cholecystitis, unspecified",
-      "K70.9": "Unspecified cirrhosis of liver",
-      "K74.6": "Cirrhosis of liver, unspecified",
-      "K50.9": "Crohn disease, unspecified",
-      "K51.9": "Ulcerative colitis, unspecified",
-      "K92.2": "Gastrointestinal hemorrhage, unspecified",
-
-      // Imaging-specific diagnoses (for PA rules)
-      "G40.909": "Epilepsy, unspecified, not intractable",
-      "R56.9": "Unspecified convulsions",
-      "G43.119": "Migraine with aura, not intractable, with status migrainosus",
-      "G45.9": "Transient ischemic attack, unspecified",
-      "R29.818": "Other specified symptoms involving nervous system",
-      "R42": "Dizziness and giddiness",
-      "M54.16": "Radiculopathy, lumbar region",
-      "M51.16": "Intervertebral disc disorder with radiculopathy, lumbar region",
-      "M48.061": "Lumbar spinal stenosis",
-      "S83.241A": "Tear of meniscus, current injury",
-      "S83.511A": "Sprain of anterior cruciate ligament",
-      "M23.221": "Derangement of anterior horn of meniscus",
-      "M25.561": "Pain in knee",
-      "M17.11": "Primary osteoarthritis, right knee",
-      "R91.1": "Solitary pulmonary nodule",
-      "R91.8": "Other nonspecific abnormal finding of lung field",
-      "C34.90": "Malignant neoplasm of unspecified part of unspecified lung",
-      "R06.02": "Shortness of breath",
-      "R07.9": "Chest pain, unspecified",
-      "R79.1": "Elevated blood glucose",
-      "I26.99": "Pulmonary embolism without acute cor pulmonale",
-      "R10.31": "Right upper quadrant pain",
-      "R10.32": "Right lower quadrant pain",
-      "K35.80": "Unspecified acute appendicitis",
-      "K57.32": "Diverticulitis of colon without perforation or abscess without bleeding",
-      "N20.0": "Calculus of kidney",
-      "R10.9": "Unspecified abdominal pain",
-      "R19.00": "Intra-abdominal and pelvic swelling, mass and lump, unspecified site",
-
-      // Renal
-      "N18.3": "Chronic kidney disease, stage 3",
-      "N18.4": "Chronic kidney disease, stage 4",
-      "N18.5": "Chronic kidney disease, stage 5",
-      "N18.9": "Chronic kidney disease, unspecified",
-      "N17.9": "Acute kidney injury, unspecified",
-
-      // Neoplastic
-      "C34.9": "Malignant neoplasm of lung, unspecified",
-      "C50.9": "Malignant neoplasm of breast, unspecified",
-      "C61": "Malignant neoplasm of prostate",
-      "C80.1": "Malignant neoplasm, unspecified",
-      "C20": "Malignant neoplasm of rectum",
-
-      // Neurological
-      "G30.9": "Alzheimer disease, unspecified",
-      "G31.83": "Dementia with Lewy bodies",
-      "G89.29": "Chronic pain, unspecified",
-      "G89.21": "Chronic pain due to trauma",
-      "G25.5": "Tremor, unspecified",
-      "G20": "Parkinson disease",
-
-      // Sleep Apnea (G47 series)
-      "G47.30": "Obstructive sleep apnea, unspecified",
-      "G47.31": "Obstructive sleep apnea, mild",
-      "G47.32": "Obstructive sleep apnea, moderate",
-      "G47.33": "Obstructive sleep apnea, severe",
-      "G47.34": "Obstructive sleep apnea with comorbidities",
-      "G47.35": "Central sleep apnea, idiopathic",
-      "G47.36": "Central sleep apnea due to high altitude periodic breathing",
-      "G47.37": "Central sleep apnea due to underlying condition",
-
-      // Mental Health
-      "F32.9": "Major depressive disorder, single episode, unspecified",
-      "F33.9": "Major depressive disorder, recurrent, unspecified",
-      "F41.1": "Generalized anxiety disorder",
-      "F41.9": "Anxiety disorder, unspecified",
-      "F90.0": "Attention-deficit/hyperactivity disorder, predominantly inattentive type",
-      "F90.1": "Attention-deficit/hyperactivity disorder, predominantly hyperactive type",
-      "F90.2": "Attention-deficit/hyperactivity disorder, combined type",
-      "F90.9": "Attention-deficit hyperactivity disorder (ADHD), unspecified",
-      "F60.3": "Dependent personality disorder",
-
-      // Other Common
-      "M79.3": "Panniculitis, unspecified",
-      "L89.90": "Pressure ulcer, unspecified site, unspecified stage",
-      "I87.2": "Venous insufficiency (chronic) (peripheral)",
-      "K21.9": "Unspecified gastro-esophageal reflux disease",
-      "J06.9": "Acute upper respiratory infection, unspecified"
-    };
-
-    // ====== PAYER POLICIES DATABASE ======
-    const payerPolicies = {
-      aetna: {
-        name: "Aetna",
-        criteria: {
-          medication: [
-            {
-              id: "fail-first",
-              label: "Fail-first requirement",
-              description: "Patient must have tried and failed at least one generic or lower-cost alternative",
-              required: true
-            },
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear diagnosis and medical necessity for the requested medication",
-              required: true
-            },
-            {
-              id: "contraindications",
-              label: "No absolute contraindications",
-              description: "Requested medication is not contraindicated for patient's conditions",
-              required: true
-            },
-            {
-              id: "duration",
-              label: "Documented trial duration",
-              description: "Prior medication trial lasted ≥30 days at therapeutic dose",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear indication based on patient symptoms, signs, or abnormal findings",
-              required: true
-            },
-            {
-              id: "prior-imaging",
-              label: "Prior imaging ruled out",
-              description: "Patient has not had the same imaging within the past 12 months",
-              required: true
-            },
-            {
-              id: "conservative-measures",
-              label: "Conservative measures attempted",
-              description: "Non-imaging diagnostic approaches have been tried first",
-              required: false
-            }
-          ]
-        }
-      },
-      bcbs: {
-        name: "Blue Cross Blue Shield",
-        criteria: {
-          medication: [
-            {
-              id: "step-therapy",
-              label: "Step therapy compliance",
-              description: "Patient completed required step therapy protocol for this drug class",
-              required: true
-            },
-            {
-              id: "diagnosis-supported",
-              label: "Diagnosis supported",
-              description: "Requested medication is FDA-approved for patient's documented condition",
-              required: true
-            },
-            {
-              id: "dosing-frequency",
-              label: "Dosing within guidelines",
-              description: "Requested dose and frequency align with FDA label and clinical guidelines",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "medical-necessity",
-              label: "Medical necessity documented",
-              description: "Clinical presentation supports imaging as next appropriate step",
-              required: true
-            },
-            {
-              id: "quality-score",
-              label: "Evidence quality score",
-              description: "Request supported by evidence-based guidelines (ACR, USPSTF, etc.)",
-              required: true
-            }
-          ]
-        }
-      },
-      cigna: {
-        name: "Cigna",
-        criteria: {
-          medication: [
-            {
-              id: "prior-auth-required",
-              label: "Prior authorization triggered",
-              description: "Drug requires PA based on Cigna formulary and coverage rules",
-              required: true
-            },
-            {
-              id: "clinical-evidence",
-              label: "Clinical evidence provided",
-              description: "Supporting clinical evidence demonstrates need for this medication",
-              required: true
-            },
-            {
-              id: "labwork-monitoring",
-              label: "Lab monitoring plan documented",
-              description: "Plan for ongoing monitoring and lab work is documented",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-necessity",
-              label: "Clinical necessity established",
-              description: "Findings on exam or other testing warrant advanced imaging",
-              required: true
-            },
-            {
-              id: "recent-imaging",
-              label: "No recent duplicate study",
-              description: "No equivalent imaging performed within past 90 days",
-              required: true
-            }
-          ]
-        }
-      },
-      humana: {
-        name: "Humana",
-        criteria: {
-          medication: [
-            {
-              id: "formulary-exception",
-              label: "Formulary exception request",
-              description: "Non-formulary drug requires medical necessity documentation",
-              required: true
-            },
-            {
-              id: "clinical-rationale",
-              label: "Clinical rationale clear",
-              description: "Why this specific drug vs. formulary alternatives",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Specific clinical question or findings necessitating imaging",
-              required: true
-            },
-            {
-              id: "imaging-guidelines",
-              label: "Imaging guidelines met",
-              description: "Request aligns with ACR, USPSTF, or specialty society guidelines",
-              required: true
-            }
-          ]
-        }
-      },
-      united: {
-        name: "United Healthcare",
-        criteria: {
-          medication: [
-            {
-              id: "clinical-criteria",
-              label: "Clinical criteria met",
-              description: "Patient meets UnitedHealth clinical criteria for this medication",
-              required: true
-            },
-            {
-              id: "prior-treatment",
-              label: "Prior treatment documented",
-              description: "Failure of or intolerance to required prior treatments documented",
-              required: true
-            },
-            {
-              id: "quantity-limit",
-              label: "Within quantity limits",
-              description: "Requested quantity aligns with UnitedHealth limits",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-necessity",
-              label: "Clinical necessity established",
-              description: "Imaging is medically necessary to answer a clinical question",
-              required: true
-            }
-          ]
-        }
-      },
-      anthem: {
-        name: "Anthem",
-        criteria: {
-          medication: [
-            {
-              id: "medical-necessity",
-              label: "Medical necessity documented",
-              description: "Medication is medically necessary for patient's condition",
-              required: true
-            },
-            {
-              id: "fda-indication",
-              label: "FDA-approved indication",
-              description: "Medication is FDA-approved for patient's diagnosis",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear clinical indication supported by history and findings",
-              required: true
-            }
-          ]
-        }
-      },
-      fidelis: {
-        name: "Fidelis Care",
-        criteria: {
-          medication: [
-            {
-              id: "medicaid-formulary",
-              label: "Medicaid formulary check",
-              description: "Drug is on Fidelis Medicaid formulary or prior authorization requested",
-              required: true
-            },
-            {
-              id: "step-therapy",
-              label: "Step therapy completed",
-              description: "Required step therapy protocol completed or documented intolerance",
-              required: true
-            },
-            {
-              id: "clinical-justification",
-              label: "Clinical justification documented",
-              description: "Clear medical necessity with specific diagnosis and prior treatment attempts",
-              required: true
-            },
-            {
-              id: "member-eligibility",
-              label: "Member eligibility verified",
-              description: "Patient is active Fidelis member with no claim issues",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "medical-necessity-imaging",
-              label: "Medical necessity established",
-              description: "Imaging is medically necessary to answer specific clinical question",
-              required: true
-            },
-            {
-              id: "guideline-adherence",
-              label: "Guideline adherence",
-              description: "Imaging request aligns with ACR, specialty society, or Fidelis guidelines",
-              required: true
-            },
-            {
-              id: "prior-testing",
-              label: "Prior testing documented",
-              description: "Document any prior imaging, labs, or conservative measures attempted",
-              required: false
-            }
-          ]
-        }
-      },
-      empire: {
-        name: "Empire BlueCross BlueShield",
-        criteria: {
-          medication: [
-            {
-              id: "clinical-criteria-met",
-              label: "Empire clinical criteria met",
-              description: "Request meets Empire's published clinical criteria for the medication",
-              required: true
-            },
-            {
-              id: "prior-authorization-triggered",
-              label: "Prior authorization requirement documented",
-              description: "Medication requires PA per Empire formulary; non-preferred or restricted",
-              required: true
-            },
-            {
-              id: "diagnosis-code-supported",
-              label: "Diagnosis code supported",
-              description: "Patient diagnosis is within FDA indication for requested medication",
-              required: true
-            },
-            {
-              id: "step-therapy-empire",
-              label: "Step therapy completed",
-              description: "Required step therapy agents tried or contraindicated",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication-empire",
-              label: "Clinical indication documented",
-              description: "Specific clinical indication with supporting history and findings",
-              required: true
-            },
-            {
-              id: "empire-imaging-guidelines",
-              label: "Empire imaging guidelines",
-              description: "Request aligns with Empire's imaging appropriateness criteria",
-              required: true
-            },
-            {
-              id: "no-recent-imaging",
-              label: "No recent duplicate imaging",
-              description: "No equivalent imaging performed within appropriate interval",
-              required: false
-            }
-          ]
-        }
-      },
-      nyship: {
-        name: "NYSHIP (NY State Health Plan)",
-        criteria: {
-          medication: [
-            {
-              id: "nyship-formulary",
-              label: "NYSHIP formulary compliance",
-              description: "Drug is on NYSHIP formulary or PA submitted for non-formulary request",
-              required: true
-            },
-            {
-              id: "medical-necessity-nyship",
-              label: "Medical necessity for state employee",
-              description: "Clear clinical justification appropriate for state employee health plan",
-              required: true
-            },
-            {
-              id: "cost-effectiveness",
-              label: "Cost-effective justification",
-              description: "Explain why this medication over more cost-effective alternatives",
-              required: true
-            },
-            {
-              id: "prior-therapy-documented",
-              label: "Prior therapy documented",
-              description: "Document prior treatment failures or contraindications",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "medical-necessity-imaging-nyship",
-              label: "Medical necessity established",
-              description: "Clinically necessary imaging to diagnose or manage documented condition",
-              required: true
-            },
-            {
-              id: "evidence-based-imaging",
-              label: "Evidence-based imaging request",
-              description: "Request supported by clinical evidence and guidelines",
-              required: true
-            },
-            {
-              id: "prior-conservative-measures",
-              label: "Conservative measures documented",
-              description: "Document prior non-imaging diagnostic or treatment attempts",
-              required: false
-            }
-          ]
-        }
-      }
-    };
-
-    // ====== STATE ======
-    let hipaaMode = true;
-    let lastAnalysis = null;
-    let selectedDiagnoses = {}; // { code: "E11.9", label: "Type 2 Diabetes..." }
-
-    // ====== UTILITIES ======
-    function showToast(msg, type = "info") {
-      // Simple console log since no toast UI needed
-      console.log(`[${type.toUpperCase()}] ${msg}`);
+      updateApprovalScore();
     }
 
-    function getPatientAge() {
-      const dob = document.getElementById("patient-dob").value;
-      if (!dob) return null;
-      const today = new Date();
-      const birth = new Date(dob);
-      let age = today.getFullYear() - birth.getFullYear();
-      const m = today.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-      return age;
-    }
-
-    function calculateApprovalLikelihood(payerId, requestType, clinicalData) {
-      let score = 50; // baseline
-
-      // Has clinical summary
-      if (clinicalData.trim().length > 20) score += 10;
-
-      // Has patient DOB (completeness indicator)
-      if (document.getElementById("patient-dob").value) score += 5;
-
-      // Has member ID
-      if (document.getElementById("member-id").value) score += 5;
-
-      // Urgency (expedited/urgent typically have slightly lower approval % but faster processing)
-      const urgency = document.getElementById("urgency").value;
-      if (urgency === "routine") score += 5;
-
-      // Cap at 95%
-      return Math.min(95, score);
-    }
-
-    function evaluateCriteria(payerId, requestType, clinicalData) {
-      const payer = payerPolicies[payerId];
-      if (!payer) return [];
-
-      const criteria = payer.criteria[requestType] || [];
-      return criteria.map(c => {
-        // Simple heuristic: longer clinical data suggests more criteria met
-        const clinicalLength = clinicalData.length;
-        let status;
-
-        if (clinicalLength < 20) {
-          status = "unknown"; // Not documented
-        } else if (c.required) {
-          // Assume required criteria are met if we have some clinical data
-          status = clinicalLength > 100 ? "met" : "unknown";
-        } else {
-          status = clinicalLength > 150 ? "met" : "unknown";
-        }
-
-        return {
-          ...c,
-          status
-        };
-      });
-    }
-
-    function generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData) {
-      const payer = payerPolicies[payerId];
-      const patientName = document.getElementById("patient-name").value || "[Patient Name]";
-      const memberId = document.getElementById("member-id").value || "[Member ID]";
-      const age = getPatientAge();
-      const ageStr = age ? ` (Age ${age})` : "";
-
-      const metCriteria = evaluatedCriteria.filter(c => c.status === "met").map(c => c.label);
-      const unknownCriteria = evaluatedCriteria.filter(c => c.status === "unknown").map(c => c.label);
-
-      // Build diagnoses section
-      let diagnosesSection = "";
-      if (Object.keys(selectedDiagnoses).length > 0) {
-        diagnosesSection = "\nDIAGNOSES (ICD-10):\n";
-        Object.entries(selectedDiagnoses).forEach(([code, label]) => {
-          diagnosesSection += `• ${code} – ${label}\n`;
-        });
-      }
-
-      // Add CPT codes for imaging
-      let cptSection = "";
-      if (requestType === "imaging") {
-        const specificRequest = document.getElementById("specific-request").value;
-        const imagingRule = imagingPARules[specificRequest];
-        if (imagingRule) {
-          cptSection = `\nCPT CODE(S): ${imagingRule.cpt.join(", ")}`;
-        }
-      }
-
-      let letter = `PRIOR AUTHORIZATION REQUEST JUSTIFICATION
-
-TO: ${payer.name}
-FROM: [Provider Name/Practice]
-DATE: ${new Date().toLocaleDateString()}
-PATIENT: ${patientName}${ageStr}
-MEMBER ID: ${memberId}
-REQUEST TYPE: ${requestType.charAt(0).toUpperCase() + requestType.slice(1)}${cptSection}${diagnosesSection}
-
----
-
-MEDICAL NECESSITY:
-
-${clinicalData || "[Clinical summary not provided]"}
-
----
-
-PAYER CRITERIA ANALYSIS:
-
-Criteria Met:
-`;
-
-      if (metCriteria.length > 0) {
-        metCriteria.forEach((crit, i) => {
-          letter += `${i + 1}. ${crit}\n`;
-        });
-      } else {
-        letter += "• Clinical data provided; specific criteria assessment pending\n";
-      }
-
-      letter += `\nInformation Not Documented:
-`;
-      if (unknownCriteria.length > 0) {
-        unknownCriteria.forEach((crit, i) => {
-          letter += `${i + 1}. ${crit} – not documented in available records\n`;
-        });
-      } else {
-        letter += "• All documented criteria have been addressed\n";
-      }
-
-      letter += `
----
-
-CLINICAL JUSTIFICATION:
-
-The requested ${requestType} is medically necessary for this patient based on:
-• Documented diagnosis and clinical presentation
-• Failure or intolerance of prior treatments (if applicable)
-• Alignment with clinical guidelines
-• Expected improvement in patient outcomes
-
-We respectfully request approval for the proposed treatment to ensure timely and appropriate patient care.
-
----
-
-Please contact the office with any questions or request for additional information.
-
-[Provider Signature]
-[Provider Name & Credentials]
-[Contact Information]`;
-
-      return letter;
-    }
-
-    function generateMedicalNecessityLetter(payerId, requestType, evaluatedCriteria, clinicalData) {
-      const payer = payerPolicies[payerId];
-      const patientName = document.getElementById("patient-name").value || "[Patient Name]";
-      const memberId = document.getElementById("member-id").value || "[Member ID]";
-      const age = getPatientAge();
-      const ageStr = age ? `, age ${age}` : "";
-      const additionalNotes = document.getElementById("additional-notes").value;
-
-      // Build diagnosis section
-      let diagnosisText = "";
-      if (Object.keys(selectedDiagnoses).length > 0) {
-        diagnosisText = "\nPRIMARY DIAGNOSES:\n";
-        Object.entries(selectedDiagnoses).forEach(([code, label]) => {
-          diagnosisText += `${code} – ${label}\n`;
-        });
-        diagnosisText += "\n";
-      }
-
-      // Request type context
-      const requestTypeMap = {
-        medication: "medication therapy",
-        imaging: "diagnostic imaging study",
-        procedure: "medical procedure",
-        therapy: "therapeutic intervention",
-        specialist: "specialist evaluation"
-      };
-      const requestContext = requestTypeMap[requestType] || requestType;
-
-      // Build medical necessity narrative
-      let letter = `MEDICAL NECESSITY STATEMENT
-
-Patient: ${patientName}${ageStr}
-Member ID: ${memberId}
-Insurance Carrier: ${payer.name}
-Date of Request: ${new Date().toLocaleDateString()}
-Requested Service: ${requestContext.charAt(0).toUpperCase() + requestContext.slice(1)}
-
-${diagnosisText}
-
-CLINICAL PRESENTATION AND HISTORY:
-
-${clinicalData ? clinicalData + "\n" : "[Clinical summary not provided]\n"}
-`;
-
-      // Add context based on request type
-      if (requestType === "imaging") {
-        letter += `
-IMAGING JUSTIFICATION:
-
-Based on the patient's clinical presentation and examination findings, advanced diagnostic imaging is medically necessary to:
-• Evaluate the abnormal findings noted on clinical examination or prior imaging
-• Rule out significant pathology and potential malignancy
-• Guide further clinical decision-making and treatment planning
-• Establish a baseline for future comparison and monitoring
-
-The clinical context necessitates imaging to exclude serious underlying conditions that could impact patient morbidity and mortality.
-`;
-      } else if (requestType === "medication") {
-        letter += `
-MEDICATION JUSTIFICATION:
-
-The requested medication is medically necessary because:
-• The patient has documented disease requiring pharmacologic management
-• Prior therapeutic attempts with first-line agents have been unsuccessful or poorly tolerated
-• The requested medication is indicated for the patient's documented condition(s)
-• Evidence-based guidelines support this therapeutic approach
-• The anticipated benefits outweigh potential risks in this clinical context
-
-This medication represents the next appropriate step in the patient's therapeutic pathway.
-`;
-      } else if (requestType === "procedure") {
-        letter += `
-PROCEDURE JUSTIFICATION:
-
-The requested procedure is medically necessary because:
-• The patient has clinical indications supporting this intervention
-• Conservative measures have been attempted or are contraindicated
-• The procedure is evidence-based and supported by clinical guidelines
-• Expected outcomes will improve patient function and quality of life
-• The clinical benefit justifies the procedural risks
-
-This intervention is the appropriate next step in addressing the patient's medical needs.
-`;
-      }
-
-      if (additionalNotes) {
-        letter += `
-ADDITIONAL CLINICAL CONTEXT:
-
-${additionalNotes}
-`;
-      }
-
-      // Add PA Logic guidance for imaging
-      if (requestType === "imaging") {
-        const specificRequest = document.getElementById("specific-request").value;
-        const imagingRule = imagingPARules[specificRequest];
-
-        if (imagingRule) {
-          letter += `
-PAYER PA LOGIC & GUIDANCE:
-
-CPT Code(s): ${imagingRule.cpt.join(", ")}
-
-Clinical Guidance:
-${imagingRule.paLogic.map((logic, i) => `${i + 1}. ${logic}`).join("\n")}
-
-This request aligns with established imaging PA criteria and documentation standards.
-`;
-        }
-      }
-
-      letter += `
-PAYER CRITERIA ALIGNMENT:
-
-This request aligns with ${payer.name}'s coverage criteria:
-`;
-
-      const metCriteria = evaluatedCriteria.filter(c => c.status === "met");
-      const unknownCriteria = evaluatedCriteria.filter(c => c.status === "unknown");
-
-      if (metCriteria.length > 0) {
-        letter += "\nDocumented Criteria Met:\n";
-        metCriteria.forEach(c => {
-          letter += `✓ ${c.label}\n`;
-        });
-      }
-
-      if (unknownCriteria.length > 0) {
-        letter += "\nAdditional Supporting Information:\n";
-        unknownCriteria.forEach(c => {
-          letter += `• ${c.label} – Documentation available upon request\n`;
-        });
-      }
-
-      letter += `
-CLINICAL OUTCOME EXPECTATIONS:
-
-Implementation of the requested ${requestContext} is expected to:
-• Provide accurate diagnostic information for clinical decision-making
-• Initiate appropriate therapeutic intervention
-• Improve patient symptoms and functional status
-• Prevent disease progression or complications
-• Support optimal clinical outcomes and quality of life
-
-CONCLUSION:
-
-Based on the clinical presentation, examination findings, and documentation provided, the requested ${requestContext} is medically necessary and appropriate for this patient. We respectfully request approval to proceed with this clinically important intervention.
-
-Should ${payer.name} require additional clinical information or clarification, please do not hesitate to contact our office.
-
-Respectfully submitted,
-
-_________________________
-[Provider Name]
-[Credentials/Specialty]
-[Practice Name]
-[Contact Information]
-[Date]
-
-SUPPORTING DOCUMENTATION:
-☐ Chart notes
-☐ Lab/imaging results
-☐ Prior treatment records
-☐ Consultation reports
-☐ Medication list`;
-
-      return letter;
-    }
-
-    // ====== EVENT HANDLERS ======
-    document.getElementById("pa-form").addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      const payerId = document.getElementById("payer").value;
+    // Calculate approval score
+    function updateApprovalScore() {
+      let score = 0;
+      let breakdown = [];
+
+      const payer = document.getElementById("payer").value;
       const requestType = document.getElementById("request-type").value;
-      const clinicalData = document.getElementById("clinical-summary").value;
+      const serviceName = document.getElementById("service-name").value;
+      const icd10 = document.getElementById("icd10-codes").value;
+      const clinicalSummary = document.getElementById("clinical-summary").value;
+      const priorTreatments = document.getElementById("prior-treatments").value;
 
-      if (!payerId || !requestType) {
-        showToast("Please select Payer and Request Type", "error");
-        return;
-      }
+      if (payer) { score += 15; breakdown.push("Payer selected: +15%"); }
+      if (requestType) { score += 15; breakdown.push("Request type defined: +15%"); }
+      if (serviceName) { score += 10; breakdown.push("Service/drug name: +10%"); }
+      if (icd10) { score += 15; breakdown.push("ICD-10 diagnosis: +15%"); }
+      if (clinicalSummary && clinicalSummary.length > 50) { score += 15; breakdown.push("Clinical summary: +15%"); }
+      if (priorTreatments && priorTreatments.length > 30) { score += 15; breakdown.push("Prior treatments documented: +15%"); }
 
-      // Calculate approval likelihood
-      const likelihood = calculateApprovalLikelihood(payerId, requestType, clinicalData);
+      // Update display
+      document.getElementById("approval-score").textContent = Math.min(95, score) + "%";
+      document.getElementById("score-fill").style.width = Math.min(95, score) + "%";
 
-      // Evaluate criteria
-      const evaluatedCriteria = evaluateCriteria(payerId, requestType, clinicalData);
+      let label = "Complete the form";
+      if (score >= 80) label = "Strong approval likelihood";
+      else if (score >= 60) label = "Moderate likelihood";
+      else if (score >= 40) label = "Additional info needed";
 
-      // Generate PA letter and medical necessity letter
-      const paLetter = generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData);
-      const medicalNecessityLetter = generateMedicalNecessityLetter(payerId, requestType, evaluatedCriteria, clinicalData);
+      document.getElementById("approval-label").textContent = label;
 
-      // Store analysis
-      lastAnalysis = {
-        payerId,
-        requestType,
-        likelihood,
-        evaluatedCriteria,
-        paLetter,
-        medicalNecessityLetter
-      };
+      // Breakdown
+      const breakdownHTML = breakdown.map(b => `<div class="breakdown-item"><span class="breakdown-label">${b.split(":")[0]}</span><span class="breakdown-value">${b.split(":")[1]}</span></div>`).join("");
+      document.getElementById("score-breakdown-items").innerHTML = breakdownHTML || "<p style='font-size: 12px; color: var(--text-secondary); margin: 0;'>Complete the form to see breakdown</p>";
 
-      // Update UI
-      displayResults(payerId, likelihood, evaluatedCriteria, paLetter, medicalNecessityLetter);
-    });
+      // Risk flags
+      const riskFlags = [];
+      if (payer && !icd10) riskFlags.push("Missing ICD-10 diagnosis code");
+      if (requestType === "medication" && !priorTreatments) riskFlags.push("No prior treatment documented");
+      if (serviceName && requestType && !clinicalSummary) riskFlags.push("Clinical summary would strengthen request");
 
-    function displayResults(payerId, likelihood, criteria, letter, medicalNecessityLetter) {
-      document.getElementById("empty-results").style.display = "none";
-      document.getElementById("results-content").style.display = "block";
-
-      // Update likelihood
-      document.getElementById("likelihood-score").textContent = likelihood + "%";
-      let likelihoodDesc = "Based on payer criteria match";
-      if (likelihood >= 80) {
-        likelihoodDesc = "Strong likelihood of approval";
-      } else if (likelihood >= 60) {
-        likelihoodDesc = "Moderate likelihood of approval";
+      if (riskFlags.length > 0) {
+        document.getElementById("risk-section").style.display = "block";
+        document.getElementById("risk-flags").innerHTML = riskFlags.map(f => `<div class="risk-flag">⚠️ ${f}</div>`).join("");
       } else {
-        likelihoodDesc = "Additional documentation may be needed";
+        document.getElementById("risk-section").style.display = "none";
       }
-      document.getElementById("likelihood-text").textContent = likelihoodDesc;
 
-      // Update criteria list
-      const criteriaList = document.getElementById("criteria-list");
-      criteriaList.innerHTML = "";
-      criteria.forEach(c => {
-        const div = document.createElement("div");
-        div.className = `criterion ${c.status}`;
-        div.innerHTML = `
-          <div class="criterion-header">
-            <div class="criterion-label">${c.label}</div>
-            <span class="criterion-badge ${c.status}">
-              ${c.status === "met" ? "✓ Met" : c.status === "not-met" ? "✗ Not Met" : "? Not Documented"}
-            </span>
-          </div>
-          <div class="criterion-text">${c.description}${c.required ? " <strong>(Required)</strong>" : " (Optional)"}</div>
-        `;
-        criteriaList.appendChild(div);
-      });
-
-      // Update letters
-      document.getElementById("pa-letter").textContent = letter;
-      document.getElementById("medical-necessity-letter").textContent = medicalNecessityLetter;
-
-      // Reset tab to criteria
-      switchTab("criteria");
-    }
-
-    function switchTab(tabName) {
-      document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.tab === tabName);
-      });
-      document.querySelectorAll(".tab-content").forEach(content => {
-        content.classList.toggle("active", content.id === tabName + "-tab");
-      });
-    }
-
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        switchTab(btn.dataset.tab);
-      });
-    });
-
-    document.getElementById("reset-btn").addEventListener("click", () => {
-      document.getElementById("pa-form").reset();
-      selectedDiagnoses = {};
-      updateSelectedDiagnoses();
-      document.getElementById("diagnosis-field").style.display = "none";
-      document.getElementById("specific-request-field").style.display = "none";
-      document.getElementById("diagnosis-checkboxes").innerHTML = "";
-      document.getElementById("empty-results").style.display = "block";
-      document.getElementById("results-content").style.display = "none";
-      lastAnalysis = null;
-    });
-
-    document.getElementById("copy-letter-btn").addEventListener("click", () => {
-      if (!lastAnalysis) return;
-      navigator.clipboard.writeText(lastAnalysis.paLetter).then(() => {
-        showToast("Letter copied to clipboard");
-      });
-    });
-
-    document.getElementById("download-letter-btn").addEventListener("click", () => {
-      if (!lastAnalysis) return;
-      const element = document.createElement("a");
-      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(lastAnalysis.paLetter));
-      element.setAttribute("download", "PA_Justification_" + new Date().toISOString().split("T")[0] + ".txt");
-      element.style.display = "none";
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    });
-
-    document.getElementById("copy-medical-btn").addEventListener("click", () => {
-      if (!lastAnalysis) return;
-      navigator.clipboard.writeText(lastAnalysis.medicalNecessityLetter).then(() => {
-        showToast("Medical necessity letter copied to clipboard");
-      });
-    });
-
-    document.getElementById("download-medical-btn").addEventListener("click", () => {
-      if (!lastAnalysis) return;
-      const element = document.createElement("a");
-      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(lastAnalysis.medicalNecessityLetter));
-      element.setAttribute("download", "Medical_Necessity_" + new Date().toISOString().split("T")[0] + ".txt");
-      element.style.display = "none";
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    });
-
-    // HIPAA Mode Toggle
-    document.getElementById("hipaa-toggle").addEventListener("click", (e) => {
-      hipaaMode = !hipaaMode;
-      e.currentTarget.classList.toggle("off", !hipaaMode);
-    });
-
-    // ====== DIAGNOSIS SELECTION ======
-    // Checkboxes now handle selection directly, no need for toggle function
-
-    function updateSelectedDiagnoses() {
-      const container = document.getElementById("selected-diagnoses");
-      container.innerHTML = "";
-      Object.entries(selectedDiagnoses).forEach(([code, label]) => {
-        const chip = document.createElement("span");
-        chip.style.cssText = `
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: var(--accent-light);
-          border: 1px solid var(--accent);
-          color: var(--accent);
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 11px;
-        `;
-        const btn = document.createElement("button");
-        btn.innerHTML = "✕";
-        btn.style.cssText = "background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font-size: 14px; line-height: 1;";
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          delete selectedDiagnoses[code];
-          const checkbox = document.getElementById(`diag-${code}`);
-          if (checkbox) checkbox.checked = false;
-          updateSelectedDiagnoses();
-        });
-        chip.innerHTML = `<strong>${code}</strong>`;
-        chip.appendChild(btn);
-        container.appendChild(chip);
-      });
-    }
-
-    // ====== REQUEST TYPE & SPECIFIC REQUEST HANDLING ======
-    document.getElementById("request-type").addEventListener("change", (e) => {
-      const requestType = e.target.value;
-      const specificField = document.getElementById("specific-request-field");
-      const specificSelect = document.getElementById("specific-request");
-      const diagnosisField = document.getElementById("diagnosis-field");
-      const specificLabel = document.getElementById("specific-request-label");
-
-      specificSelect.innerHTML = '<option value="">Select specific...</option>';
-      diagnosisField.style.display = "none";
-      selectedDiagnoses = {};
-      updateSelectedDiagnoses();
-
-      if (requestType === "medication" || requestType === "imaging") {
-        specificField.style.display = "block";
-        specificLabel.textContent = requestType === "medication" ? "Specific Medication" : "Imaging Type";
-
-        const options = requestMappings[requestType];
-        Object.keys(options).forEach(name => {
-          const opt = document.createElement("option");
-          opt.value = name;
-          opt.textContent = name;
-          specificSelect.appendChild(opt);
-        });
+      // Payer tips
+      if (payer) {
+        document.getElementById("tips-section").style.display = "block";
+        document.getElementById("payer-tips").textContent = payers[payer].tips;
       } else {
-        specificField.style.display = "none";
+        document.getElementById("tips-section").style.display = "none";
       }
+    }
+
+    function generatePA() {
+      alert("PA Letter generation coming soon! Your information is ready.");
+    }
+
+    // Event listeners
+    document.getElementById("payer").addEventListener("change", updateApprovalScore);
+    document.getElementById("request-type").addEventListener("change", updateApprovalScore);
+    document.getElementById("service-name").addEventListener("input", updateApprovalScore);
+    document.getElementById("icd10-codes").addEventListener("input", updateApprovalScore);
+    document.getElementById("clinical-summary").addEventListener("input", updateApprovalScore);
+    document.getElementById("prior-treatments").addEventListener("input", updateApprovalScore);
+
+    // Checklist interaction
+    document.querySelectorAll(".checklist-item input").forEach(checkbox => {
+      checkbox.addEventListener("change", function() {
+        this.closest(".checklist-item").classList.toggle("checked");
+      });
     });
 
-    document.getElementById("specific-request").addEventListener("change", (e) => {
-      const requestType = document.getElementById("request-type").value;
-      const specificRequest = e.target.value;
-      const diagnosisField = document.getElementById("diagnosis-field");
-
-      selectedDiagnoses = {};
-      updateSelectedDiagnoses();
-
-      if (specificRequest) {
-        const relevantCodes = requestMappings[requestType] && requestMappings[requestType][specificRequest] ? requestMappings[requestType][specificRequest] : [];
-
-        // Show only relevant diagnoses
-        if (relevantCodes && relevantCodes.length > 0) {
-          diagnosisField.style.display = "block";
-          renderRelevantDiagnoses(relevantCodes);
-        } else {
-          diagnosisField.style.display = "none";
+    // DOB to age calculation
+    document.getElementById("patient-dob").addEventListener("change", function() {
+      if (this.value) {
+        const dob = new Date(this.value);
+        const today = new Date();
+        let age = today.getFullYear() - dob.getFullYear();
+        if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
+          age--;
         }
-      } else {
-        diagnosisField.style.display = "none";
+        document.getElementById("patient-age").value = age;
       }
     });
-
-    function renderRelevantDiagnoses(codesArray) {
-      const container = document.getElementById("diagnosis-checkboxes");
-      container.innerHTML = "";
-
-      if (!codesArray || codesArray.length === 0) {
-        container.innerHTML = "<div style='padding: 10px; color: var(--neutral); font-size: 12px;'>No diagnoses available for this selection.</div>";
-        return;
-      }
-
-      let addedCount = 0;
-      codesArray.forEach(code => {
-        const label = icd10Diagnoses[code];
-        if (!label) {
-          console.warn(`Missing ICD-10 label for code: ${code}`);
-          return;
-        }
-
-        const isSelected = selectedDiagnoses[code];
-
-        const checkboxDiv = document.createElement("div");
-        checkboxDiv.style.cssText = `
-          display: flex;
-          align-items: center;
-          padding: 8px 6px;
-          border-bottom: 1px solid #e0e0e0;
-          background: ${isSelected ? 'var(--accent-light)' : 'transparent'};
-          border-radius: 4px;
-        `;
-
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.id = `diag-${code}`;
-        checkbox.checked = isSelected;
-        checkbox.style.cssText = `
-          cursor: pointer;
-          margin-right: 8px;
-          width: 16px;
-          height: 16px;
-          accent-color: var(--accent);
-        `;
-
-        const label2 = document.createElement("label");
-        label2.htmlFor = `diag-${code}`;
-        label2.style.cssText = `
-          cursor: pointer;
-          font-size: 12px;
-          flex: 1;
-          user-select: none;
-        `;
-        label2.innerHTML = `<strong>${code}</strong> – ${label}`;
-
-        checkbox.addEventListener("change", () => {
-          if (checkbox.checked) {
-            selectedDiagnoses[code] = label;
-          } else {
-            delete selectedDiagnoses[code];
-          }
-          renderRelevantDiagnoses(codesArray); // Re-render to update backgrounds
-          updateSelectedDiagnoses();
-        });
-
-        checkboxDiv.appendChild(checkbox);
-        checkboxDiv.appendChild(label2);
-        container.appendChild(checkboxDiv);
-        addedCount++;
-      });
-
-      if (addedCount === 0) {
-        container.innerHTML = "<div style='padding: 10px; color: var(--warning); font-size: 12px;'>Note: Some diagnosis codes may not be in the database. Please add them manually or contact support.</div>";
-      }
-    }
-
-    // Initialize (diagnosis checkboxes hidden until request selected)
   </script>
 </body>
 </html>
