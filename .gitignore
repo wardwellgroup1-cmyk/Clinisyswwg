@@ -2,6 +2,7 @@
 node_modules
 /.pnp
 .pnp.js
+package-lock.json
 
 # Testing
 /coverage
@@ -9,6 +10,7 @@ node_modules
 # Next.js
 /.next/
 /out/
+next-env.d.ts
 
 # Production
 /build
