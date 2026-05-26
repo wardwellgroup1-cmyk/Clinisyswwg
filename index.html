@@ -616,6 +616,13 @@
                 <input type="password" id="claudeApiKey" placeholder="sk-ant-...">
             </div>
 
+            <div style="margin-bottom: 16px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="demoMode">
+                    <span style="font-size: 12px; font-weight: 600;">🎬 Use Demo Mode (Test without API key)</span>
+                </label>
+            </div>
+
             <div class="input-group">
                 <label class="input-label">AI Model</label>
                 <select id="claudeModel">
@@ -792,7 +799,8 @@
     <script>
         let claudeConfig = {
             apiKey: null,
-            model: 'claude-3-5-sonnet-20241022'
+            model: 'claude-3-5-sonnet-20241022',
+            demoMode: false
         };
 
         const HEDIS_GAPS = {
@@ -870,8 +878,9 @@
                 return;
             }
 
-            if (!claudeConfig.apiKey) {
-                showStatus('⚠️ Please add Claude API key in Settings', 'warning');
+            // Check for API key or demo mode
+            if (!claudeConfig.apiKey && !claudeConfig.demoMode) {
+                showStatus('⚠️ Please add Claude API key in Settings or enable Demo Mode', 'warning');
                 openSettings();
                 return;
             }
@@ -880,12 +889,73 @@
             document.getElementById('noteModal').classList.add('active');
 
             try {
-                const note = await generateWithClaude(notes);
-                document.getElementById('progressNoteContent').textContent = note;
+                let note;
+                if (claudeConfig.demoMode) {
+                    note = generateDemoProgressNote(notes);
+                    document.getElementById('progressNoteContent').textContent = '🎬 [DEMO MODE] ' + note;
+                } else {
+                    note = await generateWithClaude(notes);
+                    document.getElementById('progressNoteContent').textContent = note;
+                }
                 analyzeGaps(notes);
+                showStatus('✓ Progress note generated successfully', 'success');
             } catch (error) {
                 document.getElementById('progressNoteContent').textContent = `❌ Error: ${error.message}`;
             }
+        }
+
+        function generateDemoProgressNote(notes) {
+            const timestamp = new Date().toLocaleString();
+            const lowerNotes = notes.toLowerCase();
+
+            // Extract info from notes
+            let age = null;
+            const ageMatch = notes.match(/(\d{2,3})\s*(?:year|yo|yr|old)/i);
+            if (ageMatch) age = parseInt(ageMatch[1]);
+
+            let gender = 'Patient';
+            if (lowerNotes.includes('male') || lowerNotes.includes('man')) gender = 'Male patient';
+            if (lowerNotes.includes('female') || lowerNotes.includes('woman')) gender = 'Female patient';
+
+            // Detect conditions
+            let conditions = [];
+            if (lowerNotes.match(/diabetes|dm|diabetic/)) conditions.push('Type 2 Diabetes Mellitus (E11.65)');
+            if (lowerNotes.match(/hypertension|htn|blood pressure|bp/)) conditions.push('Essential Hypertension (I10)');
+            if (lowerNotes.match(/cholesterol|lipid|statin/)) conditions.push('Hyperlipidemia (E78.5)');
+            if (lowerNotes.match(/kidney|renal|gfr|ckd/)) conditions.push('Chronic Kidney Disease (N18.3)');
+
+            const condList = conditions.length > 0 ? conditions.map(c => '• ' + c).join('\n') : '• Chronic Disease Management';
+
+            return `PROGRESS NOTE
+═══════════════════════════════════════════════════════════════════════════
+Date/Time: ${timestamp}
+${age ? `Age: ${age} years old | ` : ''}Gender: ${gender}
+
+SUBJECTIVE
+${notes}
+
+OBJECTIVE
+Vital signs reviewed and documented.
+Physical examination performed.
+${age ? `Patient age: ${age} years\n` : ''}
+
+ASSESSMENT
+${condList}
+
+PLAN
+1. Obtain necessary labs and screening tests
+2. Medication review and optimization
+3. Schedule preventive care appointments
+4. Patient education on disease management
+5. Follow-up appointment in 4-6 weeks
+
+HEDIS Care Gap Status:
+✓ Identified ${conditions.length} chronic conditions
+✓ Ready for gap analysis and treatment planning
+
+═══════════════════════════════════════════════════════════════════════════
+Review Status: Demo Mode - Replace with Claude API key for production
+═══════════════════════════════════════════════════════════════════════════`;
         }
 
         async function generateWithClaude(notes) {
@@ -994,14 +1064,21 @@ PLAN: Treatment recommendations`;
 
         function saveSettings() {
             const apiKey = document.getElementById('claudeApiKey').value;
-            if (!apiKey) {
-                showStatus('Please enter your API key', 'error');
+            const demoMode = document.getElementById('demoMode').checked;
+
+            // Allow either API key OR demo mode
+            if (!apiKey && !demoMode) {
+                showStatus('Please enter API key or enable Demo Mode', 'error');
                 return;
             }
+
             claudeConfig.apiKey = apiKey;
             claudeConfig.model = document.getElementById('claudeModel').value;
+            claudeConfig.demoMode = demoMode;
             localStorage.setItem('claudeConfig', JSON.stringify(claudeConfig));
-            showStatus('✓ Settings saved', 'success');
+
+            const modeText = demoMode ? '🎬 Demo Mode' : '🔑 API Key';
+            showStatus(`✓ Settings saved (${modeText})`, 'success');
             closeModal('settingsModal');
         }
 
@@ -1023,7 +1100,11 @@ PLAN: Treatment recommendations`;
         // Initialize on page load
         window.addEventListener('load', async () => {
             const saved = localStorage.getItem('claudeConfig');
-            if (saved) claudeConfig = JSON.parse(saved);
+            if (saved) {
+                claudeConfig = JSON.parse(saved);
+                document.getElementById('claudeApiKey').value = claudeConfig.apiKey || '';
+                document.getElementById('demoMode').checked = claudeConfig.demoMode || false;
+            }
 
             // Initialize Firebase auth listener
             setTimeout(() => {
