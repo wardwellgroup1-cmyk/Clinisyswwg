@@ -140,7 +140,7 @@ Rationale: ${form.rationale}
 
 Risk mitigation: ${form.riskIfNotApproved}
 
-Prior authorization has been requested from ${payer?.name || 'the patient's insurance plan'}.`;
+Prior authorization has been requested from ${payer?.name || "the patient's insurance plan"}.`;
 }
 
 function generateAppeal(form: ClinicalFormData, payer: PayerProfile | null): string {
