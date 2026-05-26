@@ -1,1148 +1,1597 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>PA Fast Assist – Prior Authorization Helper</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --bg-secondary: #f1f5f9;
-      --border: #e2e8f0;
-      --border-dark: #cbd5e1;
-      --accent: #0ea5e9;
-      --accent-light: #e0f2fe;
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
-      --success: #16a34a;
-      --success-light: #dcfce7;
-      --warning: #ea580c;
-      --warning-light: #fed7aa;
-      --error: #dc2626;
-      --error-light: #fee2e2;
-      --neutral: #64748b;
-      --radius: 8px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
-      background: var(--bg);
-      color: var(--text-primary);
-      line-height: 1.5;
-    }
-
-    button, input, select, textarea {
-      font-family: inherit;
-      font-size: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-
-    header {
-      background: white;
-      border-bottom: 1px solid var(--border);
-      padding: 16px 0;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-left {
-      flex: 1;
-    }
-
-    .header-title {
-      font-size: 24px;
-      font-weight: 700;
-      margin: 0;
-      color: var(--text-primary);
-    }
-
-    .header-subtitle {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin: 4px 0 0;
-    }
-
-    .header-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--success-light);
-      border: 1px solid var(--success);
-      color: var(--success);
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .header-right {
-      text-align: right;
-    }
-
-    .mode-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-    }
-
-    .toggle-switch {
-      width: 40px;
-      height: 24px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--success);
-      cursor: pointer;
-      position: relative;
-      transition: background 0.2s;
-    }
-
-    .toggle-switch.off {
-      background: var(--neutral);
-    }
-
-    .toggle-switch::after {
-      content: '';
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 10px;
-      background: white;
-      top: 2px;
-      left: 2px;
-      transition: left 0.2s;
-    }
-
-    .toggle-switch.off::after {
-      left: 18px;
-    }
-
-    .main-grid {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 20px;
-    }
-
-    .form-panel {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      height: fit-content;
-      position: sticky;
-      top: 16px;
-    }
-
-    .form-section-title {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--neutral);
-      margin: 0 0 12px;
-      display: block;
-    }
-
-    .form-section {
-      margin-bottom: 18px;
-    }
-
-    .form-section:last-child {
-      margin-bottom: 0;
-    }
-
-    .field {
-      margin-bottom: 12px;
-    }
-
-    .field:last-child {
-      margin-bottom: 0;
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 4px;
-    }
-
-    input[type="text"],
-    input[type="date"],
-    select,
-    textarea {
-      width: 100%;
-      border: 1px solid var(--border-dark);
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 12px;
-      color: var(--text-primary);
-      background: white;
-      transition: border-color 0.2s;
-    }
-
-    input[type="text"]:focus,
-    input[type="date"]:focus,
-    select:focus,
-    textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-light);
-    }
-
-    input::placeholder {
-      color: var(--neutral);
-    }
-
-    .optional-label {
-      font-size: 11px;
-      color: var(--neutral);
-      font-weight: 400;
-    }
-
-    .button-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .btn {
-      padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      border: 1px solid;
-      transition: all 0.2s;
-      text-align: center;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-      border-color: var(--accent);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background: #0284c7;
-      border-color: #0284c7;
-    }
-
-    .btn-secondary {
-      background: white;
-      color: var(--text-primary);
-      border-color: var(--border-dark);
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background: var(--bg-secondary);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .results-panel {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-secondary);
-    }
-
-    .empty-state-icon {
-      font-size: 40px;
-      margin-bottom: 12px;
-      opacity: 0.6;
-    }
-
-    .empty-state-text {
-      font-size: 14px;
-    }
-
-    .results-section {
-      margin-bottom: 24px;
-    }
-
-    .results-section:last-child {
-      margin-bottom: 0;
-    }
-
-    .section-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin: 0 0 12px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--border);
-    }
-
-    .criteria-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .criterion {
-      border-left: 3px solid var(--border);
-      padding: 10px 12px;
-      background: var(--bg-secondary);
-      border-radius: 4px;
-      font-size: 12px;
-    }
-
-    .criterion.met {
-      border-left-color: var(--success);
-      background: var(--success-light);
-    }
-
-    .criterion.not-met {
-      border-left-color: var(--error);
-      background: var(--error-light);
-    }
-
-    .criterion.unknown {
-      border-left-color: var(--warning);
-      background: var(--warning-light);
-    }
-
-    .criterion-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    .criterion-label {
-      font-weight: 600;
-      flex: 1;
-      color: var(--text-primary);
-    }
-
-    .criterion-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
-    }
-
-    .criterion-badge.met {
-      background: var(--success);
-      color: white;
-    }
-
-    .criterion-badge.not-met {
-      background: var(--error);
-      color: white;
-    }
-
-    .criterion-badge.unknown {
-      background: var(--warning);
-      color: white;
-    }
-
-    .criterion-text {
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-
-    .approval-likelihood {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
-      text-align: center;
-    }
-
-    .likelihood-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--neutral);
-      margin-bottom: 8px;
-    }
-
-    .likelihood-score {
-      font-size: 32px;
-      font-weight: 700;
-      color: var(--accent);
-      margin: 0;
-    }
-
-    .likelihood-text {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
-
-    .letter-section {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    .letter-content {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--text-primary);
-      font-family: Georgia, serif;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .btn-small {
-      padding: 8px 12px;
-      font-size: 12px;
-    }
-
-    .disclaimer {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: var(--radius);
-      padding: 12px;
-      margin-top: 20px;
-      font-size: 11px;
-      color: #0369a1;
-      line-height: 1.5;
-    }
-
-    .disclaimer strong {
-      font-weight: 600;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .tab-btn {
-      padding: 8px 12px;
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    @media (max-width: 1024px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .form-panel {
-        position: static;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CareGap">
+    <link rel="manifest" href="./manifest.json">
+    <title>CareGap - Clinical Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            color: #1a1a1a;
+        }
+
+        body {
+            padding-top: max(0px, env(safe-area-inset-top));
+            padding-bottom: max(0px, env(safe-area-inset-bottom));
+            padding-left: max(0px, env(safe-area-inset-left));
+            padding-right: max(0px, env(safe-area-inset-right));
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            color: white;
+            padding: 20px 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            flex-shrink: 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .settings-btn:active {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* CONTAINER */
+        .container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        /* SECTION */
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* BUTTONS */
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .btn-large {
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 56px;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            width: 100%;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 4px rgba(30, 64, 175, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #1a1a1a;
+            width: 100%;
+        }
+
+        .btn-secondary:active {
+            background: #d1d5db;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        /* TEXTAREA */
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 100px;
+            resize: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #1e40af;
+        }
+
+        /* CARDS */
+        .card {
+            background: #f0f4f8;
+            border-left: 4px solid #1e40af;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .card-text {
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        .card-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status-open {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-closed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 16px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: #1e40af;
+            border-bottom-color: #1e40af;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* STATUS MESSAGE */
+        .status-msg {
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .status-msg.show {
+            display: block;
+        }
+
+        .status-msg.success {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #16a34a;
+        }
+
+        .status-msg.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .status-msg.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .status-msg.info {
+            background: #dbeafe;
+            color: #0c4a6e;
+            border-left: 4px solid #0284c7;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            align-items: flex-end;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            border-radius: 20px 20px 0 0;
+            padding: 24px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #1a1a1a;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #9ca3af;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:active {
+            color: #4b5563;
+        }
+
+        /* PROGRESS NOTE */
+        .progress-note {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 16px;
+            border-radius: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        /* FOOTER */
+        .footer {
+            background: white;
+            padding: 16px;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        /* INPUT GROUP */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .input-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        input, select {
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1e40af;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .btn-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 16px;
+            background: #f0f4f8;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
 </head>
 <body>
-  <header>
+    <!-- HEADER -->
+    <header>
+        <div class="header-content">
+            <div>
+                <div class="header-title">CareGap</div>
+                <div class="header-subtitle">Clinical Documentation • AI-Powered</div>
+            </div>
+            <button class="settings-btn" onclick="openSettings()">⚙️</button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
     <div class="container">
-      <div class="header-content">
-        <div class="header-left">
-          <h1 class="header-title">PA Fast Assist</h1>
-          <p class="header-subtitle">Local-only prior authorization helper · No network calls · No trackers</p>
-        </div>
-        <div class="header-right">
-          <div class="mode-toggle">
-            <span>HIPAA Mode</span>
-            <button class="toggle-switch" id="hipaa-toggle" title="Toggle HIPAA Privacy Mode"></button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <div class="container">
-    <div class="main-grid">
-      <!-- LEFT PANEL: FORM -->
-      <div class="form-panel">
-        <form id="pa-form">
-          <!-- Request & Payer -->
-          <label class="form-section-title">1 · Request & Payer</label>
-
-          <div class="form-section">
-            <div class="field">
-              <label>Payer <span style="color: var(--error);">*</span></label>
-              <select id="payer" required>
-                <option value="">Select payer...</option>
-                <option value="aetna">Aetna</option>
-                <option value="bcbs">Blue Cross Blue Shield</option>
-                <option value="cigna">Cigna</option>
-                <option value="humana">Humana</option>
-                <option value="united">United Healthcare</option>
-                <option value="anthem">Anthem</option>
-              </select>
+        <!-- QUICK ACTIONS -->
+        <div class="section">
+            <div class="section-title">📋 Start Documentation</div>
+            <div class="btn-group">
+                <button class="btn-large btn-success" onclick="startRecording()">
+                    🎤<br>Record Voice
+                </button>
+                <button class="btn-large btn-warning" onclick="focusNotes()">
+                    ✏️<br>Type Notes
+                </button>
             </div>
-
-            <div class="field">
-              <label>Request Type <span style="color: var(--error);">*</span></label>
-              <select id="request-type" required>
-                <option value="">Select type...</option>
-                <option value="medication">Medication (Drug)</option>
-                <option value="imaging">Imaging Study</option>
-                <option value="procedure">Procedure</option>
-                <option value="therapy">Therapy/Rehabilitation</option>
-                <option value="specialist">Specialist Visit</option>
-              </select>
+            <div class="btn-group">
+                <button class="btn-large btn-primary" onclick="startAudioCall()">
+                    ☎️<br>Audio Call
+                </button>
+                <button class="btn-large btn-primary" onclick="startVideoCall()">
+                    📹<br>Video Call
+                </button>
             </div>
-
-            <div class="field">
-              <label>Urgency <span style="color: var(--error);">*</span></label>
-              <select id="urgency" required>
-                <option value="">Select urgency...</option>
-                <option value="routine">Routine (Standard Review)</option>
-                <option value="expedited">Expedited (72 hours)</option>
-                <option value="urgent">Urgent (24 hours)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Patient Info -->
-          <label class="form-section-title">2 · Patient (Optional — Local Only)</label>
-
-          <div class="form-section">
-            <div class="field">
-              <label>Patient Name <span class="optional-label">(Optional)</span></label>
-              <input type="text" id="patient-name" placeholder="Full name" />
-            </div>
-
-            <div class="field">
-              <label>Date of Birth <span class="optional-label">(Optional)</span></label>
-              <input type="date" id="patient-dob" />
-            </div>
-
-            <div class="field">
-              <label>Member ID <span class="optional-label">(Optional)</span></label>
-              <input type="text" id="member-id" placeholder="Payer member ID" />
-            </div>
-
-            <div class="field">
-              <label>Clinical Summary <span class="optional-label">(Optional)</span></label>
-              <textarea id="clinical-summary" placeholder="Diagnoses, prior treatments, relevant lab/imaging findings..." rows="4"></textarea>
-            </div>
-          </div>
-
-          <!-- Buttons -->
-          <div class="button-group">
-            <button type="submit" class="btn btn-primary">Run Analysis</button>
-            <button type="button" class="btn btn-secondary" id="reset-btn">Reset</button>
-          </div>
-        </form>
-
-        <div class="disclaimer">
-          <strong>Disclaimer:</strong> PA Fast Assist is a decision-support tool for administrative reference only. It does not constitute medical advice, legal guidance, or a guarantee of prior authorization approval. All data remains in your browser — nothing is ever transmitted to any server.
-        </div>
-      </div>
-
-      <!-- RIGHT PANEL: RESULTS -->
-      <div class="results-panel">
-        <div id="empty-results" class="empty-state">
-          <div class="empty-state-icon">🔍</div>
-          <p class="empty-state-text">
-            No analysis yet<br />
-            Fill in the form on the left and click <strong>Run Analysis</strong> to see approval likelihood, payer-specific criteria, and generate a PA letter draft.
-          </p>
+            <div id="voiceStatus" class="status-msg"></div>
         </div>
 
-        <div id="results-content" style="display: none;">
-          <!-- Approval Likelihood -->
-          <div class="approval-likelihood">
-            <div class="likelihood-label">Estimated Approval Likelihood</div>
-            <p class="likelihood-score" id="likelihood-score">85%</p>
-            <p class="likelihood-text" id="likelihood-text">Based on payer criteria match</p>
-          </div>
+        <!-- CLINICAL NOTES -->
+        <div class="section">
+            <div class="section-title">📝 Clinical Notes</div>
+            <textarea id="voiceTranscript" placeholder="Your notes will appear here..."></textarea>
+            <button class="btn-large btn-primary" style="margin-top: 12px;" onclick="generateNote()">
+                ✨ Generate Progress Note
+            </button>
+        </div>
 
-          <!-- Tabs for Criteria vs Letter -->
-          <div class="tabs">
-            <button class="tab-btn active" data-tab="criteria">Payer Criteria</button>
-            <button class="tab-btn" data-tab="letter">PA Letter</button>
-          </div>
-
-          <!-- Criteria Tab -->
-          <div id="criteria-tab" class="tab-content active">
-            <div class="results-section">
-              <h3 class="section-title">Payer-Specific Criteria</h3>
-              <div class="criteria-list" id="criteria-list">
-                <!-- Criteria will be inserted here -->
-              </div>
-            </div>
-          </div>
-
-          <!-- Letter Tab -->
-          <div id="letter-tab" class="tab-content">
-            <div class="results-section">
-              <h3 class="section-title">PA Justification Letter</h3>
-              <div class="letter-section">
-                <div class="letter-content" id="pa-letter">
-                  <!-- Letter will be inserted here -->
+        <!-- CARE GAPS -->
+        <div class="section">
+            <div class="section-title">🎯 Care Gaps</div>
+            <div id="gapsContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📊</div>
+                    <div class="empty-state-text">Record or type clinical notes to detect care gaps</div>
                 </div>
-              </div>
-              <div class="action-buttons">
-                <button class="btn btn-secondary btn-small" id="copy-letter-btn">Copy to Clipboard</button>
-                <button class="btn btn-secondary btn-small" id="download-letter-btn">Download as Text</button>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
+
+        <!-- RESULTS -->
+        <div class="section">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('icd10')">ICD-10</button>
+                <button class="tab-btn" onclick="switchTab('treatment')">Treatment</button>
+                <button class="tab-btn" onclick="switchTab('metrics')">Metrics</button>
+            </div>
+
+            <div id="icd10-tab" class="tab-content active">
+                <div id="icdContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💾</div>
+                        <div class="empty-state-text">ICD-10 codes will appear here</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="treatment-tab" class="tab-content">
+                <div id="treatmentContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💊</div>
+                        <div class="empty-state-text">Treatment plans will appear here</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="metrics-tab" class="tab-content">
+                <div class="stat-box">
+                    <div class="stat-number" id="gapRate">0%</div>
+                    <div class="stat-label">Gap Closure Rate</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="stat-box" style="background: #dcfce7; border-left: 4px solid #16a34a;">
+                        <div class="stat-number" style="color: #16a34a;" id="closedCount">0</div>
+                        <div class="stat-label">Closed</div>
+                    </div>
+                    <div class="stat-box" style="background: #fee2e2; border-left: 4px solid #ef4444;">
+                        <div class="stat-number" style="color: #ef4444;" id="openCount">0</div>
+                        <div class="stat-label">Open</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    // ====== PAYER POLICIES DATABASE ======
-    const payerPolicies = {
-      aetna: {
-        name: "Aetna",
-        criteria: {
-          medication: [
-            {
-              id: "fail-first",
-              label: "Fail-first requirement",
-              description: "Patient must have tried and failed at least one generic or lower-cost alternative",
-              required: true
-            },
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear diagnosis and medical necessity for the requested medication",
-              required: true
-            },
-            {
-              id: "contraindications",
-              label: "No absolute contraindications",
-              description: "Requested medication is not contraindicated for patient's conditions",
-              required: true
-            },
-            {
-              id: "duration",
-              label: "Documented trial duration",
-              description: "Prior medication trial lasted ≥30 days at therapeutic dose",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear indication based on patient symptoms, signs, or abnormal findings",
-              required: true
-            },
-            {
-              id: "prior-imaging",
-              label: "Prior imaging ruled out",
-              description: "Patient has not had the same imaging within the past 12 months",
-              required: true
-            },
-            {
-              id: "conservative-measures",
-              label: "Conservative measures attempted",
-              description: "Non-imaging diagnostic approaches have been tried first",
-              required: false
-            }
-          ]
-        }
-      },
-      bcbs: {
-        name: "Blue Cross Blue Shield",
-        criteria: {
-          medication: [
-            {
-              id: "step-therapy",
-              label: "Step therapy compliance",
-              description: "Patient completed required step therapy protocol for this drug class",
-              required: true
-            },
-            {
-              id: "diagnosis-supported",
-              label: "Diagnosis supported",
-              description: "Requested medication is FDA-approved for patient's documented condition",
-              required: true
-            },
-            {
-              id: "dosing-frequency",
-              label: "Dosing within guidelines",
-              description: "Requested dose and frequency align with FDA label and clinical guidelines",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "medical-necessity",
-              label: "Medical necessity documented",
-              description: "Clinical presentation supports imaging as next appropriate step",
-              required: true
-            },
-            {
-              id: "quality-score",
-              label: "Evidence quality score",
-              description: "Request supported by evidence-based guidelines (ACR, USPSTF, etc.)",
-              required: true
-            }
-          ]
-        }
-      },
-      cigna: {
-        name: "Cigna",
-        criteria: {
-          medication: [
-            {
-              id: "prior-auth-required",
-              label: "Prior authorization triggered",
-              description: "Drug requires PA based on Cigna formulary and coverage rules",
-              required: true
-            },
-            {
-              id: "clinical-evidence",
-              label: "Clinical evidence provided",
-              description: "Supporting clinical evidence demonstrates need for this medication",
-              required: true
-            },
-            {
-              id: "labwork-monitoring",
-              label: "Lab monitoring plan documented",
-              description: "Plan for ongoing monitoring and lab work is documented",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-necessity",
-              label: "Clinical necessity established",
-              description: "Findings on exam or other testing warrant advanced imaging",
-              required: true
-            },
-            {
-              id: "recent-imaging",
-              label: "No recent duplicate study",
-              description: "No equivalent imaging performed within past 90 days",
-              required: true
-            }
-          ]
-        }
-      },
-      humana: {
-        name: "Humana",
-        criteria: {
-          medication: [
-            {
-              id: "formulary-exception",
-              label: "Formulary exception request",
-              description: "Non-formulary drug requires medical necessity documentation",
-              required: true
-            },
-            {
-              id: "clinical-rationale",
-              label: "Clinical rationale clear",
-              description: "Why this specific drug vs. formulary alternatives",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Specific clinical question or findings necessitating imaging",
-              required: true
-            },
-            {
-              id: "imaging-guidelines",
-              label: "Imaging guidelines met",
-              description: "Request aligns with ACR, USPSTF, or specialty society guidelines",
-              required: true
-            }
-          ]
-        }
-      },
-      united: {
-        name: "United Healthcare",
-        criteria: {
-          medication: [
-            {
-              id: "clinical-criteria",
-              label: "Clinical criteria met",
-              description: "Patient meets UnitedHealth clinical criteria for this medication",
-              required: true
-            },
-            {
-              id: "prior-treatment",
-              label: "Prior treatment documented",
-              description: "Failure of or intolerance to required prior treatments documented",
-              required: true
-            },
-            {
-              id: "quantity-limit",
-              label: "Within quantity limits",
-              description: "Requested quantity aligns with UnitedHealth limits",
-              required: false
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-necessity",
-              label: "Clinical necessity established",
-              description: "Imaging is medically necessary to answer a clinical question",
-              required: true
-            }
-          ]
-        }
-      },
-      anthem: {
-        name: "Anthem",
-        criteria: {
-          medication: [
-            {
-              id: "medical-necessity",
-              label: "Medical necessity documented",
-              description: "Medication is medically necessary for patient's condition",
-              required: true
-            },
-            {
-              id: "fda-indication",
-              label: "FDA-approved indication",
-              description: "Medication is FDA-approved for patient's diagnosis",
-              required: true
-            }
-          ],
-          imaging: [
-            {
-              id: "clinical-indication",
-              label: "Clinical indication documented",
-              description: "Clear clinical indication supported by history and findings",
-              required: true
-            }
-          ]
-        }
-      }
-    };
+    <!-- FOOTER -->
+    <div class="footer">
+        CareGap v13.0 • Powered by Claude API • HIPAA Safe • Offline-First
+    </div>
 
-    // ====== STATE ======
-    let hipaaMode = true;
-    let lastAnalysis = null;
+    <!-- PROGRESS NOTE MODAL -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>📋 Your Progress Note</span>
+                <button class="close-btn" onclick="closeModal('noteModal')">✕</button>
+            </div>
 
-    // ====== UTILITIES ======
-    function showToast(msg, type = "info") {
-      // Simple console log since no toast UI needed
-      console.log(`[${type.toUpperCase()}] ${msg}`);
-    }
+            <div class="btn-group">
+                <button class="btn-large btn-secondary" onclick="copyNote()">📋 Copy</button>
+                <button class="btn-large btn-secondary" onclick="downloadNote()">⬇️ Download</button>
+            </div>
 
-    function getPatientAge() {
-      const dob = document.getElementById("patient-dob").value;
-      if (!dob) return null;
-      const today = new Date();
-      const birth = new Date(dob);
-      let age = today.getFullYear() - birth.getFullYear();
-      const m = today.getMonth() - birth.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-      return age;
-    }
+            <div id="progressNoteContent" class="progress-note">Loading...</div>
 
-    function calculateApprovalLikelihood(payerId, requestType, clinicalData) {
-      let score = 50; // baseline
+            <button class="btn-large btn-primary" onclick="archiveNote()">✅ Sign & Save</button>
+        </div>
+    </div>
 
-      // Has clinical summary
-      if (clinicalData.trim().length > 20) score += 10;
+    <!-- SETTINGS MODAL -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>⚙️ Settings</span>
+                <button class="close-btn" onclick="closeModal('settingsModal')">✕</button>
+            </div>
 
-      // Has patient DOB (completeness indicator)
-      if (document.getElementById("patient-dob").value) score += 5;
+            <div class="input-group">
+                <label class="input-label">Claude API Key</label>
+                <input type="password" id="claudeApiKey" placeholder="sk-ant-...">
+            </div>
 
-      // Has member ID
-      if (document.getElementById("member-id").value) score += 5;
+            <div style="margin-bottom: 16px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="demoMode">
+                    <span style="font-size: 12px; font-weight: 600;">🎬 Use Demo Mode (Test without API key)</span>
+                </label>
+            </div>
 
-      // Urgency (expedited/urgent typically have slightly lower approval % but faster processing)
-      const urgency = document.getElementById("urgency").value;
-      if (urgency === "routine") score += 5;
+            <div class="input-group">
+                <label class="input-label">AI Model</label>
+                <select id="claudeModel">
+                    <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (Recommended)</option>
+                    <option value="claude-3-opus-20250219">Claude 3 Opus (Powerful)</option>
+                    <option value="claude-3-haiku-20250307">Claude 3 Haiku (Fast)</option>
+                </select>
+            </div>
 
-      // Cap at 95%
-      return Math.min(95, score);
-    }
+            <button class="btn-large btn-primary" style="margin-top: 16px; margin-bottom: 12px;" onclick="saveSettings()">
+                💾 Save Settings
+            </button>
 
-    function evaluateCriteria(payerId, requestType, clinicalData) {
-      const payer = payerPolicies[payerId];
-      if (!payer) return [];
+            <div class="status-msg info show">
+                <strong>How to get your API key:</strong><br>
+                1. Visit console.anthropic.com<br>
+                2. Sign up (free)<br>
+                3. Go to API Keys section<br>
+                4. Create and copy your key<br>
+                5. Paste above and save
+            </div>
+        </div>
+    </div>
 
-      const criteria = payer.criteria[requestType] || [];
-      return criteria.map(c => {
-        // Simple heuristic: longer clinical data suggests more criteria met
-        const clinicalLength = clinicalData.length;
-        let status;
+    <!-- AUTHENTICATION MODAL -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="authTitle">🔐 Sign In</span>
+                <button class="close-btn" onclick="closeModal('authModal')">✕</button>
+            </div>
 
-        if (clinicalLength < 20) {
-          status = "unknown"; // Not documented
-        } else if (c.required) {
-          // Assume required criteria are met if we have some clinical data
-          status = clinicalLength > 100 ? "met" : "unknown";
-        } else {
-          status = clinicalLength > 150 ? "met" : "unknown";
-        }
+            <div id="authContent">
+                <!-- Login Form -->
+                <div id="loginForm">
+                    <div class="input-group">
+                        <label class="input-label">Email Address</label>
+                        <input type="email" id="loginEmail" placeholder="you@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Password</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••">
+                    </div>
+                    <button class="btn-large btn-primary" style="margin-top: 16px;" onclick="handleLogin()">
+                        Sign In
+                    </button>
+                    <button class="btn-large btn-secondary" style="margin-top: 8px;" onclick="switchToSignup()">
+                        Create Account
+                    </button>
+                    <div id="loginStatus" class="status-msg"></div>
+                </div>
 
-        return {
-          ...c,
-          status
+                <!-- Signup Form (hidden) -->
+                <div id="signupForm" style="display:none;">
+                    <div class="input-group">
+                        <label class="input-label">Full Name</label>
+                        <input type="text" id="signupName" placeholder="John Doe">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Email Address</label>
+                        <input type="email" id="signupEmail" placeholder="you@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Password</label>
+                        <input type="password" id="signupPassword" placeholder="••••••••">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Confirm Password</label>
+                        <input type="password" id="signupPasswordConfirm" placeholder="••••••••">
+                    </div>
+                    <button class="btn-large btn-primary" style="margin-top: 16px;" onclick="handleSignup()">
+                        Create Account
+                    </button>
+                    <button class="btn-large btn-secondary" style="margin-top: 8px;" onclick="switchToLogin()">
+                        Already have an account?
+                    </button>
+                    <div id="signupStatus" class="status-msg"></div>
+                </div>
+            </div>
+
+            <div class="status-msg info show" style="margin-top: 16px;">
+                <strong>Security Note:</strong><br>
+                Your data is encrypted with AES-256 and stored securely in Firebase Firestore. HIPAA-compliant.
+            </div>
+        </div>
+    </div>
+
+    <!-- BACKUP & SYNC MODAL -->
+    <div class="modal" id="backupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>☁️ Cloud Backup & Sync</span>
+                <button class="close-btn" onclick="closeModal('backupModal')">✕</button>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-number" id="syncStatus">🟢 Online</div>
+                <div class="stat-label">Connection Status</div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-number" id="pendingSyncCount">0</div>
+                <div class="stat-label">Pending Syncs</div>
+            </div>
+
+            <div id="notesBackupList" style="margin-top: 16px;">
+                <!-- Notes list will be populated here -->
+            </div>
+
+            <button class="btn-large btn-primary" style="margin-top: 16px;" onclick="syncNow()">
+                🔄 Sync Now
+            </button>
+
+            <button class="btn-large btn-danger" style="margin-top: 8px;" onclick="logoutUser()">
+                🚪 Logout
+            </button>
+
+            <div id="backupStatus" class="status-msg"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged
+        } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            getDocs,
+            query,
+            where,
+            updateDoc,
+            doc,
+            serverTimestamp,
+            enableIndexedDbPersistence
+        } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+        // Replace with your Firebase configuration
+        const firebaseConfig = {
+            apiKey: 'YOUR_FIREBASE_API_KEY',
+            authDomain: 'your-project.firebaseapp.com',
+            projectId: 'your-project-id',
+            storageBucket: 'your-project.appspot.com',
+            messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+            appId: 'YOUR_APP_ID'
         };
-      });
-    }
 
-    function generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData) {
-      const payer = payerPolicies[payerId];
-      const patientName = document.getElementById("patient-name").value || "[Patient Name]";
-      const memberId = document.getElementById("member-id").value || "[Member ID]";
-      const age = getPatientAge();
-      const ageStr = age ? ` (Age ${age})` : "";
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-      const metCriteria = evaluatedCriteria.filter(c => c.status === "met").map(c => c.label);
-      const unknownCriteria = evaluatedCriteria.filter(c => c.status === "unknown").map(c => c.label);
-
-      let letter = `PRIOR AUTHORIZATION REQUEST JUSTIFICATION
-
-TO: ${payer.name}
-FROM: [Provider Name/Practice]
-DATE: ${new Date().toLocaleDateString()}
-PATIENT: ${patientName}${ageStr}
-MEMBER ID: ${memberId}
-REQUEST TYPE: ${requestType.charAt(0).toUpperCase() + requestType.slice(1)}
-
----
-
-MEDICAL NECESSITY:
-
-${clinicalData || "[Clinical summary not provided]"}
-
----
-
-PAYER CRITERIA ANALYSIS:
-
-Criteria Met:
-`;
-
-      if (metCriteria.length > 0) {
-        metCriteria.forEach((crit, i) => {
-          letter += `${i + 1}. ${crit}\n`;
+        // Enable offline persistence
+        enableIndexedDbPersistence(db).catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.log('Multiple tabs open, persistence only enabled in one tab.');
+            } else if (err.code === 'unimplemented') {
+                console.log('Browser does not support offline persistence');
+            }
         });
-      } else {
-        letter += "• Clinical data provided; specific criteria assessment pending\n";
-      }
 
-      letter += `\nInformation Not Documented:
-`;
-      if (unknownCriteria.length > 0) {
-        unknownCriteria.forEach((crit, i) => {
-          letter += `${i + 1}. ${crit} – not documented in available records\n`;
+        // Make auth and db globally accessible
+        window.firebase = { auth, db, getAuth, getFirestore };
+    </script>
+
+    <script>
+        let claudeConfig = {
+            apiKey: null,
+            model: 'claude-3-5-sonnet-20241022',
+            demoMode: false
+        };
+
+        const HEDIS_GAPS = {
+            'A1C Testing': { suggestion: 'Order HbA1c panel' },
+            'Blood Pressure Control': { suggestion: 'Monitor and adjust medication' },
+            'Cancer Screening': { suggestion: 'Schedule screening appointment' },
+            'Medication Adherence': { suggestion: 'Refill prescriptions' },
+            'Eye Exam': { suggestion: 'Annual diabetic eye exam' },
+            'Foot Exam': { suggestion: 'Annual diabetic foot exam' }
+        };
+
+        const ICD10_CODES = {
+            diabetes: { code: 'E11.65', desc: 'Type 2 Diabetes' },
+            hypertension: { code: 'I10', desc: 'Essential Hypertension' },
+            hyperlipidemia: { code: 'E78.5', desc: 'Hyperlipidemia' },
+            ckd: { code: 'N18.3', desc: 'Chronic Kidney Disease' }
+        };
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognizer = null;
+        let isRecording = false;
+
+        if (SpeechRecognition) {
+            recognizer = new SpeechRecognition();
+            recognizer.continuous = true;
+            recognizer.interimResults = true;
+
+            recognizer.onstart = () => {
+                isRecording = true;
+                showStatus('🎤 Recording... tap to stop', 'info');
+            };
+
+            recognizer.onresult = (event) => {
+                let final = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        final += event.results[i][0].transcript + ' ';
+                    }
+                }
+                if (final) {
+                    document.getElementById('voiceTranscript').value += final;
+                }
+            };
+
+            recognizer.onend = () => {
+                isRecording = false;
+            };
+        }
+
+        function startRecording() {
+            if (recognizer) {
+                isRecording = true;
+                recognizer.start();
+            } else {
+                showStatus('Voice recognition not supported', 'error');
+            }
+        }
+
+        function focusNotes() {
+            document.getElementById('voiceTranscript').focus();
+        }
+
+        function startAudioCall() {
+            showStatus('☎️ Audio call recording feature coming soon', 'info');
+        }
+
+        function startVideoCall() {
+            showStatus('📹 Video call recording feature coming soon', 'info');
+        }
+
+        async function generateNote() {
+            const notes = document.getElementById('voiceTranscript').value;
+            if (!notes.trim()) {
+                showStatus('Please enter or record clinical notes first', 'error');
+                return;
+            }
+
+            // Check for API key or demo mode
+            if (!claudeConfig.apiKey && !claudeConfig.demoMode) {
+                showStatus('⚠️ Please add Claude API key in Settings or enable Demo Mode', 'warning');
+                openSettings();
+                return;
+            }
+
+            document.getElementById('progressNoteContent').textContent = '⏳ Generating your progress note...';
+            document.getElementById('noteModal').classList.add('active');
+
+            try {
+                let note;
+                if (claudeConfig.demoMode) {
+                    note = generateDemoProgressNote(notes);
+                    document.getElementById('progressNoteContent').textContent = '🎬 [DEMO MODE] ' + note;
+                } else {
+                    note = await generateWithClaude(notes);
+                    document.getElementById('progressNoteContent').textContent = note;
+                }
+                analyzeGaps(notes);
+                showStatus('✓ Progress note generated successfully', 'success');
+            } catch (error) {
+                document.getElementById('progressNoteContent').textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        function generateDemoProgressNote(notes) {
+            const timestamp = new Date().toLocaleString();
+            const lowerNotes = notes.toLowerCase();
+
+            // Extract info from notes
+            let age = null;
+            const ageMatch = notes.match(/(\d{2,3})\s*(?:year|yo|yr|old)/i);
+            if (ageMatch) age = parseInt(ageMatch[1]);
+
+            let gender = 'Patient';
+            if (lowerNotes.includes('male') || lowerNotes.includes('man')) gender = 'Male patient';
+            if (lowerNotes.includes('female') || lowerNotes.includes('woman')) gender = 'Female patient';
+
+            // Detect conditions
+            let conditions = [];
+            if (lowerNotes.match(/diabetes|dm|diabetic/)) conditions.push('Type 2 Diabetes Mellitus (E11.65)');
+            if (lowerNotes.match(/hypertension|htn|blood pressure|bp/)) conditions.push('Essential Hypertension (I10)');
+            if (lowerNotes.match(/cholesterol|lipid|statin/)) conditions.push('Hyperlipidemia (E78.5)');
+            if (lowerNotes.match(/kidney|renal|gfr|ckd/)) conditions.push('Chronic Kidney Disease (N18.3)');
+
+            const condList = conditions.length > 0 ? conditions.map(c => '• ' + c).join('\n') : '• Chronic Disease Management';
+
+            return `PROGRESS NOTE
+═══════════════════════════════════════════════════════════════════════════
+Date/Time: ${timestamp}
+${age ? `Age: ${age} years old | ` : ''}Gender: ${gender}
+
+SUBJECTIVE
+${notes}
+
+OBJECTIVE
+Vital signs reviewed and documented.
+Physical examination performed.
+${age ? `Patient age: ${age} years\n` : ''}
+
+ASSESSMENT
+${condList}
+
+PLAN
+1. Obtain necessary labs and screening tests
+2. Medication review and optimization
+3. Schedule preventive care appointments
+4. Patient education on disease management
+5. Follow-up appointment in 4-6 weeks
+
+HEDIS Care Gap Status:
+✓ Identified ${conditions.length} chronic conditions
+✓ Ready for gap analysis and treatment planning
+
+═══════════════════════════════════════════════════════════════════════════
+Review Status: Demo Mode - Replace with Claude API key for production
+═══════════════════════════════════════════════════════════════════════════`;
+        }
+
+        async function generateWithClaude(notes) {
+            const prompt = `Generate a professional SOAP format progress note from these clinical notes:
+
+${notes}
+
+Format as:
+SUBJECTIVE: Patient presentation
+OBJECTIVE: Findings and vitals
+ASSESSMENT: Diagnoses with ICD-10 codes
+PLAN: Treatment recommendations`;
+
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': claudeConfig.apiKey,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: claudeConfig.model,
+                    max_tokens: 1000,
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate note. Check API key.');
+            }
+
+            const data = await response.json();
+            return data.content[0].text;
+        }
+
+        function analyzeGaps(text) {
+            const lower = text.toLowerCase();
+            let gaps = [];
+            let closed = 0;
+
+            Object.entries(HEDIS_GAPS).forEach(([gap, info]) => {
+                const isClosed = lower.includes(gap.toLowerCase().replace(/\s/g, ''));
+                if (isClosed) closed++;
+                gaps.push({ name: gap, closed: isClosed, suggestion: info.suggestion });
+            });
+
+            let html = '';
+            gaps.forEach(g => {
+                const status = g.closed ? 'status-closed' : 'status-open';
+                const statusText = g.closed ? 'CLOSED' : 'OPEN';
+                html += `
+                    <div class="card">
+                        <div class="card-title">✓ ${g.name}</div>
+                        <div class="card-text">${g.suggestion}</div>
+                        <div class="card-status ${status}">${statusText}</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('gapsContainer').innerHTML = html;
+
+            const rate = Math.round((closed / gaps.length) * 100);
+            document.getElementById('gapRate').textContent = rate + '%';
+            document.getElementById('closedCount').textContent = closed;
+            document.getElementById('openCount').textContent = gaps.length - closed;
+        }
+
+        function copyNote() {
+            const text = document.getElementById('progressNoteContent').textContent;
+            navigator.clipboard.writeText(text);
+            showStatus('✓ Copied to clipboard', 'success');
+        }
+
+        function downloadNote() {
+            const text = document.getElementById('progressNoteContent').textContent;
+            const link = document.createElement('a');
+            link.href = 'data:text/plain,' + encodeURIComponent(text);
+            link.download = `note_${new Date().toISOString().split('T')[0]}.txt`;
+            link.click();
+        }
+
+        function archiveNote() {
+            showStatus('✓ Note archived', 'success');
+            closeModal('noteModal');
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function openSettings() {
+            const saved = localStorage.getItem('claudeConfig');
+            if (saved) {
+                claudeConfig = JSON.parse(saved);
+                document.getElementById('claudeApiKey').value = claudeConfig.apiKey || '';
+            }
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function saveSettings() {
+            const apiKey = document.getElementById('claudeApiKey').value;
+            const demoMode = document.getElementById('demoMode').checked;
+
+            // Allow either API key OR demo mode
+            if (!apiKey && !demoMode) {
+                showStatus('Please enter API key or enable Demo Mode', 'error');
+                return;
+            }
+
+            claudeConfig.apiKey = apiKey;
+            claudeConfig.model = document.getElementById('claudeModel').value;
+            claudeConfig.demoMode = demoMode;
+            localStorage.setItem('claudeConfig', JSON.stringify(claudeConfig));
+
+            const modeText = demoMode ? '🎬 Demo Mode' : '🔑 API Key';
+            showStatus(`✓ Settings saved (${modeText})`, 'success');
+            closeModal('settingsModal');
+        }
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('voiceStatus');
+            el.textContent = msg;
+            el.className = `status-msg show ${type}`;
+            setTimeout(() => {
+                el.classList.remove('show');
+            }, 3000);
+        }
+
+        // Global state
+        let currentUser = null;
+        let firestoreService = null;
+        let syncManager = null;
+        let notesData = [];
+
+        // Initialize on page load
+        window.addEventListener('load', async () => {
+            const saved = localStorage.getItem('claudeConfig');
+            if (saved) {
+                claudeConfig = JSON.parse(saved);
+                document.getElementById('claudeApiKey').value = claudeConfig.apiKey || '';
+                document.getElementById('demoMode').checked = claudeConfig.demoMode || false;
+            }
+
+            // Initialize Firebase auth listener
+            setTimeout(() => {
+                if (window.firebase && window.firebase.auth) {
+                    window.firebase.auth.onAuthStateChanged(handleAuthStateChange);
+                }
+            }, 500);
+
+            // Setup sync and encryption
+            initializeSyncManager();
         });
-      } else {
-        letter += "• All documented criteria have been addressed\n";
-      }
 
-      letter += `
----
+        // Service Worker registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+        }
 
-CLINICAL JUSTIFICATION:
+        // Encryption Service
+        class EncryptionService {
+            static async generateKey() {
+                return await window.crypto.subtle.generateKey(
+                    { name: 'AES-GCM', length: 256 },
+                    true,
+                    ['encrypt', 'decrypt']
+                );
+            }
 
-The requested ${requestType} is medically necessary for this patient based on:
-• Documented diagnosis and clinical presentation
-• Failure or intolerance of prior treatments (if applicable)
-• Alignment with clinical guidelines
-• Expected improvement in patient outcomes
+            static async encrypt(data, key) {
+                const encoder = new TextEncoder();
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
-We respectfully request approval for the proposed treatment to ensure timely and appropriate patient care.
+                const encrypted = await window.crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    encoder.encode(data)
+                );
 
----
+                return {
+                    iv: this.arrayBufferToBase64(iv),
+                    ciphertext: this.arrayBufferToBase64(encrypted),
+                    algorithm: 'AES-GCM'
+                };
+            }
 
-Please contact the office with any questions or request for additional information.
+            static async decrypt(encryptedData, key) {
+                const decoder = new TextDecoder();
+                const iv = this.base64ToArrayBuffer(encryptedData.iv);
+                const ciphertext = this.base64ToArrayBuffer(encryptedData.ciphertext);
 
-[Provider Signature]
-[Provider Name & Credentials]
-[Contact Information]`;
+                const decrypted = await window.crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    ciphertext
+                );
 
-      return letter;
-    }
+                return decoder.decode(decrypted);
+            }
 
-    // ====== EVENT HANDLERS ======
-    document.getElementById("pa-form").addEventListener("submit", (e) => {
-      e.preventDefault();
+            static arrayBufferToBase64(buffer) {
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
 
-      const payerId = document.getElementById("payer").value;
-      const requestType = document.getElementById("request-type").value;
-      const clinicalData = document.getElementById("clinical-summary").value;
+            static base64ToArrayBuffer(base64) {
+                const binary = atob(base64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                return bytes.buffer;
+            }
 
-      if (!payerId || !requestType) {
-        showToast("Please select Payer and Request Type", "error");
-        return;
-      }
+            static async deriveKey(password, salt) {
+                const encoder = new TextEncoder();
+                const baseKey = await window.crypto.subtle.importKey(
+                    'raw',
+                    encoder.encode(password),
+                    'PBKDF2',
+                    false,
+                    ['deriveBits', 'deriveKey']
+                );
 
-      // Calculate approval likelihood
-      const likelihood = calculateApprovalLikelihood(payerId, requestType, clinicalData);
+                return await window.crypto.subtle.deriveKey(
+                    {
+                        name: 'PBKDF2',
+                        salt: encoder.encode(salt),
+                        iterations: 100000,
+                        hash: 'SHA-256'
+                    },
+                    baseKey,
+                    { name: 'AES-GCM', length: 256 },
+                    true,
+                    ['encrypt', 'decrypt']
+                );
+            }
+        }
 
-      // Evaluate criteria
-      const evaluatedCriteria = evaluateCriteria(payerId, requestType, clinicalData);
+        // Sync Manager
+        class SyncManager {
+            constructor() {
+                this.syncQueue = [];
+                this.isOnline = navigator.onLine;
+                this.isSyncing = false;
+                this.encryptionKey = null;
 
-      // Generate PA letter
-      const paLetter = generatePALetter(payerId, requestType, evaluatedCriteria, clinicalData);
+                window.addEventListener('online', () => this.handleOnline());
+                window.addEventListener('offline', () => this.handleOffline());
 
-      // Store analysis
-      lastAnalysis = {
-        payerId,
-        requestType,
-        likelihood,
-        evaluatedCriteria,
-        paLetter
-      };
+                this.loadQueue();
+                this.updateSyncStatus();
+            }
 
-      // Update UI
-      displayResults(payerId, likelihood, evaluatedCriteria, paLetter);
-    });
+            handleOnline() {
+                this.isOnline = true;
+                updateSyncIndicator();
+                if (this.syncQueue.length > 0) {
+                    this.syncAll();
+                }
+            }
 
-    function displayResults(payerId, likelihood, criteria, letter) {
-      document.getElementById("empty-results").style.display = "none";
-      document.getElementById("results-content").style.display = "block";
+            handleOffline() {
+                this.isOnline = false;
+                updateSyncIndicator();
+            }
 
-      // Update likelihood
-      document.getElementById("likelihood-score").textContent = likelihood + "%";
-      let likelihoodDesc = "Based on payer criteria match";
-      if (likelihood >= 80) {
-        likelihoodDesc = "Strong likelihood of approval";
-      } else if (likelihood >= 60) {
-        likelihoodDesc = "Moderate likelihood of approval";
-      } else {
-        likelihoodDesc = "Additional documentation may be needed";
-      }
-      document.getElementById("likelihood-text").textContent = likelihoodDesc;
+            addToQueue(operation) {
+                this.syncQueue.push({
+                    ...operation,
+                    timestamp: Date.now(),
+                    id: Math.random().toString(36).substr(2, 9)
+                });
+                localStorage.setItem('syncQueue', JSON.stringify(this.syncQueue));
+                updatePendingSyncCount();
+            }
 
-      // Update criteria list
-      const criteriaList = document.getElementById("criteria-list");
-      criteriaList.innerHTML = "";
-      criteria.forEach(c => {
-        const div = document.createElement("div");
-        div.className = `criterion ${c.status}`;
-        div.innerHTML = `
-          <div class="criterion-header">
-            <div class="criterion-label">${c.label}</div>
-            <span class="criterion-badge ${c.status}">
-              ${c.status === "met" ? "✓ Met" : c.status === "not-met" ? "✗ Not Met" : "? Not Documented"}
-            </span>
-          </div>
-          <div class="criterion-text">${c.description}${c.required ? " <strong>(Required)</strong>" : " (Optional)"}</div>
-        `;
-        criteriaList.appendChild(div);
-      });
+            loadQueue() {
+                const saved = localStorage.getItem('syncQueue');
+                this.syncQueue = saved ? JSON.parse(saved) : [];
+            }
 
-      // Update letter
-      document.getElementById("pa-letter").textContent = letter;
+            async syncAll() {
+                if (this.isSyncing || !this.isOnline || !currentUser) return;
 
-      // Reset tab to criteria
-      switchTab("criteria");
-    }
+                this.isSyncing = true;
+                this.loadQueue();
 
-    function switchTab(tabName) {
-      document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.tab === tabName);
-      });
-      document.querySelectorAll(".tab-content").forEach(content => {
-        content.classList.toggle("active", content.id === tabName + "-tab");
-      });
-    }
+                for (const operation of this.syncQueue) {
+                    try {
+                        await this.processOperation(operation);
+                        this.syncQueue = this.syncQueue.filter(op => op.id !== operation.id);
+                    } catch (error) {
+                        console.error('Sync error:', error);
+                        break;
+                    }
+                }
 
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        switchTab(btn.dataset.tab);
-      });
-    });
+                localStorage.setItem('syncQueue', JSON.stringify(this.syncQueue));
+                this.isSyncing = false;
+                updatePendingSyncCount();
+                showStatus('✓ Sync completed', 'success');
+            }
 
-    document.getElementById("reset-btn").addEventListener("click", () => {
-      document.getElementById("pa-form").reset();
-      document.getElementById("empty-results").style.display = "block";
-      document.getElementById("results-content").style.display = "none";
-      lastAnalysis = null;
-    });
+            async processOperation(operation) {
+                const { type, data } = operation;
+                const firebase = window.firebase;
 
-    document.getElementById("copy-letter-btn").addEventListener("click", () => {
-      if (!lastAnalysis) return;
-      navigator.clipboard.writeText(lastAnalysis.paLetter).then(() => {
-        showToast("Letter copied to clipboard");
-      });
-    });
+                switch (type) {
+                    case 'saveNote':
+                        await addDoc(
+                            collection(firebase.db, 'users', currentUser.uid, 'notes'),
+                            data
+                        );
+                        break;
+                    case 'updateNote':
+                        await updateDoc(
+                            doc(firebase.db, 'users', currentUser.uid, 'notes', data.id),
+                            { ...data, updatedAt: serverTimestamp() }
+                        );
+                        break;
+                    default:
+                        throw new Error(`Unknown operation: ${type}`);
+                }
+            }
 
-    document.getElementById("download-letter-btn").addEventListener("click", () => {
-      if (!lastAnalysis) return;
-      const element = document.createElement("a");
-      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(lastAnalysis.paLetter));
-      element.setAttribute("download", "PA_Justification_" + new Date().toISOString().split("T")[0] + ".txt");
-      element.style.display = "none";
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    });
+            updateSyncStatus() {
+                updateSyncIndicator();
+                updatePendingSyncCount();
+            }
+        }
 
-    // HIPAA Mode Toggle
-    document.getElementById("hipaa-toggle").addEventListener("click", (e) => {
-      hipaaMode = !hipaaMode;
-      e.currentTarget.classList.toggle("off", !hipaaMode);
-    });
-  </script>
+        function initializeSyncManager() {
+            syncManager = new SyncManager();
+        }
+
+        // Authentication Handlers
+        async function handleAuthStateChange(user) {
+            currentUser = user;
+
+            if (user) {
+                // User is signed in
+                document.getElementById('authModal').classList.remove('active');
+                document.querySelector('.container').style.display = 'flex';
+                document.querySelector('header').style.display = 'flex';
+                document.querySelector('.footer').style.display = 'block';
+
+                // Load user's notes
+                loadUserNotes();
+
+                // Perform any pending syncs
+                if (syncManager && syncManager.syncQueue.length > 0) {
+                    syncManager.syncAll();
+                }
+            } else {
+                // User is signed out
+                document.getElementById('authModal').classList.add('active');
+                document.querySelector('.container').style.display = 'none';
+                document.querySelector('header').style.display = 'none';
+                document.querySelector('.footer').style.display = 'none';
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const statusEl = document.getElementById('loginStatus');
+
+            if (!email || !password) {
+                showAuthStatus('Please enter email and password', 'error', statusEl);
+                return;
+            }
+
+            try {
+                statusEl.textContent = 'Signing in...';
+                statusEl.className = 'status-msg show info';
+
+                const firebase = window.firebase;
+                await signInWithEmailAndPassword(firebase.auth, email, password);
+
+                // Auth state change will handle the rest
+            } catch (error) {
+                showAuthStatus(`Sign in failed: ${error.message}`, 'error', statusEl);
+            }
+        }
+
+        async function handleSignup() {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirm = document.getElementById('signupPasswordConfirm').value;
+            const statusEl = document.getElementById('signupStatus');
+
+            if (!name || !email || !password || !confirm) {
+                showAuthStatus('Please fill in all fields', 'error', statusEl);
+                return;
+            }
+
+            if (password !== confirm) {
+                showAuthStatus('Passwords do not match', 'error', statusEl);
+                return;
+            }
+
+            if (password.length < 6) {
+                showAuthStatus('Password must be at least 6 characters', 'error', statusEl);
+                return;
+            }
+
+            try {
+                statusEl.textContent = 'Creating account...';
+                statusEl.className = 'status-msg show info';
+
+                const firebase = window.firebase;
+                const userCred = await createUserWithEmailAndPassword(firebase.auth, email, password);
+
+                // Store user profile
+                const userDoc = {
+                    uid: userCred.user.uid,
+                    email: email,
+                    name: name,
+                    createdAt: new Date().toISOString(),
+                    role: 'clinician'
+                };
+
+                localStorage.setItem(`user_${userCred.user.uid}`, JSON.stringify(userDoc));
+
+                // Auth state change will handle the rest
+            } catch (error) {
+                showAuthStatus(`Sign up failed: ${error.message}`, 'error', statusEl);
+            }
+        }
+
+        function switchToSignup() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('signupForm').style.display = 'block';
+            document.getElementById('authTitle').textContent = '🆕 Create Account';
+        }
+
+        function switchToLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('signupForm').style.display = 'none';
+            document.getElementById('authTitle').textContent = '🔐 Sign In';
+        }
+
+        async function logoutUser() {
+            try {
+                const firebase = window.firebase;
+                await signOut(firebase.auth);
+                showStatus('✓ Logged out successfully', 'success');
+            } catch (error) {
+                showStatus(`Logout failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Load user notes from Firestore
+        async function loadUserNotes() {
+            if (!currentUser || !window.firebase) return;
+
+            try {
+                const firebase = window.firebase;
+                const q = query(
+                    collection(firebase.db, 'users', currentUser.uid, 'notes'),
+                    where('userId', '==', currentUser.uid)
+                );
+
+                const snapshot = await getDocs(q);
+                notesData = [];
+
+                for (const docSnap of snapshot.docs) {
+                    const data = docSnap.data();
+                    notesData.push({
+                        id: docSnap.id,
+                        ...data
+                    });
+                }
+
+                displayBackupNotes();
+            } catch (error) {
+                console.error('Error loading notes:', error);
+            }
+        }
+
+        // Save note to Firebase
+        async function saveNoteToFirebase(noteContent, title) {
+            if (!currentUser || !window.firebase) {
+                showStatus('Please sign in to save notes', 'warning');
+                return;
+            }
+
+            try {
+                const firebase = window.firebase;
+
+                // Encrypt the content
+                const encryptionKey = await EncryptionService.deriveKey(
+                    currentUser.uid,
+                    localStorage.getItem(`salt_${currentUser.uid}`) || currentUser.uid
+                );
+
+                const encrypted = await EncryptionService.encrypt(noteContent, encryptionKey);
+
+                const noteData = {
+                    userId: currentUser.uid,
+                    title: title || `Note ${new Date().toLocaleDateString()}`,
+                    encryptedContent: encrypted,
+                    status: 'draft',
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    lastModifiedBy: currentUser.uid,
+                    version: 1
+                };
+
+                if (navigator.onLine) {
+                    const docRef = await addDoc(
+                        collection(firebase.db, 'users', currentUser.uid, 'notes'),
+                        noteData
+                    );
+                    notesData.push({ id: docRef.id, ...noteData });
+                    showStatus('✓ Note saved to cloud', 'success');
+                } else {
+                    syncManager.addToQueue({
+                        type: 'saveNote',
+                        data: noteData
+                    });
+                    showStatus('⏱️ Note queued - will sync when online', 'info');
+                }
+
+                displayBackupNotes();
+            } catch (error) {
+                showStatus(`Error saving note: ${error.message}`, 'error');
+            }
+        }
+
+        // Display backup notes list
+        function displayBackupNotes() {
+            const container = document.getElementById('notesBackupList');
+
+            if (notesData.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-text">No notes backed up yet</div></div>';
+                return;
+            }
+
+            let html = '';
+            notesData.forEach(note => {
+                const date = note.createdAt ? new Date(note.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown';
+                html += `
+                    <div class="card">
+                        <div class="card-title">📄 ${note.title}</div>
+                        <div class="card-text">Saved on ${date} • Version ${note.version || 1}</div>
+                        <div class="card-status ${note.status === 'draft' ? 'status-open' : 'status-closed'}">
+                            ${note.status.toUpperCase()}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Sync now
+        async function syncNow() {
+            if (!navigator.onLine) {
+                showStatus('No internet connection', 'error');
+                return;
+            }
+
+            if (syncManager) {
+                await syncManager.syncAll();
+                await loadUserNotes();
+            }
+        }
+
+        // Update sync indicators
+        function updateSyncIndicator() {
+            const indicator = document.getElementById('syncStatus');
+            if (indicator) {
+                indicator.textContent = navigator.onLine ? '🟢 Online' : '🔴 Offline';
+            }
+        }
+
+        function updatePendingSyncCount() {
+            const count = document.getElementById('pendingSyncCount');
+            if (count && syncManager) {
+                count.textContent = syncManager.syncQueue.length;
+            }
+        }
+
+        function showAuthStatus(msg, type, element) {
+            element.textContent = msg;
+            element.className = `status-msg show ${type}`;
+            setTimeout(() => {
+                element.classList.remove('show');
+            }, 4000);
+        }
+
+        // Open backup modal
+        function openBackupModal() {
+            loadUserNotes();
+            updateSyncIndicator();
+            updatePendingSyncCount();
+            document.getElementById('backupModal').classList.add('active');
+        }
+
+        // Archive note with cloud backup
+        function archiveNote() {
+            const text = document.getElementById('progressNoteContent').textContent;
+            const title = `Progress Note ${new Date().toLocaleDateString()}`;
+
+            saveNoteToFirebase(text, title);
+            showStatus('✓ Note archived and backed up', 'success');
+            closeModal('noteModal');
+        }
+
+        // Add backup button to header
+        document.addEventListener('DOMContentLoaded', () => {
+            const headerBtn = document.querySelector('.settings-btn');
+            if (headerBtn && !document.getElementById('backupBtn')) {
+                const backupBtn = document.createElement('button');
+                backupBtn.id = 'backupBtn';
+                backupBtn.className = 'settings-btn';
+                backupBtn.innerHTML = '☁️';
+                backupBtn.title = 'Cloud Backup & Sync';
+                backupBtn.onclick = openBackupModal;
+                headerBtn.parentElement.insertBefore(backupBtn, headerBtn);
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,135 @@
+version: '3.9'
+
+services:
+  # Main HEDIS CareGap application
+  caregap:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hedis-caregap
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Firebase config (set in .env)
+      - VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
+      - VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
+      - VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}
+      - VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}
+      - VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}
+      - VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
+    volumes:
+      - ./dist:/app/dist:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/index.html"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - caregap-network
+    labels:
+      - "com.hedis.service=caregap"
+      - "com.hedis.type=web"
+
+  # Optional: Nginx reverse proxy for production-like environment
+  nginx:
+    image: nginx:alpine
+    container_name: hedis-caregap-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./dist:/usr/share/nginx/html:ro
+      - ./ssl:/etc/nginx/ssl:ro  # For SSL certificates
+    depends_on:
+      - caregap
+    restart: unless-stopped
+    networks:
+      - caregap-network
+    labels:
+      - "com.hedis.service=nginx"
+      - "com.hedis.type=proxy"
+
+  # Optional: PostgreSQL for future backend services
+  postgres:
+    image: postgres:15-alpine
+    container_name: hedis-caregap-db
+    environment:
+      POSTGRES_DB: caregap
+      POSTGRES_USER: caregap
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - caregap-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caregap"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "com.hedis.service=postgres"
+      - "com.hedis.type=database"
+    profiles:
+      - with-db
+
+  # Optional: Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: hedis-caregap-cache
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-change_me}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - caregap-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "com.hedis.service=redis"
+      - "com.hedis.type=cache"
+    profiles:
+      - with-cache
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  caregap-network:
+    driver: bridge
+
+# Usage:
+#
+# Production (minimal):
+#   docker-compose up
+#
+# With database:
+#   docker-compose --profile with-db up
+#
+# With cache:
+#   docker-compose --profile with-cache up
+#
+# Full stack:
+#   docker-compose --profile with-db --profile with-cache up
+#
+# Build without cache:
+#   docker-compose build --no-cache
+#
+# View logs:
+#   docker-compose logs -f caregap
+#
+# Run one-off command:
+#   docker-compose exec caregap sh
