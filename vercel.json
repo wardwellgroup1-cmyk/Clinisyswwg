@@ -1,3 +1,8 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "installCommand": "npm ci --legacy-peer-deps",
+  "env": {
+    "VERCEL_SKIP_AUTO_BUILD": "false"
+  }
 }
