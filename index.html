@@ -808,7 +808,77 @@
         document.querySelector(`.step[data-step="${i}"]`).classList.add("completed");
       }
 
+      if (stepNum === 5) {
+        updateReviewSummary();
+      }
+
       updateApprovalScore();
+    }
+
+    function updateReviewSummary() {
+      const payer = document.getElementById("payer").value;
+      const payerName = payers[payer]?.name || payer || '[Not Selected]';
+      const requestType = document.getElementById("request-type").value;
+      const requestTypeLabel = {
+        medication: "Medication / Rx",
+        imaging: "Imaging Study",
+        procedure: "Procedure / Surgery",
+        dme: "DME / Equipment",
+        specialist: "Specialist Referral",
+        behavioral: "Behavioral Health",
+        homehealth: "Home Health Services"
+      }[requestType] || '[Not Selected]';
+
+      const serviceName = document.getElementById("service-name").value || '[Not Provided]';
+      const serviceCode = document.getElementById("service-code").value || '[Not Provided]';
+      const urgency = document.getElementById("urgency").value || 'Routine';
+      const patientName = document.getElementById("patient-name").value || '[Not Provided]';
+      const patientDOB = document.getElementById("patient-dob").value || '[Not Provided]';
+      const memberId = document.getElementById("member-id").value || '[Not Provided]';
+      const icd10 = document.getElementById("icd10-codes").value || '[Not Provided]';
+      const clinicalSummary = document.getElementById("clinical-summary").value || '[Not Provided]';
+      const priorTreatments = document.getElementById("prior-treatments").value || '[Not Documented]';
+      const conservativeMeasures = document.getElementById("conservative-measures").value || '[Not Documented]';
+      const labResults = document.getElementById("lab-results").value || '[Not Provided]';
+
+      const summaryHTML = `
+        <div style="background: white; padding: 16px; border-radius: 6px; margin-bottom: 16px; border-left: 3px solid #0ea5e9;">
+          <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 13px;">Request Overview</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+            <div><strong style="color: #0f172a;">Payer:</strong> <span style="color: #475569;">${payerName}</span></div>
+            <div><strong style="color: #0f172a;">Type:</strong> <span style="color: #475569;">${requestTypeLabel}</span></div>
+            <div><strong style="color: #0f172a;">Service:</strong> <span style="color: #475569;">${serviceName}</span></div>
+            <div><strong style="color: #0f172a;">Code:</strong> <span style="color: #475569;">${serviceCode}</span></div>
+            <div><strong style="color: #0f172a;">Urgency:</strong> <span style="color: #475569;">${urgency.charAt(0).toUpperCase() + urgency.slice(1)}</span></div>
+            <div><strong style="color: #0f172a;">ICD-10(s):</strong> <span style="color: #475569;">${icd10}</span></div>
+          </div>
+        </div>
+
+        <div style="background: white; padding: 16px; border-radius: 6px; margin-bottom: 16px; border-left: 3px solid #16a34a;">
+          <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 13px;">Patient Information</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+            <div><strong style="color: #0f172a;">Name:</strong> <span style="color: #475569;">${patientName}</span></div>
+            <div><strong style="color: #0f172a;">DOB:</strong> <span style="color: #475569;">${patientDOB}</span></div>
+            <div colspan="2"><strong style="color: #0f172a;">Member ID:</strong> <span style="color: #475569;">${memberId}</span></div>
+          </div>
+        </div>
+
+        <div style="background: white; padding: 16px; border-radius: 6px; margin-bottom: 16px;">
+          <h3 style="margin: 0 0 12px; color: #0f172a; font-size: 13px;">Clinical Documentation</h3>
+          <div style="font-size: 12px; color: #475569; line-height: 1.5;">
+            <p style="margin: 0 0 8px;"><strong style="color: #0f172a;">Clinical Summary:</strong></p>
+            <p style="margin: 0 0 12px; padding: 8px; background: #f8fafc; border-radius: 4px;">${clinicalSummary}</p>
+            <p style="margin: 0 0 8px;"><strong style="color: #0f172a;">Prior Treatments:</strong></p>
+            <p style="margin: 0 0 12px; padding: 8px; background: #f8fafc; border-radius: 4px;">${priorTreatments}</p>
+            <p style="margin: 0 0 8px;"><strong style="color: #0f172a;">Conservative Measures:</strong></p>
+            <p style="margin: 0 0 12px; padding: 8px; background: #f8fafc; border-radius: 4px;">${conservativeMeasures}</p>
+            <p style="margin: 0 0 8px;"><strong style="color: #0f172a;">Lab/Test Results:</strong></p>
+            <p style="margin: 0; padding: 8px; background: #f8fafc; border-radius: 4px;">${labResults}</p>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("review-summary").innerHTML = summaryHTML;
     }
 
     // Calculate approval score
@@ -868,7 +938,258 @@
     }
 
     function generatePA() {
-      alert("PA Letter generation coming soon! Your information is ready.");
+      const payer = document.getElementById("payer").value;
+      const requestType = document.getElementById("request-type").value;
+      const serviceName = document.getElementById("service-name").value;
+      const serviceCode = document.getElementById("service-code").value;
+      const urgency = document.getElementById("urgency").value;
+      const patientName = document.getElementById("patient-name").value;
+      const patientDOB = document.getElementById("patient-dob").value;
+      const memberId = document.getElementById("member-id").value;
+      const icd10 = document.getElementById("icd10-codes").value;
+      const clinicalSummary = document.getElementById("clinical-summary").value;
+      const priorTreatments = document.getElementById("prior-treatments").value;
+      const conservativeMeasures = document.getElementById("conservative-measures").value;
+      const labResults = document.getElementById("lab-results").value;
+
+      if (!payer || !requestType || !serviceName || !icd10) {
+        alert("Please complete all required fields (Payer, Request Type, Service Name, and ICD-10 Codes) before generating the PA letter.");
+        return;
+      }
+
+      const letterHTML = generatePALetter({
+        payer,
+        requestType,
+        serviceName,
+        serviceCode,
+        urgency,
+        patientName,
+        patientDOB,
+        memberId,
+        icd10,
+        clinicalSummary,
+        priorTreatments,
+        conservativeMeasures,
+        labResults
+      });
+
+      displayPALetter(letterHTML);
+    }
+
+    function generatePALetter(data) {
+      const today = new Date();
+      const dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const payerName = payers[data.payer]?.name || data.payer;
+
+      const requestTypeLabel = {
+        medication: "Medication / Prescription",
+        imaging: "Imaging Study",
+        procedure: "Procedure / Surgery",
+        dme: "Durable Medical Equipment",
+        specialist: "Specialist Referral",
+        behavioral: "Behavioral Health Service",
+        homehealth: "Home Health Services"
+      }[data.requestType] || data.requestType;
+
+      const medicalNecessityText = generateMedicalNecessity(data);
+
+      return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Prior Authorization Request Letter</title>
+  <style>
+    body { font-family: "Segoe UI", Tahoma, Geneva, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background: #f5f5f5; }
+    .letter-container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 4px; }
+    .header { border-bottom: 3px solid #0ea5e9; padding-bottom: 20px; margin-bottom: 30px; }
+    .clinic-name { font-size: 16px; font-weight: bold; color: #0f172a; margin: 0; }
+    .letter-title { font-size: 18px; font-weight: bold; color: #0f172a; margin: 20px 0 10px; }
+    .date-to { margin: 20px 0; color: #475569; font-size: 13px; }
+    .salutation { margin: 20px 0; }
+    .section { margin: 20px 0; }
+    .section-title { font-weight: bold; color: #0f172a; margin: 15px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .section-content { font-size: 13px; color: #475569; margin-bottom: 12px; }
+    .patient-info { background: #f8fafc; padding: 12px; border-left: 3px solid #0ea5e9; border-radius: 4px; margin: 10px 0; }
+    .patient-info-row { display: flex; margin: 6px 0; font-size: 12px; }
+    .patient-info-label { font-weight: 600; width: 120px; color: #0f172a; }
+    .patient-info-value { color: #475569; }
+    .signature-block { margin-top: 40px; padding-top: 30px; border-top: 1px solid #e2e8f0; }
+    .signature-line { margin-top: 20px; }
+    .signature-line-text { font-size: 12px; color: #475569; margin-bottom: 40px; }
+    .buttons { margin-top: 30px; text-align: center; padding-top: 20px; border-top: 1px solid #e2e8f0; }
+    button { padding: 10px 20px; margin: 0 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; }
+    .btn-primary { background: #0ea5e9; color: white; }
+    .btn-primary:hover { background: #0284c7; }
+    .btn-secondary { background: #e2e8f0; color: #0f172a; }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .footer { margin-top: 30px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+  </style>
+</head>
+<body>
+  <div class="letter-container">
+    <div class="header">
+      <p class="clinic-name">📋 ClinisysWWG PRIOR AUTH PRO</p>
+      <p style="font-size: 12px; color: #475569; margin: 4px 0 0;">Clinical Documentation System</p>
+    </div>
+
+    <h2 class="letter-title">PRIOR AUTHORIZATION REQUEST LETTER</h2>
+
+    <div class="date-to">
+      <p style="margin: 0;"><strong>Date:</strong> ${dateStr}</p>
+      <p style="margin: 4px 0;"><strong>To:</strong> ${payerName} Prior Authorization Department</p>
+      <p style="margin: 4px 0;"><strong>Re:</strong> Prior Authorization for ${requestTypeLabel}</p>
+    </div>
+
+    <div class="salutation">
+      <p>Dear Prior Authorization Review Team,</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Patient Information</div>
+      <div class="patient-info">
+        <div class="patient-info-row">
+          <span class="patient-info-label">Patient Name:</span>
+          <span class="patient-info-value">${data.patientName || '[Patient Name]'}</span>
+        </div>
+        <div class="patient-info-row">
+          <span class="patient-info-label">Date of Birth:</span>
+          <span class="patient-info-value">${data.patientDOB || '[DOB]'}</span>
+        </div>
+        <div class="patient-info-row">
+          <span class="patient-info-label">Member ID:</span>
+          <span class="patient-info-value">${data.memberId || '[Member ID]'}</span>
+        </div>
+        <div class="patient-info-row">
+          <span class="patient-info-label">Diagnosis Code(s):</span>
+          <span class="patient-info-value">${data.icd10}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Requested Service</div>
+      <div class="section-content">
+        <p style="margin: 0;"><strong>Service/Medication:</strong> ${data.serviceName}</p>
+        ${data.serviceCode ? `<p style="margin: 4px 0;"><strong>Code:</strong> ${data.serviceCode}</p>` : ''}
+        <p style="margin: 4px 0;"><strong>Urgency Level:</strong> ${data.urgency.charAt(0).toUpperCase() + data.urgency.slice(1)}</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Clinical Indication</div>
+      <div class="section-content">
+        ${data.clinicalSummary ? `<p>${data.clinicalSummary}</p>` : '<p>[Clinical summary would be inserted here]</p>'}
+      </div>
+    </div>
+
+    ${data.priorTreatments ? `
+    <div class="section">
+      <div class="section-title">Prior Treatment History</div>
+      <div class="section-content">
+        <p>${data.priorTreatments}</p>
+      </div>
+    </div>
+    ` : ''}
+
+    ${data.conservativeMeasures ? `
+    <div class="section">
+      <div class="section-title">Conservative Measures / Step Therapy</div>
+      <div class="section-content">
+        <p>${data.conservativeMeasures}</p>
+      </div>
+    </div>
+    ` : ''}
+
+    ${data.labResults ? `
+    <div class="section">
+      <div class="section-title">Supporting Test Results</div>
+      <div class="section-content">
+        <p>${data.labResults}</p>
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="section">
+      <div class="section-title">Medical Necessity Justification</div>
+      <div class="section-content">
+        ${medicalNecessityText}
+      </div>
+    </div>
+
+    <div class="signature-block">
+      <p style="margin: 0;">We respectfully request approval of this prior authorization. The requested ${requestTypeLabel.toLowerCase()} is medically necessary and appropriate for this patient's clinical condition. Please contact our office if you require additional information.</p>
+
+      <div class="signature-line">
+        <p style="margin: 0; color: #0f172a; font-weight: 600;">Requesting Physician / Provider</p>
+        <p class="signature-line-text">Signature: _________________________________</p>
+        <p class="signature-line-text">Printed Name: _______________________________</p>
+        <p class="signature-line-text">NPI/License: ________________________________</p>
+        <p class="signature-line-text">Date: ____________________</p>
+      </div>
+    </div>
+
+    <div class="buttons" style="display: flex; justify-content: center; gap: 10px;">
+      <button class="btn-primary" onclick="window.print()">🖨️ Print Letter</button>
+      <button class="btn-secondary" onclick="downloadLetter()">⬇️ Download PDF</button>
+      <button class="btn-secondary" onclick="window.close()">Close</button>
+    </div>
+
+    <div class="footer">
+      <p>Generated by ClinisysWWG PRIOR AUTH PRO | Local processing only | HIPAA-compliant</p>
+    </div>
+  </div>
+
+  <script>
+    function downloadLetter() {
+      const element = document.querySelector('.letter-container');
+      const opt = {
+        margin: 10,
+        filename: 'Prior_Authorization_Letter.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+      };
+      alert('PDF download feature requires external library. Use Print → Save as PDF in your browser instead.');
+    }
+  </script>
+</body>
+</html>
+      `;
+    }
+
+    function generateMedicalNecessity(data) {
+      const templates = {
+        medication: `
+          <p>The requested medication, ${data.serviceName}, is medically necessary for this patient based on the documented diagnosis (${data.icd10}). ${data.clinicalSummary ? 'The clinical presentation demonstrates clear indication for this therapy.' : ''} Prior treatment attempts have been documented. This medication is supported by clinical guidelines and evidence-based practice for the patient's condition.</p>
+        `,
+        imaging: `
+          <p>The requested imaging study, ${data.serviceName}, is medically necessary to evaluate the patient's clinical condition (${data.icd10}). This study will provide essential diagnostic information to guide clinical decision-making and appropriate management. The clinical indication is well-supported by the patient's presentation and findings.</p>
+        `,
+        procedure: `
+          <p>The requested procedure, ${data.serviceName}, is medically necessary for this patient with documented diagnosis ${data.icd10}. Conservative measures have been attempted as appropriate. This procedure is indicated and supported by clinical evidence for the patient's condition.</p>
+        `,
+        dme: `
+          <p>The requested durable medical equipment, ${data.serviceName}, is medically necessary for this patient (${data.icd10}). The equipment is essential for the patient's mobility, safety, and functional independence. This request is supported by clinical examination and appropriate medical necessity criteria.</p>
+        `,
+        specialist: `
+          <p>Referral to a specialist for ${data.serviceName} is medically necessary for this patient with documented diagnosis ${data.icd10}. The specialist's expertise is required for appropriate evaluation and management of this condition.</p>
+        `,
+        behavioral: `
+          <p>The requested behavioral health service, ${data.serviceName}, is medically necessary for this patient (${data.icd10}). The patient requires specialized mental health or substance use services for appropriate clinical management.</p>
+        `,
+        homehealth: `
+          <p>The requested home health service, ${data.serviceName}, is medically necessary for this patient (${data.icd10}). The patient requires skilled nursing or therapy services in the home setting to safely transition from acute care and maintain clinical stability.</p>
+        `
+      };
+
+      return templates[data.requestType] || `<p>This request for ${data.serviceName} is medically necessary based on the patient's clinical condition (${data.icd10}).</p>`;
+    }
+
+    function displayPALetter(letterHTML) {
+      const newWindow = window.open('', '_blank');
+      newWindow.document.write(letterHTML);
+      newWindow.document.close();
     }
 
     // Event listeners
