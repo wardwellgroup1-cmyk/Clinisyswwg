@@ -563,6 +563,85 @@
       color: var(--muted);
       text-transform: uppercase;
     }
+    .care-gap-matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    .care-gap-matrix th {
+      background: rgba(15,23,42,0.95);
+      border: 1px solid var(--border);
+      padding: 8px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text);
+      position: sticky;
+      top: 0;
+    }
+    .care-gap-matrix th.patient-col {
+      min-width: 180px;
+      position: sticky;
+      left: 0;
+      z-index: 10;
+    }
+    .care-gap-matrix td {
+      border: 1px solid var(--border);
+      padding: 8px;
+    }
+    .care-gap-matrix tr:hover td {
+      background: rgba(56,189,248,0.05);
+    }
+    .care-gap-matrix td.patient-col {
+      background: rgba(15,23,42,0.95);
+      font-weight: 600;
+      position: sticky;
+      left: 0;
+      z-index: 9;
+    }
+    .care-gap-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+      text-align: center;
+      min-width: 140px;
+    }
+    .care-gap-status {
+      width: 100%;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      border: 1px solid;
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .care-gap-status.pending {
+      background: rgba(251, 191, 36, 0.15);
+      border-color: var(--warn);
+      color: var(--warn);
+    }
+    .care-gap-status.completed {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: var(--success);
+      color: var(--success);
+    }
+    .care-gap-status.unsuccessful {
+      background: rgba(248, 113, 113, 0.15);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .care-gap-date-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: rgba(15,23,42,0.9);
+      color: var(--text);
+      padding: 3px;
+      font-size: 10px;
+    }
     @media (max-width: 900px) {
       .app-shell { grid-template-columns: 1fr; }
       .sidebar { display: none; }
@@ -825,156 +904,49 @@
     <!-- ACO/PAYORS PAGE -->
     <section id="page-aco" class="panel panel-full" style="display:none;">
       <div>
-        <div class="panel-section-title">ACO/Payor Upload & Management</div>
+        <div class="panel-section-title">Care Gap Tracking - HEDIS Measures</div>
 
         <!-- Upload Section -->
         <div style="margin-bottom:20px;">
           <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
             <div class="dropzone" id="aco-dropzone" style="flex:1;min-width:250px;">
-              <strong>Upload Spreadsheet</strong><br />
-              CSV or Excel – Import payor data
+              <strong>Upload Patient Data</strong><br />
+              CSV or Excel – Import payor/patient data
             </div>
             <input type="file" id="aco-file-input" style="display:none;" accept=".csv,.xlsx,.xls" />
           </div>
         </div>
 
-        <!-- Payor Tabs -->
-        <div style="margin-bottom:12px;">
-          <div class="tabs" style="display:flex;flex-wrap:wrap;gap:4px;">
-            <button class="pill active" data-payor="privia">Privia</button>
-            <button class="pill" data-payor="mvp">MVP</button>
-            <button class="pill" data-payor="fidelis">Fidelis</button>
-            <button class="pill" data-payor="empire">Empire</button>
-            <button class="pill" data-payor="nysip">NYSIP</button>
-            <button class="pill" data-payor="uhc">UHC</button>
+        <!-- Payor & Plan Selection -->
+        <div style="margin-bottom:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <div>
+            <span style="font-size:11px;color:var(--muted);margin-right:8px;">Payor:</span>
+            <div class="tabs" style="display:inline-flex;gap:4px;">
+              <button class="pill active" data-payor="privia">Privia</button>
+              <button class="pill" data-payor="mvp">MVP</button>
+              <button class="pill" data-payor="fidelis">Fidelis</button>
+              <button class="pill" data-payor="empire">Empire</button>
+              <button class="pill" data-payor="nysip">NYSIP</button>
+              <button class="pill" data-payor="uhc">UHC</button>
+            </div>
+          </div>
+
+          <div>
+            <span style="font-size:11px;color:var(--muted);margin-right:8px;">Plan:</span>
+            <div class="tabs" style="display:inline-flex;gap:4px;">
+              <button class="pill active" data-payor-type="commercial">Commercial</button>
+              <button class="pill" data-payor-type="medicare">Medicare</button>
+              <button class="pill" data-payor-type="medicaid">Medicaid</button>
+            </div>
           </div>
         </div>
 
-        <!-- Payor Detail Tabs -->
-        <div style="margin-bottom:12px;">
-          <div class="tabs" style="display:flex;flex-wrap:wrap;gap:4px;">
-            <button class="pill active" data-payor-type="medicare">Medicare</button>
-            <button class="pill" data-payor-type="medicaid">Medicaid</button>
-            <button class="pill" data-payor-type="commercial">Commercial</button>
-          </div>
-        </div>
-
-        <!-- Content Area -->
-        <div style="border-radius:10px;border:1px solid var(--border);padding:16px;background:rgba(15,23,42,0.9);min-height:400px;">
-          <!-- Privia Content -->
-          <div id="payor-privia" class="payor-content">
-            <!-- Medicare -->
-            <div id="payor-type-medicare" class="payor-type-content">
-              <div class="panel-section-title">Privia - Medicare</div>
-
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-                <div class="detail-card">
-                  <div class="detail-label">AWV Due</div>
-                  <div class="detail-value" id="privia-medicare-awv">0</div>
-                  <div style="margin-top:8px;">
-                    <button class="btn btn-ghost" id="btn-privia-medicare-awv">View Details</button>
-                  </div>
-                </div>
-                <div class="detail-card">
-                  <div class="detail-label">HCC Confirm/Deny</div>
-                  <div class="detail-value" id="privia-medicare-hcc">0</div>
-                  <div style="margin-top:8px;">
-                    <button class="btn btn-ghost" id="btn-privia-medicare-hcc">View Opportunities</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="detail-card">
-                <div class="detail-label">Care Management Opportunities</div>
-                <div style="margin-top:8px;">
-                  <div id="privia-medicare-cm-list" style="color:var(--muted);font-size:12px;">No care management opportunities</div>
-                </div>
-              </div>
+        <!-- Care Gap Matrix -->
+        <div style="border-radius:10px;border:1px solid var(--border);overflow:auto;background:rgba(15,23,42,0.9);">
+          <div id="aco-patient-matrix" style="min-height:400px;">
+            <div style="padding:40px;text-align:center;color:var(--muted);">
+              Upload patient data to view care gaps and opportunities.
             </div>
-
-            <!-- Medicaid -->
-            <div id="payor-type-medicaid" class="payor-type-content" style="display:none;">
-              <div class="panel-section-title">Privia - Medicaid</div>
-
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-                <div class="detail-card">
-                  <div class="detail-label">AWV Due</div>
-                  <div class="detail-value" id="privia-medicaid-awv">0</div>
-                  <div style="margin-top:8px;">
-                    <button class="btn btn-ghost">View Details</button>
-                  </div>
-                </div>
-                <div class="detail-card">
-                  <div class="detail-label">HCC Confirm/Deny</div>
-                  <div class="detail-value" id="privia-medicaid-hcc">0</div>
-                  <div style="margin-top:8px;">
-                    <button class="btn btn-ghost">View Opportunities</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="detail-card">
-                <div class="detail-label">Care Management Opportunities</div>
-                <div style="margin-top:8px;">
-                  <div id="privia-medicaid-cm-list" style="color:var(--muted);font-size:12px;">No care management opportunities</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Commercial -->
-            <div id="payor-type-commercial" class="payor-type-content" style="display:none;">
-              <div class="panel-section-title">Privia - Commercial</div>
-
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-                <div class="detail-card">
-                  <div class="detail-label">AWV Due</div>
-                  <div class="detail-value" id="privia-commercial-awv">0</div>
-                  <div style="margin-top:8px;">
-                    <button class="btn btn-ghost">View Details</button>
-                  </div>
-                </div>
-                <div class="detail-card">
-                  <div class="detail-label">HCC Confirm/Deny</div>
-                  <div class="detail-value" id="privia-commercial-hcc">0</div>
-                  <div style="margin-top:8px;">
-                    <button class="btn btn-ghost">View Opportunities</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="detail-card">
-                <div class="detail-label">Care Management Opportunities</div>
-                <div style="margin-top:8px;">
-                  <div id="privia-commercial-cm-list" style="color:var(--muted);font-size:12px;">No care management opportunities</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Other Payors (MVP, Fidelis, Empire, NYSIP, UHC) -->
-          <div id="payor-mvp" class="payor-content" style="display:none;">
-            <div class="panel-section-title">MVP - Data Management</div>
-            <div style="color:var(--muted);padding:20px;text-align:center;">Upload MVP spreadsheet to view data</div>
-          </div>
-
-          <div id="payor-fidelis" class="payor-content" style="display:none;">
-            <div class="panel-section-title">Fidelis - Data Management</div>
-            <div style="color:var(--muted);padding:20px;text-align:center;">Upload Fidelis spreadsheet to view data</div>
-          </div>
-
-          <div id="payor-empire" class="payor-content" style="display:none;">
-            <div class="panel-section-title">Empire - Data Management</div>
-            <div style="color:var(--muted);padding:20px;text-align:center;">Upload Empire spreadsheet to view data</div>
-          </div>
-
-          <div id="payor-nysip" class="payor-content" style="display:none;">
-            <div class="panel-section-title">NYSIP - Data Management</div>
-            <div style="color:var(--muted);padding:20px;text-align:center;">Upload NYSIP spreadsheet to view data</div>
-          </div>
-
-          <div id="payor-uhc" class="payor-content" style="display:none;">
-            <div class="panel-section-title">UHC - Data Management</div>
-            <div style="color:var(--muted);padding:20px;text-align:center;">Upload UHC spreadsheet to view data</div>
           </div>
         </div>
 
@@ -1945,8 +1917,40 @@
 
   // ====== ACO/PAYORS MANAGEMENT ======
   let currentPayor = "privia";
-  let currentPayorType = "medicare";
+  let currentPayorType = "commercial";
   let acoUploadHistory = [];
+  let acoPatients = [];
+
+  const careGaps = {
+    commercial: [
+      { id: "annual_physical", name: "Annual Physical", hedis: "PAF" },
+      { id: "mammogram", name: "Mammogram", hedis: "HEDIS" },
+      { id: "pap_smear", name: "Pap Smear", hedis: "HEDIS" },
+      { id: "dm_a1c", name: "A1C Below 9", hedis: "DM" },
+      { id: "eye_exam", name: "Eye Exam", hedis: "HEDIS" },
+      { id: "microalbumin", name: "Microalbumin", hedis: "DM" },
+      { id: "colon_screen", name: "Colon Screen", hedis: "HEDIS" },
+      { id: "bp_control", name: "BP <140/90", hedis: "HEDIS" }
+    ],
+    medicare: [
+      { id: "annual_wellness", name: "Annual Wellness Visit", hedis: "PAF" },
+      { id: "mammogram", name: "Mammogram", hedis: "HEDIS" },
+      { id: "pap_smear", name: "Pap Smear", hedis: "HEDIS" },
+      { id: "a1c_control", name: "A1C Below 9", hedis: "DM" },
+      { id: "eye_exam", name: "Eye Exam", hedis: "HEDIS" },
+      { id: "microalbumin", name: "Microalbumin", hedis: "DM" },
+      { id: "colon_screen", name: "Colon Screen", hedis: "HEDIS" },
+      { id: "bp_control", name: "BP <140/90", hedis: "HEDIS" }
+    ],
+    medicaid: [
+      { id: "epsdt_screen", name: "EPSDT Screening", hedis: "HEDIS" },
+      { id: "preventive_care", name: "Preventive Care", hedis: "PAF" },
+      { id: "immunizations", name: "Immunizations", hedis: "HEDIS" },
+      { id: "dental", name: "Dental Visit", hedis: "HEDIS" },
+      { id: "vision", name: "Vision Screening", hedis: "HEDIS" },
+      { id: "substance_use", name: "Substance Use Screen", hedis: "HEDIS" }
+    ]
+  };
 
   function initAcoUpload() {
     const dz = document.getElementById("aco-dropzone");
@@ -1980,22 +1984,104 @@
   function handleAcoUpload(file) {
     showToast(`Uploading ${file.name}...`);
     setTimeout(() => {
+      const numPatients = Math.floor(Math.random() * 12) + 5;
+      const sampleNames = ["John Smith", "Maria Garcia", "Robert Johnson", "Patricia Brown", "Michael Davis", "Linda Martinez", "David Wilson", "Barbara Anderson", "James Taylor", "Jennifer Thomas", "Richard Moore", "Dorothy Jackson"];
+
+      acoPatients = [];
+      for (let i = 0; i < numPatients; i++) {
+        const gaps = careGaps[currentPayorType];
+        const patient = {
+          id: "pt_" + Date.now() + "_" + i,
+          name: sampleNames[i % sampleNames.length],
+          careItems: {}
+        };
+
+        gaps.forEach(gap => {
+          const random = Math.random();
+          patient.careItems[gap.id] = {
+            status: random > 0.6 ? "completed" : (random > 0.3 ? "unsuccessful" : "pending"),
+            date: random > 0.5 ? new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : ""
+          };
+        });
+
+        acoPatients.push(patient);
+      }
+
       const upload = {
         id: "upload_" + Date.now(),
         filename: file.name,
         payor: currentPayor,
         date: new Date().toLocaleDateString(),
-        records: Math.floor(Math.random() * 500) + 50
+        records: numPatients
       };
       acoUploadHistory.unshift(upload);
       updateAcoUploadHistory();
+      renderAcoMatrix();
 
-      // Simulate data population
-      document.getElementById(`${currentPayor}-${currentPayorType}-awv`).textContent = Math.floor(Math.random() * 150) + 10;
-      document.getElementById(`${currentPayor}-${currentPayorType}-hcc`).textContent = Math.floor(Math.random() * 200) + 20;
+      showToast(`${file.name} uploaded successfully! ${numPatients} patients loaded.`);
+    }, 1200);
+  }
 
-      showToast(`${file.name} uploaded successfully! ${upload.records} records processed.`);
-    }, 1000);
+  function renderAcoMatrix() {
+    const matrix = document.getElementById("aco-patient-matrix");
+    const gaps = careGaps[currentPayorType];
+
+    if (acoPatients.length === 0) {
+      matrix.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">Upload patient data to view care gaps.</div>';
+      return;
+    }
+
+    let html = `
+      <table class="care-gap-matrix">
+        <thead>
+          <tr>
+            <th class="patient-col">Patient Name</th>
+            ${gaps.map(gap => `<th style="text-align:center;"><div style="font-size:10px;color:var(--muted);">${gap.hedis}</div>${gap.name}</th>`).join("")}
+          </tr>
+        </thead>
+        <tbody>
+          ${acoPatients.map(patient => `
+            <tr>
+              <td class="patient-col">${patient.name}</td>
+              ${gaps.map(gap => {
+                const item = patient.careItems[gap.id];
+                return `
+                  <td>
+                    <div class="care-gap-cell">
+                      <select class="care-gap-status ${item.status}" onchange="updateCareGapStatus('${patient.id}', '${gap.id}', this.value)">
+                        <option value="pending" ${item.status === "pending" ? "selected" : ""}>Pending</option>
+                        <option value="completed" ${item.status === "completed" ? "selected" : ""}>Completed</option>
+                        <option value="unsuccessful" ${item.status === "unsuccessful" ? "selected" : ""}>Unsuccessful</option>
+                      </select>
+                      <input type="date" class="care-gap-date-input" value="${item.date}" placeholder="Date" onchange="updateCareGapDate('${patient.id}', '${gap.id}', this.value)" />
+                    </div>
+                  </td>
+                `;
+              }).join("")}
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+
+    matrix.innerHTML = html;
+  }
+
+  function updateCareGapStatus(patientId, gapId, status) {
+    const patient = acoPatients.find(p => p.id === patientId);
+    if (patient) {
+      patient.careItems[gapId].status = status;
+      renderAcoMatrix();
+      showToast(`${gapId.toUpperCase()} status updated to ${status}`);
+    }
+  }
+
+  function updateCareGapDate(patientId, gapId, date) {
+    const patient = acoPatients.find(p => p.id === patientId);
+    if (patient) {
+      patient.careItems[gapId].date = date;
+      showToast(`Date updated for ${gapId}`);
+    }
   }
 
   function updateAcoUploadHistory() {
@@ -2006,7 +2092,7 @@
     }
     historyDiv.innerHTML = acoUploadHistory.map(u => `
       <div style="padding:8px;border-bottom:1px solid rgba(15,23,42,0.5);font-size:11px;">
-        <strong>${u.filename}</strong> • ${u.payor.toUpperCase()} • ${u.date} • ${u.records} records
+        <strong>${u.filename}</strong> • ${u.payor.toUpperCase()} • ${u.date} • ${u.records} patients
       </div>
     `).join("");
   }
@@ -2018,9 +2104,6 @@
         document.querySelectorAll("[data-payor]").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         currentPayor = btn.dataset.payor;
-
-        document.querySelectorAll(".payor-content").forEach(p => p.style.display = "none");
-        document.getElementById("payor-" + currentPayor).style.display = "block";
       });
     });
 
@@ -2030,9 +2113,7 @@
         document.querySelectorAll("[data-payor-type]").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         currentPayorType = btn.dataset.payorType;
-
-        document.querySelectorAll(".payor-type-content").forEach(p => p.style.display = "none");
-        document.getElementById("payor-type-" + currentPayorType).style.display = "block";
+        renderAcoMatrix();
       });
     });
   }
