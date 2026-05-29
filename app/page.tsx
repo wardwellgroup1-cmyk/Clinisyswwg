@@ -46,9 +46,9 @@ export default function Home() {
                 Specialized for common medications: Wegovy, Mounjaro, SGLT2i, GLP-1 agonists & more.
               </p>
               <ul className="text-sm text-slate-700 space-y-2 mb-6">
-                <li>✓ Popular med database</li>
+                <li>✓ Payor intelligence</li>
                 <li>✓ ICD-10 optimization</li>
-                <li>✓ Approval scoring</li>
+                <li>✓ 3-factor approval scoring</li>
               </ul>
               <button className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 font-medium">
                 Launch Tool
