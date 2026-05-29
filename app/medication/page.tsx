@@ -119,8 +119,7 @@ export default function MedicationPA() {
 
     // Historical (25%)
     const payorKey = payor as keyof typeof PAYOOR_HISTORICAL;
-    const H = payor && (PAYOOR_HISTORICAL[payorKey]?.[medClass as keyof any] ?? 60) || 60;
-
+const H = payor && (PAYOOR_HISTORICAL[payorKey]?.[medClass as keyof typeof PAYOOR_HISTORICAL] ?? 60) || 60;
     const weighted = Math.round((C * 0.4) + (D * 0.35) + (H * 0.25));
 
     setScoreDetails({ C, D, H });
