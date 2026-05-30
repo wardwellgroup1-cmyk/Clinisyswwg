@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Coding Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>💊 Medical Coding Engine</h1>
+                <div class="header-user">
+                    <span>Welcome, <strong>{{ user }}</strong></span>
+                    <a href="/logout" class="btn-logout">Logout</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <h2>Clinical Encounter Text</h2>
+                <p class="hint">Paste the clinical encounter documentation here:</p>
+
+                <div class="input-wrapper">
+                    <textarea
+                        id="clinicalText"
+                        placeholder="Example: Patient came in for 25 minute medication management visit. Has hypertension and diabetes. Post-discharge follow-up."
+                        rows="8"
+                    ></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button id="generateBtn" class="btn btn-primary">
+                        🚀 Generate Codes
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary">
+                        Clear
+                    </button>
+                </div>
+            </section>
+
+            <!-- Output Section -->
+            <section class="output-section" id="outputSection" style="display: none;">
+                <h2>Generated Billing Codes</h2>
+
+                <div class="result-box">
+                    <!-- CPT Codes -->
+                    <div class="code-group">
+                        <h3>CPT Codes (Procedure)</h3>
+                        <div id="cptOutput" class="code-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- ICD-10 Codes -->
+                    <div class="code-group">
+                        <h3>ICD-10 Codes (Diagnosis)</h3>
+                        <div id="icd10Output" class="code-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Modifiers -->
+                    <div class="code-group">
+                        <h3>Billing Modifiers</h3>
+                        <div id="modifiersOutput" class="code-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Explanation -->
+                    <div class="code-group">
+                        <h3>Audit Trail</h3>
+                        <div id="explanationOutput" class="explanation-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="copyBtn" class="btn btn-success">
+                        📋 Copy JSON
+                    </button>
+                    <button id="exportBtn" class="btn btn-secondary">
+                        💾 Export
+                    </button>
+                </div>
+            </section>
+
+            <!-- Encounter History -->
+            <section class="history-section">
+                <h2>Recent Encounters</h2>
+                <div class="history-list">
+                    {% if data %}
+                        {% for encounter in data[:10] %}
+                            <div class="history-item">
+                                <p class="encounter-text"><strong>Input:</strong> {{ encounter[1][:80] }}...</p>
+                                <p class="encounter-output"><strong>Output:</strong> {{ encounter[2][:100] }}...</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="empty-state">No encounters yet. Generate some codes to get started!</p>
+                    {% endif %}
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Generate Codes
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const text = document.getElementById('clinicalText').value.trim();
+
+            if (!text) {
+                alert('Please enter clinical text');
+                return;
+            }
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate codes');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        // Display Results
+        function displayResults(data) {
+            document.getElementById('outputSection').style.display = 'block';
+
+            // CPT
+            document.getElementById('cptOutput').innerHTML = data.cpt.length > 0
+                ? data.cpt.map(code => `<span class="code-badge">${code}</span>`).join('')
+                : '<span class="empty">No CPT codes generated</span>';
+
+            // ICD-10
+            document.getElementById('icd10Output').innerHTML = data.icd10.length > 0
+                ? data.icd10.map(code => `<span class="code-badge">${code}</span>`).join('')
+                : '<span class="empty">No ICD-10 codes generated</span>';
+
+            // Modifiers
+            document.getElementById('modifiersOutput').innerHTML = data.modifiers.length > 0
+                ? data.modifiers.map(mod => `<span class="modifier-badge">${mod}</span>`).join('')
+                : '<span class="empty">No modifiers</span>';
+
+            // Explanation
+            document.getElementById('explanationOutput').innerHTML = data.explanation.map(exp =>
+                `<div class="explanation-item">✓ ${exp}</div>`
+            ).join('');
+
+            // Store current result for copying
+            window.lastResult = data;
+
+            // Scroll to output
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Copy JSON
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const json = JSON.stringify(window.lastResult, null, 2);
+            navigator.clipboard.writeText(json);
+            alert('JSON copied to clipboard!');
+        });
+
+        // Clear
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            document.getElementById('clinicalText').value = '';
+            document.getElementById('outputSection').style.display = 'none';
+        });
+
+        // Export
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const json = JSON.stringify(window.lastResult, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `encounter_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+        });
+    </script>
+</body>
+</html>
