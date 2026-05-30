@@ -58,18 +58,21 @@ The `coding_engine()` function uses keyword-based pattern matching:
 # Development Rules
 
 ✅ **DO**:
+- Use Pydantic for request/response validation
 - Keep logic simple and explainable
 - Always include explanation for each CPT code
-- Use rule-based approach first
-- Store ALL encounters in database
-- Validate JSON output format
+- Validate CPT/modifier codes against whitelists
+- Store ALL encounters in database (JSON format)
 - Use parameterized SQL queries (prevent injection)
+- Support both rule-based AND AI-powered coding
+- Gracefully fall back to rule-based if AI fails
 
 ❌ **DON'T**:
 - Hallucinate medical codes
 - Return codes without explanation
-- Hardcode proprietary code lists
+- Accept codes outside VALID_CPT/VALID_MODIFIERS
 - Expose database directly to frontend
+- Require OpenAI (make it optional)
 
 # Database Schema
 
@@ -81,10 +84,47 @@ CREATE TABLE encounters (
 )
 ```
 
+# Advanced Features
+
+## Pydantic Validation
+
+- **GenerateRequest**: Validates incoming requests (`text`, `use_ai`)
+- **CodingResult**: Ensures responses have correct schema
+- **ErrorResponse**: Standardized error format
+
+Request validation automatically rejects:
+- Missing fields
+- Invalid JSON
+- Empty text
+- Invalid schema
+
+## OpenAI Integration (Optional)
+
+Requires: `OPENAI_API_KEY` environment variable
+
+Two coding modes:
+1. **Rule-based** (default): Fast, no API calls, predictable
+2. **AI-powered** (opt-in): Smarter matching, validates against whitelists
+
+AI mode features:
+- Uses `gpt-3.5-turbo` for code generation
+- Validates all codes/modifiers against whitelists
+- Falls back to rule-based if AI fails
+- Marks results with `ai_generated: true/false` flag
+
+## Code Validation
+
+All generated codes validated against:
+- **VALID_CPT**: 16 approved CPT codes
+- **VALID_MODIFIERS**: 8 approved billing modifiers
+
+Invalid codes are silently filtered from results.
+
 # Future Improvements
 
-- Add Claude API integration for smart coding
+- Add Claude API integration for even smarter coding
 - Add confidence scores per code
+- Add more ICD-10 patterns
 - Add modifier logic (e.g., -25, -59)
 - Add Stripe billing integration
 - Add multi-user support (clinic management)

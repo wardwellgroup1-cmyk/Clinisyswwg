@@ -1,9 +1,25 @@
 from flask import Flask, render_template, request, jsonify, session, redirect
+from werkzeug.exceptions import BadRequest
+from pydantic import BaseModel, ValidationError, Field
+from typing import List, Optional
 import sqlite3
 import os
+import json
+
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
+
+# OpenAI client (optional)
+if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
+    openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+else:
+    openai_client = None
 
 # Database configuration
 DB_PATH = "database.db"
@@ -27,16 +43,77 @@ def init_db():
 # Initialize database on startup
 init_db()
 
-# ============= MEDICAL CODING ENGINE =============
-def coding_engine(text):
-    """
-    Convert clinical text into medical billing codes.
+# ============= PYDANTIC MODELS =============
 
-    Returns structured JSON with:
-    - cpt: list of CPT codes
-    - icd10: list of ICD-10 diagnosis codes
-    - modifiers: list of billing modifiers
-    - explanation: explanation for each code
+class GenerateRequest(BaseModel):
+    """Request schema for code generation."""
+    text: str = Field(min_length=1, description="Clinical encounter text")
+    use_ai: bool = Field(default=False, description="Use OpenAI for smart coding")
+
+class CodingResult(BaseModel):
+    """Response schema for coding results."""
+    cpt: List[str] = Field(default_factory=list, description="CPT procedure codes")
+    icd10: List[str] = Field(default_factory=list, description="ICD-10 diagnosis codes")
+    modifiers: List[str] = Field(default_factory=list, description="Billing modifiers")
+    explanation: List[str] = Field(default_factory=list, description="Explanation for each code")
+    ai_generated: bool = Field(default=False, description="Whether this was generated with AI")
+
+class ErrorResponse(BaseModel):
+    """Error response schema."""
+    error: str = Field(description="Error message")
+    details: Optional[dict] = Field(default=None, description="Additional error details")
+
+# ============= VALIDATION CONSTANTS =============
+
+VALID_CPT = {
+    "99213", "99214", "99215",
+    "99495", "99496",
+    "G0442", "G0443", "G0444",
+    "96127", "99406", "99407",
+    "99401", "99402", "99403",
+    "99483", "96125"
+}
+
+VALID_MODIFIERS = {"25", "33", "59", "95", "XU", "XE", "XS", "XP"}
+
+# ============= ERROR HELPERS =============
+
+def json_error(message: str, status: int = 400, details=None):
+    """Return standardized error response."""
+    payload = ErrorResponse(error=message, details=details).model_dump()
+    return jsonify(payload), status
+
+def parse_request_json():
+    """
+    Safely parse and validate incoming request JSON.
+    Returns: (parsed_request, error_response) tuple
+    """
+    if not request.is_json:
+        return None, json_error(
+            "Request must use Content-Type: application/json",
+            415
+        )
+
+    try:
+        data = request.get_json(silent=False)
+    except BadRequest:
+        return None, json_error("Invalid JSON body", 400)
+
+    if data is None:
+        return None, json_error("Empty JSON body", 400)
+
+    try:
+        parsed = GenerateRequest(**data)
+    except ValidationError as e:
+        return None, json_error("Invalid request schema", 422, e.errors())
+
+    return parsed, None
+
+# ============= MEDICAL CODING ENGINE =============
+def rule_based_coding(text):
+    """
+    Rule-based medical coding engine (no AI required).
+    Detects keywords and patterns to generate codes.
     """
     text_lower = text.lower()
 
@@ -85,10 +162,80 @@ def coding_engine(text):
             result["explanation"].append("ICD-10 F32.9: Major depressive disorder")
 
     if "hypertension" in text_lower and "diabetes" in text_lower:
-        result["modifiers"].append("99213-25")
+        result["modifiers"].append("25")
         result["explanation"].append("Modifier -25: Significant, separately identifiable E/M service")
 
     return result
+
+def validate_codes(result):
+    """Validate CPT codes and modifiers against known lists."""
+    result["cpt"] = [code for code in result["cpt"] if code in VALID_CPT]
+    result["modifiers"] = [mod for mod in result["modifiers"] if mod in VALID_MODIFIERS]
+    return result
+
+def ai_powered_coding(text):
+    """
+    Use OpenAI to intelligently generate codes.
+    Falls back to rule-based if AI unavailable.
+    """
+    if not openai_client:
+        return rule_based_coding(text), False
+
+    try:
+        prompt = f"""You are a medical coding expert. Analyze this clinical encounter and generate appropriate codes.
+
+Clinical Text:
+{text}
+
+Respond ONLY with valid JSON (no markdown, no extra text):
+{{
+  "cpt": ["code1", "code2"],
+  "icd10": ["code1", "code2"],
+  "modifiers": ["mod1", "mod2"],
+  "explanation": ["reason1", "reason2"]
+}}
+
+Ensure:
+- CPT codes are from: {', '.join(sorted(VALID_CPT))}
+- Modifiers are from: {', '.join(sorted(VALID_MODIFIERS))}
+- Each code has a corresponding explanation
+"""
+
+        response = openai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=500
+        )
+
+        response_text = response.choices[0].message.content.strip()
+        result = json.loads(response_text)
+
+        result = validate_codes(result)
+        return result, True
+
+    except Exception as e:
+        app.logger.warning(f"AI coding failed: {str(e)}. Falling back to rule-based.")
+        return rule_based_coding(text), False
+
+def coding_engine(text, use_ai=False):
+    """
+    Main coding engine dispatcher.
+    Routes to AI or rule-based depending on availability and request.
+    """
+    if use_ai and openai_client:
+        result, ai_generated = ai_powered_coding(text)
+    else:
+        result = rule_based_coding(text)
+        ai_generated = False
+
+    return CodingResult(
+        cpt=result.get("cpt", []),
+        icd10=result.get("icd10", []),
+        modifiers=result.get("modifiers", []),
+        explanation=result.get("explanation", []),
+        ai_generated=ai_generated
+    )
 
 # ============= FLASK ROUTES =============
 
@@ -131,7 +278,8 @@ def generate():
 
     Request JSON:
     {
-      "text": "clinical encounter text..."
+      "text": "clinical encounter text...",
+      "use_ai": false
     }
 
     Response JSON:
@@ -139,35 +287,34 @@ def generate():
       "cpt": [...],
       "icd10": [...],
       "modifiers": [...],
-      "explanation": [...]
+      "explanation": [...],
+      "ai_generated": false
     }
     """
-    try:
-        request_data = request.get_json()
-        if not request_data or "text" not in request_data:
-            return jsonify({"error": "Missing 'text' field"}), 400
+    parsed_req, error_resp = parse_request_json()
+    if error_resp:
+        return error_resp
 
-        text = request_data["text"].strip()
-        if not text:
-            return jsonify({"error": "Text cannot be empty"}), 400
+    try:
+        text = parsed_req.text.strip()
 
         # Generate codes
-        result = coding_engine(text)
+        result = coding_engine(text, use_ai=parsed_req.use_ai)
 
         # Store in database
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO encounters (input, output) VALUES (?, ?)",
-            (text, str(result))
+            (text, result.model_dump_json())
         )
         conn.commit()
         conn.close()
 
-        return jsonify(result)
+        return jsonify(result.model_dump())
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return json_error(f"Code generation failed: {str(e)}", 500)
 
 @app.route("/api/encounters", methods=["GET"])
 def api_encounters():
@@ -199,11 +346,11 @@ def api_encounters():
 
 @app.errorhandler(404)
 def not_found(e):
-    return jsonify({"error": "Not found"}), 404
+    return json_error("Not found", 404)
 
 @app.errorhandler(500)
 def server_error(e):
-    return jsonify({"error": "Internal server error"}), 500
+    return json_error("Internal server error", 500)
 
 # ============= RUN SERVER =============
 
