@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect
+from flask import Flask, render_template, request, jsonify, session, redirect, send_from_directory
 from werkzeug.exceptions import BadRequest
 from pydantic import BaseModel, ValidationError, Field
 from typing import List, Optional
@@ -22,7 +22,7 @@ else:
     openai_client = None
 
 # Database configuration
-DB_PATH = "database.db"
+DB_PATH = os.environ.get("DATABASE_URL", "database.db")
 
 # ============= DATABASE INITIALIZATION =============
 def init_db():
@@ -239,7 +239,14 @@ def coding_engine(text, use_ai=False):
 
 # ============= FLASK ROUTES =============
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
+@app.route("/index")
+@app.route("/index.html")
+def index_page():
+    """Serve the standalone index.html landing page."""
+    return send_from_directory(app.root_path, "index.html")
+
+@app.route("/login", methods=["GET", "POST"])
 def login():
     """Login page and session management."""
     if request.method == "POST":
@@ -253,13 +260,13 @@ def login():
 def logout():
     """Clear session and return to login."""
     session.pop("user", None)
-    return redirect("/")
+    return redirect("/login")
 
 @app.route("/dashboard")
 def dashboard():
     """Main dashboard showing encounter history."""
     if "user" not in session:
-        return redirect("/")
+        return redirect("/login")
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -342,6 +349,37 @@ def api_encounters():
         ]
     })
 
+@app.route("/download_history", methods=["GET"])
+def download_history():
+    """Download recent encounter history as a JSON file."""
+    if "user" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, input, output, created_at FROM encounters ORDER BY id DESC LIMIT 100"
+    )
+    data = cursor.fetchall()
+    conn.close()
+
+    encounters = [
+        {
+            "id": row[0],
+            "input": row[1],
+            "output": row[2],
+            "created_at": row[3]
+        }
+        for row in data
+    ]
+
+    payload = json.dumps({"encounters": encounters}, indent=2)
+    return app.response_class(
+        payload,
+        mimetype="application/json",
+        headers={"Content-Disposition": "attachment; filename=encounters.json"}
+    )
+
 # ============= ERROR HANDLERS =============
 
 @app.errorhandler(404)
@@ -357,6 +395,6 @@ def server_error(e):
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
-        port=81,
-        debug=os.environ.get("FLASK_DEBUG", False)
+        port=int(os.environ.get("FLASK_PORT", 81)),
+        debug=str(os.environ.get("FLASK_DEBUG", "False")).lower() in {"1", "true", "yes"}
     )

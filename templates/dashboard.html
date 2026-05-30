@@ -45,6 +45,9 @@
                     <button id="generateBtn" class="btn btn-primary">
                         🚀 Generate Codes
                     </button>
+                    <button id="sampleBtn" class="btn btn-secondary">
+                        📝 Sample Text
+                    </button>
                     <button id="clearBtn" class="btn btn-secondary">
                         Clear
                     </button>
@@ -97,6 +100,12 @@
                         💾 Export
                     </button>
                 </div>
+            </section>
+
+            <section class="download-section">
+                <button id="downloadHistoryBtn" class="btn btn-secondary">
+                    📥 Download Recent History
+                </button>
             </section>
 
             <!-- Encounter History -->
@@ -195,6 +204,12 @@
             alert('JSON copied to clipboard!');
         });
 
+        // Sample text
+        document.getElementById('sampleBtn').addEventListener('click', () => {
+            document.getElementById('clinicalText').value = 
+                'Patient came in for 25 minute medication management visit. Has hypertension and diabetes. Post-discharge follow-up.';
+        });
+
         // Clear
         document.getElementById('clearBtn').addEventListener('click', () => {
             document.getElementById('clinicalText').value = '';
@@ -210,6 +225,11 @@
             a.href = url;
             a.download = `encounter_${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
+        });
+
+        // Download history
+        document.getElementById('downloadHistoryBtn').addEventListener('click', () => {
+            window.location.href = '/download_history';
         });
     </script>
 </body>

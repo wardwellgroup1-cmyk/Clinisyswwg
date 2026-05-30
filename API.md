@@ -6,6 +6,8 @@
 http://localhost:81
 ```
 
+> Note: The application port can be configured with the `FLASK_PORT` environment variable. If not set, it defaults to `81`.
+
 ## Authentication
 
 Currently uses Flask session-based authentication. All API routes require a valid session cookie.
@@ -149,7 +151,19 @@ Fetch recent encounters for the logged-in user.
 
 ---
 
-### 5. Logout
+### 5. Download Encounter History
+
+**GET** `/download_history`
+
+Download recent encounter history as a JSON file. This returns the latest stored encounters as a file attachment named `encounters.json`.
+
+**Requires:** Active session
+
+**Response:** JSON file download with the same encounter data structure as `/api/encounters`.
+
+---
+
+### 6. Logout
 
 **GET** `/logout`
 
