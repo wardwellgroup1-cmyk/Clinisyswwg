@@ -1,0 +1,198 @@
+================================================================================
+🏥 MEDICAL CODING SAAS - LOCALHOST QUICK START
+================================================================================
+
+📋 COPY & PASTE THESE COMMANDS
+
+================================================================================
+1️⃣ ACTIVATE VIRTUAL ENVIRONMENT
+================================================================================
+
+On macOS/Linux:
+  source venv/bin/activate
+
+On Windows (PowerShell):
+  venv\Scripts\Activate.ps1
+
+On Windows (Command Prompt):
+  venv\Scripts\activate.bat
+
+You should see (venv) in your terminal.
+
+================================================================================
+2️⃣ INSTALL DEPENDENCIES (ONE TIME ONLY)
+================================================================================
+
+pip install -r requirements.txt
+
+Expected output:
+  Successfully installed Flask-2.3.3 Werkzeug-2.3.7 pydantic-2.5.0 openai-1.3.5
+
+================================================================================
+3️⃣ CONFIGURE OPENAI (OPTIONAL)
+================================================================================
+
+cp .env.example .env
+
+Then edit .env and add:
+  OPENAI_API_KEY=sk-your-api-key-here
+
+Get API key from: https://platform.openai.com/api-keys
+
+Skip if you don't have an OpenAI key - app works without it!
+
+================================================================================
+4️⃣ RUN THE APP
+================================================================================
+
+python app.py
+
+Expected output:
+  WARNING: This is a development server...
+  Running on http://0.0.0.0:81
+
+================================================================================
+5️⃣ OPEN IN BROWSER
+================================================================================
+
+http://localhost:81
+
+You should see the login page!
+
+================================================================================
+6️⃣ LOGIN AND TEST
+================================================================================
+
+Email: test@example.com (any email works)
+Click: Login
+
+Paste this clinical text:
+  "25 minute office visit with medication management.
+   Has hypertension and diabetes.
+   Post-discharge follow-up."
+
+Click: Generate Codes
+
+You should see:
+  CPT: 99495, 99214
+  ICD-10: I10, E11.9
+  Modifiers: 25
+
+✅ Success!
+
+================================================================================
+⚠️ COMMON ISSUES
+================================================================================
+
+Port 81 Already in Use?
+  Change port in app.py:
+  app.run(host="0.0.0.0", port=8000)  # Use 8000 instead
+
+ModuleNotFoundError?
+  Make sure (venv) is activated:
+  source venv/bin/activate
+
+No module named 'flask'?
+  Reinstall:
+  pip install -r requirements.txt
+
+================================================================================
+🛑 STOP THE APP
+================================================================================
+
+Press: Ctrl+C in the terminal
+
+================================================================================
+🚪 DEACTIVATE VIRTUAL ENVIRONMENT
+================================================================================
+
+deactivate
+
+The (venv) prefix will disappear.
+
+================================================================================
+📁 FILE LOCATIONS
+================================================================================
+
+app.py              → Main Flask application
+database.db         → SQLite database (auto-created)
+templates/          → HTML templates
+static/             → CSS and static files
+.env                → Environment variables (gitignored)
+venv/               → Virtual environment (gitignored)
+
+================================================================================
+🌐 LOCALHOST URLs
+================================================================================
+
+Login:     http://localhost:81/
+Dashboard: http://localhost:81/dashboard
+API:       http://localhost:81/generate (POST)
+Logout:    http://localhost:81/logout
+
+================================================================================
+📝 TESTING WITH CURL
+================================================================================
+
+curl -X POST http://localhost:81/generate \
+  -H "Content-Type: application/json" \
+  -d '{"text": "25 minute office visit", "use_ai": false}'
+
+Expected response:
+  {
+    "cpt": ["99214"],
+    "icd10": [],
+    "modifiers": [],
+    "explanation": ["CPT 99214: Office visit (25-39 minutes)"],
+    "ai_generated": false
+  }
+
+================================================================================
+💾 DATABASE
+================================================================================
+
+View records:
+  sqlite3 database.db
+  sqlite> SELECT * FROM encounters;
+  sqlite> .quit
+
+Reset database:
+  rm database.db
+  python app.py  # Recreates empty database
+
+================================================================================
+✅ DEVELOPMENT WORKFLOW
+================================================================================
+
+1. Edit Python code (app.py)
+2. Save file
+3. Stop app (Ctrl+C)
+4. Start app (python app.py)
+5. Refresh browser (F5)
+
+For HTML/CSS:
+1. Edit file
+2. Refresh browser (F5)
+3. Changes appear immediately
+
+================================================================================
+🎯 NEXT STEPS
+================================================================================
+
+1. Read LOCALHOST_SETUP.md for detailed guide
+2. Test all features locally
+3. Make changes as needed
+4. Push to GitHub when ready
+5. Reference PR #6: https://github.com/wardwellgroup1-cmyk/Clinisyswwg/pull/6
+
+================================================================================
+✨ YOU'RE READY TO GO!
+================================================================================
+
+Questions? Check:
+  - LOCALHOST_SETUP.md (detailed guide)
+  - README.md (project overview)
+  - API.md (API documentation)
+  - CLAUDE.md (architecture)
+
+Happy coding! 🚀
