@@ -3,7 +3,10 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
-const PAYORS = [
+type Payor = 'MVP' | 'Fidelis' | 'WellCare' | 'Aetna' | 'Cigna' | 'Humana' | 'NYSHIP' | 'UHC' | 'Medicare' | 'Medicaid';
+type MedClass = 'glp1' | 'sglt2' | 'diabetes' | 'depression' | 'adhd' | 'asthma' | 'cardio' | 'pain';
+
+const PAYORS: Payor[] = [
   'MVP', 'Fidelis', 'WellCare', 'Aetna', 'Cigna', 'Humana', 'NYSHIP', 'UHC', 'Medicare', 'Medicaid',
 ];
 
@@ -69,13 +72,17 @@ const ICD10_BY_CLASS = {
   ],
 };
 
-const PAYOOR_HISTORICAL = {
-  'MVP': { glp1: 55, diabetes: 75, depression: 80, adhd: 60 },
-  'Fidelis': { glp1: 50, diabetes: 70, depression: 65, adhd: 40 },
-  'WellCare': { glp1: 60, diabetes: 75, depression: 75, adhd: 55 },
-  'UHC': { glp1: 70, diabetes: 80, depression: 85, adhd: 65 },
-  'Medicare': { glp1: 45, diabetes: 75, depression: 80, adhd: 70 },
-  'Medicaid': { glp1: 40, diabetes: 60, depression: 70, adhd: 50 },
+const PAYOOR_HISTORICAL: Record<Payor, Record<MedClass, number>> = {
+  'MVP': { glp1: 55, sglt2: 70, diabetes: 75, depression: 80, adhd: 60, asthma: 75, cardio: 78, pain: 72 },
+  'Fidelis': { glp1: 50, sglt2: 65, diabetes: 70, depression: 65, adhd: 40, asthma: 70, cardio: 72, pain: 68 },
+  'WellCare': { glp1: 60, sglt2: 72, diabetes: 75, depression: 75, adhd: 55, asthma: 76, cardio: 80, pain: 74 },
+  'Aetna': { glp1: 58, sglt2: 71, diabetes: 77, depression: 82, adhd: 63, asthma: 78, cardio: 81, pain: 75 },
+  'Cigna': { glp1: 62, sglt2: 73, diabetes: 79, depression: 84, adhd: 65, asthma: 80, cardio: 82, pain: 76 },
+  'Humana': { glp1: 64, sglt2: 74, diabetes: 81, depression: 86, adhd: 68, asthma: 82, cardio: 84, pain: 78 },
+  'NYSHIP': { glp1: 66, sglt2: 75, diabetes: 82, depression: 87, adhd: 70, asthma: 83, cardio: 85, pain: 79 },
+  'UHC': { glp1: 70, sglt2: 78, diabetes: 80, depression: 85, adhd: 65, asthma: 84, cardio: 86, pain: 80 },
+  'Medicare': { glp1: 45, sglt2: 68, diabetes: 75, depression: 80, adhd: 70, asthma: 72, cardio: 76, pain: 70 },
+  'Medicaid': { glp1: 40, sglt2: 60, diabetes: 60, depression: 70, adhd: 50, asthma: 65, cardio: 68, pain: 62 },
 };
 
 export default function MedicationPA() {
@@ -118,8 +125,9 @@ export default function MedicationPA() {
     if (D < 10) D = 10;
 
     // Historical (25%)
-    const payorKey = payor as keyof typeof PAYOOR_HISTORICAL;
-const H = payor && (PAYOOR_HISTORICAL[payorKey]?.[medClass as keyof typeof PAYOOR_HISTORICAL] ?? 60) || 60;
+    const H = payor && medClass && medClass !== 'generic'
+      ? (PAYOOR_HISTORICAL[payor as Payor]?.[medClass as MedClass] ?? 60)
+      : 60;
     const weighted = Math.round((C * 0.4) + (D * 0.35) + (H * 0.25));
 
     setScoreDetails({ C, D, H });
