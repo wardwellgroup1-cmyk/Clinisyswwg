@@ -3,359 +3,512 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
-type Payor = 'MVP' | 'Fidelis' | 'WellCare' | 'Aetna' | 'Cigna' | 'Humana' | 'NYSHIP' | 'UHC' | 'Medicare' | 'Medicaid';
-type MedClass = 'glp1' | 'sglt2' | 'diabetes' | 'depression' | 'adhd' | 'asthma' | 'cardio' | 'pain';
+type Payor = 'UHC' | 'BCBS' | 'Aetna' | 'Cigna' | 'Humana' | 'Molina' | 'Centene' | 'CVS' | 'Kaiser' | 'Medicare' | 'Medicaid' | 'TRICARE' | 'Other';
+type Severity = 'mild' | 'moderate' | 'severe' | 'refractory';
+type FunctionalImpairment = 'none' | 'mild' | 'moderate' | 'severe';
 
 const PAYORS: Payor[] = [
-  'MVP', 'Fidelis', 'WellCare', 'Aetna', 'Cigna', 'Humana', 'NYSHIP', 'UHC', 'Medicare', 'Medicaid',
+  'UHC', 'BCBS', 'Aetna', 'Cigna', 'Humana', 'Molina', 'Centene', 'CVS', 'Kaiser', 'Medicare', 'Medicaid', 'TRICARE', 'Other',
 ];
 
-const PLAN_TYPES = ['Commercial', 'Medicaid', 'Medicare', 'Medicare Advantage', 'Medicare + Medicaid'];
-
-const MEDICATIONS = [
-  { name: 'Wegovy (semaglutide)', medClass: 'glp1', dose: '0.25-2.4 mg weekly' },
-  { name: 'Mounjaro (tirzepatide)', medClass: 'glp1', dose: '2.5-15 mg weekly' },
-  { name: 'Ozempic (semaglutide)', medClass: 'glp1', dose: '0.5-1 mg weekly' },
-  { name: 'Saxenda (liraglutide)', medClass: 'glp1', dose: '1.2-3 mg daily' },
-  { name: 'SGLT2 Inhibitors', medClass: 'sglt2', dose: 'Varies' },
-  { name: 'Metformin', medClass: 'diabetes', dose: '500-2550 mg daily' },
-  { name: 'Sertraline (SSRI)', medClass: 'depression', dose: '25-200 mg daily' },
-  { name: 'Fluoxetine (SSRI)', medClass: 'depression', dose: '20-80 mg daily' },
-  { name: 'Lisdexamfetamine (Vyvanse)', medClass: 'adhd', dose: '20-70 mg daily' },
-  { name: 'Methylphenidate (Concerta)', medClass: 'adhd', dose: '18-72 mg daily' },
-  { name: 'Budesonide/Salmeterol (Symbicort)', medClass: 'asthma', dose: '1-2 inhalations daily' },
-  { name: 'Atorvastatin', medClass: 'cardio', dose: '10-80 mg daily' },
-  { name: 'Rosuvastatin', medClass: 'cardio', dose: '5-40 mg daily' },
-  { name: 'Gabapentin', medClass: 'pain', dose: '300-3600 mg daily' },
-  { name: 'Pregabalin (Lyrica)', medClass: 'pain', dose: '150-600 mg daily' },
+const PLAN_TYPES = [
+  'Commercial / Employer', 'Medicare Part A', 'Medicare Part B', 'Medicare Advantage (Part C)', 'Medicare Part D',
+  'Medicaid / CHIP', 'Marketplace / ACA', 'TRICARE / Military', 'Workers Compensation'
 ];
 
-const ICD10_BY_CLASS = {
-  glp1: [
-    { code: 'E11.65', label: 'Type 2 diabetes with hyperglycemia' },
-    { code: 'E66.01', label: 'Morbid obesity due to excess calories' },
-    { code: 'E66.09', label: 'Other obesity, drug-induced' },
-    { code: 'Z68.39', label: 'BMI 30-39.9 (specify weight status)' },
-  ],
-  sglt2: [
-    { code: 'E11.9', label: 'Type 2 diabetes' },
-    { code: 'I50.9', label: 'Heart failure, unspecified' },
-    { code: 'Z9.4', label: 'Kidney transplant status' },
-  ],
-  diabetes: [
-    { code: 'E11.9', label: 'Type 2 diabetes' },
-    { code: 'E11.65', label: 'Type 2 diabetes with hyperglycemia' },
-  ],
-  depression: [
-    { code: 'F33.1', label: 'Major depressive disorder, recurrent, moderate' },
-    { code: 'F41.1', label: 'Generalized anxiety disorder' },
-    { code: 'F43.23', label: 'Adjustment disorder with mixed emotions' },
-  ],
-  adhd: [
-    { code: 'F90.2', label: 'ADHD, combined type' },
-    { code: 'F41.1', label: 'Generalized anxiety disorder' },
-    { code: 'Z55.9', label: 'School/work impairment' },
-  ],
-  asthma: [
-    { code: 'J45.40', label: 'Moderate persistent asthma' },
-    { code: 'J45.50', label: 'Severe persistent asthma' },
-  ],
-  cardio: [
-    { code: 'I10', label: 'Essential hypertension' },
-    { code: 'E78.5', label: 'Hyperlipidemia' },
-    { code: 'I25.10', label: 'Atherosclerotic heart disease' },
-  ],
-  pain: [
-    { code: 'M54.50', label: 'Low back pain, unspecified' },
-    { code: 'G62.9', label: 'Polyneuropathy, unspecified' },
-    { code: 'M79.7', label: 'Fibromyalgia' },
-  ],
+const MED_CLASSES = ['Biologic / Specialty', 'Brand (Non-Specialty)', 'Generic', 'Durable Medical Equipment', 'IV Infusion / Injectable', 'Imaging / Procedure', 'Surgical Procedure'];
+
+const FAILURE_REASONS = [
+  'Lack of Efficacy', 'Adverse Effects / Intolerance', 'Medical Contraindication', 'Drug Allergy', 'Both Inefficacy & Adverse Effects', 'Step Therapy Not Required'
+];
+
+const PAYOOR_REQUIREMENTS: Record<Payor, { requiresStepTherapy: boolean; avgProcessingDays: number; denialRate: number }> = {
+  'UHC': { requiresStepTherapy: true, avgProcessingDays: 3, denialRate: 28 },
+  'BCBS': { requiresStepTherapy: true, avgProcessingDays: 5, denialRate: 32 },
+  'Aetna': { requiresStepTherapy: true, avgProcessingDays: 3, denialRate: 25 },
+  'Cigna': { requiresStepTherapy: true, avgProcessingDays: 4, denialRate: 30 },
+  'Humana': { requiresStepTherapy: false, avgProcessingDays: 2, denialRate: 20 },
+  'Molina': { requiresStepTherapy: true, avgProcessingDays: 5, denialRate: 35 },
+  'Centene': { requiresStepTherapy: true, avgProcessingDays: 4, denialRate: 33 },
+  'CVS': { requiresStepTherapy: true, avgProcessingDays: 3, denialRate: 29 },
+  'Kaiser': { requiresStepTherapy: false, avgProcessingDays: 1, denialRate: 18 },
+  'Medicare': { requiresStepTherapy: false, avgProcessingDays: 7, denialRate: 22 },
+  'Medicaid': { requiresStepTherapy: true, avgProcessingDays: 10, denialRate: 40 },
+  'TRICARE': { requiresStepTherapy: false, avgProcessingDays: 14, denialRate: 15 },
+  'Other': { requiresStepTherapy: true, avgProcessingDays: 5, denialRate: 30 },
 };
 
-const PAYOOR_HISTORICAL: Record<Payor, Record<MedClass, number>> = {
-  'MVP': { glp1: 55, sglt2: 70, diabetes: 75, depression: 80, adhd: 60, asthma: 75, cardio: 78, pain: 72 },
-  'Fidelis': { glp1: 50, sglt2: 65, diabetes: 70, depression: 65, adhd: 40, asthma: 70, cardio: 72, pain: 68 },
-  'WellCare': { glp1: 60, sglt2: 72, diabetes: 75, depression: 75, adhd: 55, asthma: 76, cardio: 80, pain: 74 },
-  'Aetna': { glp1: 58, sglt2: 71, diabetes: 77, depression: 82, adhd: 63, asthma: 78, cardio: 81, pain: 75 },
-  'Cigna': { glp1: 62, sglt2: 73, diabetes: 79, depression: 84, adhd: 65, asthma: 80, cardio: 82, pain: 76 },
-  'Humana': { glp1: 64, sglt2: 74, diabetes: 81, depression: 86, adhd: 68, asthma: 82, cardio: 84, pain: 78 },
-  'NYSHIP': { glp1: 66, sglt2: 75, diabetes: 82, depression: 87, adhd: 70, asthma: 83, cardio: 85, pain: 79 },
-  'UHC': { glp1: 70, sglt2: 78, diabetes: 80, depression: 85, adhd: 65, asthma: 84, cardio: 86, pain: 80 },
-  'Medicare': { glp1: 45, sglt2: 68, diabetes: 75, depression: 80, adhd: 70, asthma: 72, cardio: 76, pain: 70 },
-  'Medicaid': { glp1: 40, sglt2: 60, diabetes: 60, depression: 70, adhd: 50, asthma: 65, cardio: 68, pain: 62 },
-};
+interface FailedMedication {
+  name: string;
+  duration: string;
+  reason: string;
+}
 
 export default function MedicationPA() {
-  const [payor, setPayor] = useState('');
+  // Payer & Plan
+  const [payor, setPayor] = useState<Payor | ''>('');
   const [planType, setPlanType] = useState('');
-  const [selectedMed, setSelectedMed] = useState('');
+  const [policyId, setPolicyId] = useState('');
+  const [dateOfService, setDateOfService] = useState('');
+
+  // Medication & Therapy
+  const [medication, setMedication] = useState('');
+  const [medClass, setMedClass] = useState('');
+  const [dose, setDose] = useState('');
+  const [provider, setProvider] = useState('');
+  const [npi, setNpi] = useState('');
+
+  // Diagnosis
   const [diagnosis, setDiagnosis] = useState('');
-  const [failedTherapies, setFailedTherapies] = useState('');
+  const [icd10Codes, setIcd10Codes] = useState<string[]>([]);
+  const [icd10Input, setIcd10Input] = useState('');
+
+  // Step Therapy
+  const [failedMeds, setFailedMeds] = useState<FailedMedication[]>([]);
+  const [tempMedName, setTempMedName] = useState('');
+  const [tempMedDuration, setTempMedDuration] = useState('');
+  const [tempMedReason, setTempMedReason] = useState('');
+
+  // Clinical Evidence
+  const [severity, setSeverity] = useState<Severity>('moderate');
   const [symptoms, setSymptoms] = useState('');
-  const [selectedIcds, setSelectedIcds] = useState<string[]>([]);
+  const [functionalImpairment, setFunctionalImpairment] = useState<FunctionalImpairment>('moderate');
+  const [labResults, setLabResults] = useState('');
+
+  // Scoring
   const [approvalScore, setApprovalScore] = useState(0);
-  const [scoreDetails, setScoreDetails] = useState({ C: 0, D: 0, H: 0 });
   const [generatedNote, setGeneratedNote] = useState('');
 
-  const getMedClass = (): string => {
-    const med = MEDICATIONS.find(m => m.name === selectedMed);
-    return med?.medClass || 'generic';
+  const addFailedMed = () => {
+    if (tempMedName && tempMedDuration && tempMedReason) {
+      setFailedMeds([...failedMeds, { name: tempMedName, duration: tempMedDuration, reason: tempMedReason }]);
+      setTempMedName('');
+      setTempMedDuration('');
+      setTempMedReason('');
+    }
   };
 
-  const getRecommendedIcds = () => {
-    const medClass = getMedClass();
-    return (ICD10_BY_CLASS as any)[medClass] || [];
+  const removeFailedMed = (index: number) => {
+    setFailedMeds(failedMeds.filter((_, i) => i !== index));
+  };
+
+  const addIcd10 = () => {
+    if (icd10Input && !icd10Codes.includes(icd10Input)) {
+      setIcd10Codes([...icd10Codes, icd10Input]);
+      setIcd10Input('');
+    }
   };
 
   const calculateScore = () => {
-    const medClass = getMedClass();
+    let score = 0;
 
-    // Criteria match (40%)
-    let C = 80;
-    if (!payor) C -= 20;
-    if (medClass === 'glp1' || medClass === 'adhd') C -= 10;
-    if (C < 10) C = 10;
-    if (C > 100) C = 100;
+    if (payor) score += 15;
+    if (planType) score += 5;
+    if (medication && medClass) score += 15;
+    if (diagnosis && icd10Codes.length > 0) score += 20;
+    if (failedMeds.length >= 2) score += 20;
+    else if (failedMeds.length === 1) score += 10;
+    if (['severe', 'refractory'].includes(severity)) score += 10;
+    if (['moderate', 'severe'].includes(functionalImpairment)) score += 10;
+    if (labResults) score += 5;
 
-    // Documentation (35%)
-    let D = 100;
-    if (!diagnosis) D -= 40;
-    if (!failedTherapies) D -= 30;
-    if (!symptoms) D -= 20;
-    if (D < 10) D = 10;
+    setApprovalScore(Math.min(100, score));
 
-    // Historical (25%)
-    const H = payor && medClass && medClass !== 'generic'
-      ? (PAYOOR_HISTORICAL[payor as Payor]?.[medClass as MedClass] ?? 60)
-      : 60;
-    const weighted = Math.round((C * 0.4) + (D * 0.35) + (H * 0.25));
+    if (medication && diagnosis && failedMeds.length > 0) {
+      const note = `PRIOR AUTHORIZATION REQUEST – MEDICAL NECESSITY
 
-    setScoreDetails({ C, D, H });
-    setApprovalScore(weighted);
+PATIENT & INSURANCE INFORMATION
+Insurance Payer: ${payor || 'TBD'}
+Plan Type: ${planType || 'TBD'}
+Policy ID: ${policyId || 'Not provided'}
+Date of Service: ${dateOfService || 'TBD'}
 
-    // Generate note
-    if (selectedMed && diagnosis) {
-      const note = `MEDICATION PRIOR AUTHORIZATION – MEDICAL NECESSITY
+MEDICATION & THERAPY DETAILS
+Requested Medication/Device: ${medication}
+Medication Class: ${medClass || 'TBD'}
+Dose/Frequency: ${dose || 'TBD'}
+Prescribing Provider: ${provider || 'TBD'}
 
-Payor: ${payor || 'TBD'} | Plan: ${planType || 'TBD'}
-Medication: ${selectedMed}
+CLINICAL DIAGNOSIS
 Primary Diagnosis: ${diagnosis}
+ICD-10 Codes: ${icd10Codes.join(', ') || 'None entered'}
 
-CLINICAL SUMMARY
-Patient has documented ${diagnosis} with symptoms of ${symptoms || '[provide symptoms]'}. Prior therapies attempted: ${failedTherapies || '[list failed treatments]'}.
+STEP THERAPY / FAILED MEDICATIONS
+Prior Medications Tried (${failedMeds.length}):
+${failedMeds.map(m => `• ${m.name} (${m.duration}) - ${m.reason}`).join('\n') || 'None documented'}
+
+CLINICAL SEVERITY & FUNCTIONAL IMPACT
+Disease Severity: ${severity.toUpperCase()}
+Active Symptoms: ${symptoms || 'Not documented'}
+Functional Impairment: ${functionalImpairment.toUpperCase()}
+Supporting Lab/Imaging: ${labResults || 'None provided'}
 
 MEDICAL JUSTIFICATION
-The requested medication is medically necessary per clinical guidelines for this condition. Patient has demonstrated inadequate response to standard therapies and is at clinical risk without escalation.
+The requested medication/therapy is medically necessary for treatment of documented ${diagnosis}. Patient has demonstrated inadequate response to ${failedMeds.length} prior therapy option(s) and requires escalation to ${medication} per clinical guidelines.
 
-APPROVAL LIKELIHOOD: ${weighted}%
-${weighted >= 50 ? '✓ PROCEED to submission' : '⚠ NEEDS CLARIFICATION – add more documentation'}`;
+APPROVAL RECOMMENDATION
+PA Readiness Score: ${approvalScore}%
+${approvalScore >= 70 ? '✓ STRONG - Ready for submission' : approvalScore >= 50 ? '⚠ MODERATE - Add more clinical detail' : '❌ WEAK - Strengthen documentation'}`;
+
       setGeneratedNote(note);
     }
   };
 
   useEffect(() => {
     calculateScore();
-  }, [payor, selectedMed, diagnosis, failedTherapies, symptoms]);
+  }, [payor, planType, medication, medClass, diagnosis, icd10Codes, failedMeds, severity, functionalImpairment, labResults]);
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-8">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <div className="mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <Link href="/" className="text-green-600 hover:text-green-800 mb-4 inline-block">
             ← Back to Tools
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900">Medication Prior Authorization</h1>
-          <p className="text-slate-600 mt-1">Pre-PA planner with payor intelligence & approval scoring</p>
+          <h1 className="text-4xl font-bold text-slate-900">PriorAuthPro</h1>
+          <p className="text-slate-600 mt-1">Pre-Prior Authorization Clinical Planner | 🏥 Clinical Decision Support Tool</p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-4">
+        <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Form */}
-          <div className="lg:col-span-3 bg-white rounded-lg shadow-md p-8 space-y-6">
-            {/* Payor & Plan */}
-            <div className="grid gap-4 md:grid-cols-2">
-              <section>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Payor</label>
-                <select
-                  value={payor}
-                  onChange={e => setPayor(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="">Select payor...</option>
-                  {PAYORS.map(p => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-              </section>
-              <section>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Plan Type</label>
-                <select
-                  value={planType}
-                  onChange={e => setPlanType(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="">Select plan type...</option>
-                  {PLAN_TYPES.map(p => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-              </section>
+          <div className="lg:col-span-2 space-y-6">
+            {/* Section 1: Payer & Plan */}
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">📋 PAYER & PLAN INFORMATION</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Insurance Payer</label>
+                  <select
+                    value={payor}
+                    onChange={e => setPayor(e.target.value as Payor | '')}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="">— Select Payer —</option>
+                    {PAYORS.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Plan Type</label>
+                  <select
+                    value={planType}
+                    onChange={e => setPlanType(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="">— Select Plan Type —</option>
+                    {PLAN_TYPES.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Policy / Member ID (optional)</label>
+                  <input
+                    type="text"
+                    value={policyId}
+                    onChange={e => setPolicyId(e.target.value)}
+                    placeholder="Enter member ID"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Date of Service</label>
+                  <input
+                    type="date"
+                    value={dateOfService}
+                    onChange={e => setDateOfService(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Medication */}
-            <section>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Medication</label>
-              <select
-                value={selectedMed}
-                onChange={e => setSelectedMed(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">Choose medication...</option>
-                {MEDICATIONS.map(med => (
-                  <option key={med.name} value={med.name}>
-                    {med.name} – {med.dose}
-                  </option>
-                ))}
-              </select>
-            </section>
-
-            {/* Primary Diagnosis */}
-            <section>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Primary Diagnosis</label>
-              <input
-                type="text"
-                value={diagnosis}
-                onChange={e => setDiagnosis(e.target.value)}
-                placeholder="e.g., Type 2 diabetes with obesity, uncontrolled A1c"
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-              />
-            </section>
-
-            {/* Failed Therapies */}
-            <section>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Failed Therapies</label>
-              <input
-                type="text"
-                value={failedTherapies}
-                onChange={e => setFailedTherapies(e.target.value)}
-                placeholder="e.g., Metformin 2000mg x 6mo, Lisinopril 20mg x 3mo"
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-              />
-            </section>
-
-            {/* Symptoms */}
-            <section>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Symptoms / Severity</label>
-              <textarea
-                value={symptoms}
-                onChange={e => setSymptoms(e.target.value)}
-                placeholder="e.g., Uncontrolled blood glucose, weight gain, fatigue, functional impairment"
-                rows={3}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-              />
-            </section>
-
-            {/* Recommended ICD-10 */}
-            {selectedMed && (
-              <section>
-                <label className="block text-sm font-semibold text-slate-900 mb-3">Suggested ICD-10 Codes</label>
-                <div className="space-y-2">
-                  {getRecommendedIcds().map(icd => (
-                    <label key={icd.code} className="flex items-center p-3 bg-green-50 border border-green-200 rounded-md cursor-pointer hover:bg-green-100">
-                      <input
-                        type="checkbox"
-                        checked={selectedIcds.includes(icd.code)}
-                        onChange={e => {
-                          if (e.target.checked) {
-                            setSelectedIcds([...selectedIcds, icd.code]);
-                          } else {
-                            setSelectedIcds(selectedIcds.filter(c => c !== icd.code));
-                          }
-                        }}
-                        className="w-4 h-4 text-green-600 rounded"
-                      />
-                      <span className="ml-3 text-sm">
-                        <strong>{icd.code}</strong> – {icd.label}
-                      </span>
-                    </label>
-                  ))}
+            {/* Section 2: Medication & Therapy */}
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">💊 MEDICATION & THERAPY</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold mb-1">Requested Medication / Device</label>
+                  <input
+                    type="text"
+                    value={medication}
+                    onChange={e => setMedication(e.target.value)}
+                    placeholder="e.g., Dupilumab, Ozempic, Mounjaro"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
                 </div>
-              </section>
-            )}
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Medication Class / Type</label>
+                  <select
+                    value={medClass}
+                    onChange={e => setMedClass(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">— Select Class —</option>
+                    {MED_CLASSES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Requested Dose / Frequency</label>
+                  <input
+                    type="text"
+                    value={dose}
+                    onChange={e => setDose(e.target.value)}
+                    placeholder="e.g., 300mg weekly"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Prescribing Provider</label>
+                  <input
+                    type="text"
+                    value={provider}
+                    onChange={e => setProvider(e.target.value)}
+                    placeholder="Provider name"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">NPI Number (optional)</label>
+                  <input
+                    type="text"
+                    value={npi}
+                    onChange={e => setNpi(e.target.value)}
+                    placeholder="10-digit NPI"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Diagnosis */}
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">🔬 DIAGNOSIS & CLINICAL</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Primary Diagnosis</label>
+                  <input
+                    type="text"
+                    value={diagnosis}
+                    onChange={e => setDiagnosis(e.target.value)}
+                    placeholder="e.g., Type 2 Diabetes Mellitus, Moderate to Severe Atopic Dermatitis"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">ICD-10 Code(s) — Press Enter after each code</label>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={icd10Input}
+                      onChange={e => setIcd10Input(e.target.value.toUpperCase())}
+                      onKeyPress={e => e.key === 'Enter' && addIcd10()}
+                      placeholder="e.g., E11.9"
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                    />
+                    <button
+                      onClick={addIcd10}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 font-semibold text-sm"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {icd10Codes.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {icd10Codes.map(code => (
+                        <span key={code} className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                          {code}
+                          <button
+                            onClick={() => setIcd10Codes(icd10Codes.filter(c => c !== code))}
+                            className="text-purple-600 hover:text-purple-900 font-bold"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Step Therapy */}
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">🔄 STEP THERAPY / FAILED MEDICATIONS</h2>
+              <div className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-3">
+                  <input
+                    type="text"
+                    value={tempMedName}
+                    onChange={e => setTempMedName(e.target.value)}
+                    placeholder="Medication name"
+                    className="px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={tempMedDuration}
+                    onChange={e => setTempMedDuration(e.target.value)}
+                    placeholder="Duration (e.g., 6 months)"
+                    className="px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                  />
+                  <select
+                    value={tempMedReason}
+                    onChange={e => setTempMedReason(e.target.value)}
+                    className="px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                  >
+                    <option value="">— Select Reason —</option>
+                    {FAILURE_REASONS.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  onClick={addFailedMed}
+                  className="w-full px-3 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 font-semibold text-sm"
+                >
+                  Add Failed Medication
+                </button>
+
+                {failedMeds.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {failedMeds.map((med, idx) => (
+                      <div key={idx} className="bg-orange-50 p-3 rounded-md border border-orange-200 flex justify-between items-start">
+                        <div className="text-sm">
+                          <strong>{med.name}</strong> • {med.duration} • {med.reason}
+                        </div>
+                        <button
+                          onClick={() => removeFailedMed(idx)}
+                          className="text-orange-600 hover:text-orange-900 font-bold"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Section 5: Symptom Severity */}
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">📊 SYMPTOM SEVERITY & FUNCTIONAL IMPACT</h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Disease Severity</label>
+                  <select
+                    value={severity}
+                    onChange={e => setSeverity(e.target.value as Severity)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="mild">Mild</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="severe">Severe</option>
+                    <option value="refractory">Severe / Refractory</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Functional Impairment</label>
+                  <select
+                    value={functionalImpairment}
+                    onChange={e => setFunctionalImpairment(e.target.value as FunctionalImpairment)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="none">None documented</option>
+                    <option value="mild">Mild — minor limitations</option>
+                    <option value="moderate">Moderate — affects daily activities</option>
+                    <option value="severe">Severe — disabling / work impaired</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold mb-1">Active Symptoms</label>
+                  <input
+                    type="text"
+                    value={symptoms}
+                    onChange={e => setSymptoms(e.target.value)}
+                    placeholder="e.g., pruritus, excoriation, sleep disturbance"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold mb-1">Recent Lab / Imaging Supporting Medical Necessity</label>
+                  <input
+                    type="text"
+                    value={labResults}
+                    onChange={e => setLabResults(e.target.value)}
+                    placeholder="e.g., HbA1c 9.2%, BMI 35.2, CT scan showing..."
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
 
             {/* Generated Note */}
             {generatedNote && (
-              <section>
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Generated PA Note</label>
-                <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto border border-slate-300 text-slate-800">
+              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-slate-500">
+                <h2 className="text-lg font-bold text-slate-900 mb-3">📝 Generated PA Note</h2>
+                <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto border border-slate-300 text-slate-800 whitespace-pre-wrap">
                   {generatedNote}
                 </pre>
-              </section>
+              </div>
             )}
-
-            {/* Generate Button */}
-            <button className="w-full bg-green-600 text-white py-3 rounded-md hover:bg-green-700 font-semibold transition">
-              Export PA Letter
-            </button>
           </div>
 
-          {/* Sidebar - Scoring */}
-          <div className="space-y-4">
+          {/* Sidebar */}
+          <div className="space-y-6">
             {/* Approval Score */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Approval Score</h3>
+            <div className="bg-white rounded-lg shadow-md p-6 sticky top-8">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">⚡ PA APPROVAL SCORE</h3>
               <div className="text-center mb-6">
-                <div className="text-6xl font-bold text-green-600 mb-2">{approvalScore}%</div>
-                <div className="w-full bg-slate-200 rounded-full h-3 mb-4">
+                <div className="text-6xl font-bold text-green-600 mb-2">{approvalScore}</div>
+                <div className="text-sm text-slate-600">out of 100 points</div>
+                <div className="w-full bg-slate-200 rounded-full h-3 mt-4 mb-4">
                   <div
                     className={`h-3 rounded-full transition-all ${
-                      approvalScore >= 50 ? 'bg-green-600' : 'bg-red-500'
+                      approvalScore >= 70 ? 'bg-green-600' : approvalScore >= 50 ? 'bg-yellow-500' : 'bg-red-500'
                     }`}
                     style={{ width: `${approvalScore}%` }}
                   />
                 </div>
                 <p className="text-sm font-semibold">
-                  {approvalScore >= 50 ? '✓ PROCEED' : '⚠ NEEDS CLARIFICATION'}
+                  {approvalScore >= 70 ? '✓ STRONG - Ready for submission' : approvalScore >= 50 ? '⚠ MODERATE - Add more details' : '❌ STOP — Not Ready'}
                 </p>
-              </div>
-
-              {/* Score Breakdown */}
-              <div className="text-sm space-y-2 border-t pt-4">
-                <div className="flex justify-between">
-                  <span>Criteria Match (40%)</span>
-                  <span className="font-semibold">{scoreDetails.C}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Documentation (35%)</span>
-                  <span className="font-semibold">{scoreDetails.D}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Historical {payor ? `(${payor})` : '(Default)'} (25%)</span>
-                  <span className="font-semibold">{scoreDetails.H}</span>
-                </div>
               </div>
             </div>
 
-            {/* Tips */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h3 className="font-semibold text-blue-900 mb-3">💡 Approval Tips</h3>
-              <ul className="text-xs text-blue-800 space-y-2">
-                <li>✓ Always specify payor for accurate scoring</li>
-                <li>✓ Document 2+ failed prior therapies</li>
-                <li>✓ Use suggested ICD-10 codes (RAF-friendly)</li>
-                <li>✓ Describe functional impact clearly</li>
-                <li>✓ Reference clinical guidelines in note</li>
+            {/* Readiness Checklist */}
+            <div className="bg-blue-50 rounded-lg shadow-md p-6 border border-blue-200">
+              <h3 className="font-bold text-blue-900 mb-3">✅ PA READINESS CHECKLIST</h3>
+              <ul className="text-sm text-blue-800 space-y-2">
+                <li className={payor ? '✓' : '○'} > Payer selected</li>
+                <li className={planType ? '✓' : '○'} > Plan type selected</li>
+                <li className={medication && medClass ? '✓' : '○'} > Medication & class entered</li>
+                <li className={diagnosis && icd10Codes.length > 0 ? '✓' : '○'} > Diagnosis with ICD-10 codes</li>
+                <li className={failedMeds.length >= 2 ? '✓' : '○'} > 2+ prior medications documented</li>
+                <li className={['severe', 'refractory'].includes(severity) ? '✓' : '○'} > Severity documented</li>
+                <li className={labResults ? '✓' : '○'} > Supporting labs/imaging</li>
               </ul>
             </div>
 
-            {/* Quick Status */}
-            {approvalScore > 0 && (
-              <div className={`rounded-lg p-4 text-sm text-center font-semibold ${
-                approvalScore >= 60 ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-yellow-50 text-yellow-800 border border-yellow-200'
-              }`}>
-                {approvalScore >= 80 && '🎯 Strong likelihood – submit now'}
-                {approvalScore >= 60 && approvalScore < 80 && '⚠️ Moderate – add more clinical detail'}
-                {approvalScore < 60 && '❌ Weak – strengthen all sections'}
+            {/* Payer Intelligence */}
+            {payor && payor !== '' && (
+              <div className="bg-amber-50 rounded-lg shadow-md p-6 border border-amber-200">
+                <h3 className="font-bold text-amber-900 mb-3">🧠 PAYER INTELLIGENCE</h3>
+                <div className="text-sm text-amber-800 space-y-2">
+                  {(() => {
+                    const req = PAYOOR_REQUIREMENTS[payor as Payor];
+                    return (
+                      <>
+                        <p><strong>Step Therapy Required:</strong> {req.requiresStepTherapy ? 'Yes' : 'No'}</p>
+                        <p><strong>Avg Processing:</strong> {req.avgProcessingDays} days</p>
+                        <p><strong>Historical Denial Rate:</strong> {req.denialRate}%</p>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
             )}
           </div>
